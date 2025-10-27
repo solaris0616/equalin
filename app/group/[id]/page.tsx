@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { v4 as uuidv4 } from "uuid";
+import { useEffect, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { createClient } from '@/lib/supabase/client';
 
 type Profile = {
   id: string;
@@ -15,7 +15,7 @@ export default function GroupPage({ params }: { params: { id: string } }) {
   const storageKey = `equalin_profile_${groupId}`; // Key is now group-specific
 
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [nameInput, setNameInput] = useState("");
+  const [nameInput, setNameInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export default function GroupPage({ params }: { params: { id: string } }) {
 
   const handleJoinGroup = async () => {
     if (!nameInput.trim()) {
-      alert("Please enter your name.");
+      alert('Please enter your name.');
       return;
     }
 
@@ -43,21 +43,21 @@ export default function GroupPage({ params }: { params: { id: string } }) {
 
     // 1. Save to 'profiles' table
     const { error: profileError } = await supabase
-      .from("profiles")
+      .from('profiles')
       .insert(newProfile);
     if (profileError) {
-      console.error("Error saving profile:", profileError);
-      alert("Could not save your profile. Please try again.");
+      console.error('Error saving profile:', profileError);
+      alert('Could not save your profile. Please try again.');
       return;
     }
 
     // 2. Save to 'group_members' table
     const { error: memberError } = await supabase
-      .from("group_members")
+      .from('group_members')
       .insert({ group_id: groupId, profile_id: newProfile.id });
     if (memberError) {
-      console.error("Error joining group:", memberError);
-      alert("Could not join the group. Please try again.");
+      console.error('Error joining group:', memberError);
+      alert('Could not join the group. Please try again.');
       return;
     }
 

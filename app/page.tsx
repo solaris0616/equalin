@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 export default function Page() {
   const router = useRouter();
@@ -10,14 +10,14 @@ export default function Page() {
     const supabase = createClient();
 
     const { data, error } = await supabase
-      .from("groups")
+      .from('groups')
       .insert([{}])
-      .select("id")
+      .select('id')
       .single();
 
     if (error) {
-      console.error("Error creating group:", error.message);
-      alert("Failed to create a group. Please try again.");
+      console.error('Error creating group:', error.message);
+      alert('Failed to create a group. Please try again.');
       return;
     }
 
