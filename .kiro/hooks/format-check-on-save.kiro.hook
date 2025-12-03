@@ -1,0 +1,20 @@
+{
+  "enabled": true,
+  "name": "Format and Check on Save",
+  "description": "Automatically runs bun run format:apply and bun run check:apply on the current file when it is saved, then reviews the changes and applies them as needed.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.json"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "bun run format:apply \"$FILE\" && bun run check:apply \"$FILE\""
+  }
+}
