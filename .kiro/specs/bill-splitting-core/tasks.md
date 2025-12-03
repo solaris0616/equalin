@@ -7,7 +7,7 @@
   - Run migration to update database schema
   - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
-- [ ] 2. Create utility functions for amount handling
+- [x] 2. Create utility functions for amount handling
   - Create `lib/utils/currency.ts` file
   - Implement `amountToInteger()` function to convert decimal to cents
   - Implement `integerToAmount()` function to convert cents to decimal string
