@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { calculateSettlement } from '@/app/actions/payments';
 import { integerToAmount } from '@/lib/utils/currency';
-import type { SettlementTransaction } from '@/lib/utils/settlement';
+import type { SettlementTransaction } from '@/types/payment';
 
 interface SettlementDisplayProps {
   groupId: string;

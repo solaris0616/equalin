@@ -1,6 +1,6 @@
 'use client';
 
-import type { PaymentWithDetails } from '@/app/actions/payments';
+import type { PaymentWithDetails } from '@/types/payment';
 import { integerToAmount } from '@/lib/utils/currency';
 
 interface PaymentListProps {

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { createPayment, type Profile } from '@/app/actions/payments';
+import { createPayment } from '@/app/actions/payments';
+import type { Profile } from '@/types/payment';
 import { cn } from '@/lib/utils';
 
 interface PaymentFormProps {

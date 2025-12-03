@@ -3,12 +3,8 @@
 import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@/lib/supabase/client';
-import {
-  getGroupMembers,
-  getGroupPayments,
-  type Profile,
-  type PaymentWithDetails,
-} from '@/app/actions/payments';
+import { getGroupMembers, getGroupPayments } from '@/app/actions/payments';
+import type { Profile, PaymentWithDetails } from '@/types/payment';
 import { PaymentForm } from './components/PaymentForm';
 import { PaymentList } from './components/PaymentList';
 import { SettlementDisplay } from './components/SettlementDisplay';

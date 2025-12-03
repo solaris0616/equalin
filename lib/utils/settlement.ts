@@ -4,19 +4,10 @@
  * minimal settlement transactions.
  */
 
-export interface MemberBalance {
-  profile_id: string;
-  name: string;
-  paid: number; // total amount paid (in cents)
-  owed: number; // total share of expenses (in cents)
-  balance: number; // paid - owed (in cents)
-}
+import type { MemberBalance, SettlementTransaction } from '@/types/payment';
 
-export interface SettlementTransaction {
-  from: string; // profile name
-  to: string; // profile name
-  amount: number; // amount in cents
-}
+// Re-export types for backward compatibility
+export type { MemberBalance, SettlementTransaction };
 
 export interface PaymentWithParticipants {
   id: string;

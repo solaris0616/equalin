@@ -131,7 +131,7 @@
   - Implement refresh logic after payment creation
   - _Requirements: 4.1, 6.1, 8.1_
 
-- [ ] 11. Add TypeScript type definitions
+- [x] 11. Add TypeScript type definitions
   - Create `types/payment.ts` file
   - Define `Payment`, `PaymentParticipant`, `PaymentWithDetails` types
   - Define `MemberBalance`, `SettlementTransaction` types

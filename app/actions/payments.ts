@@ -6,31 +6,16 @@ import {
   calculateSettlement as calculateSettlementUtil,
   type Member,
   type PaymentWithParticipants,
-  type SettlementTransaction,
 } from '@/lib/utils/settlement';
+import type {
+  Profile,
+  Payment,
+  PaymentWithDetails,
+  SettlementTransaction,
+} from '@/types/payment';
 
-/**
- * Type definitions for payment operations
- */
-
-export interface Profile {
-  id: string;
-  name: string;
-}
-
-export interface Payment {
-  id: string;
-  group_id: string;
-  payer_id: string;
-  amount: number; // stored as integer (cents)
-  description: string | null;
-  created_at: string;
-}
-
-export interface PaymentWithDetails extends Payment {
-  payer_name: string;
-  participant_names: string[];
-}
+// Re-export types for backward compatibility
+export type { Profile, Payment, PaymentWithDetails, SettlementTransaction };
 
 /**
  * Creates a new payment with participants.
