@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Add payment_participants table to database
+- [x] 1. Add payment_participants table to database
   - Create new Supabase migration file
   - Add CREATE TABLE statement with CASCADE DELETE constraints
   - Add PRIMARY KEY constraint for uniqueness
