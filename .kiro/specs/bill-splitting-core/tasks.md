@@ -18,7 +18,7 @@
   - **Property 15: Amount storage round-trip**
   - **Validates: Requirements 9.2, 9.3**
 
-- [ ] 3. Create Server Actions for payment operations
+- [x] 3. Create Server Actions for payment operations
   - Create `app/actions/payments.ts` file
   - Implement `createPayment()` action with validation and error handling
   - Implement `getGroupPayments()` action to fetch payments with payer and participant details
