@@ -1,12 +1,12 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, expect, it } from 'bun:test';
 import {
-  calculateTotalPaid,
-  calculateTotalOwed,
   calculateMemberBalances,
-  generateSettlementTransactions,
   calculateSettlement,
-  type PaymentWithParticipants,
+  calculateTotalOwed,
+  calculateTotalPaid,
+  generateSettlementTransactions,
   type Member,
+  type PaymentWithParticipants,
 } from './settlement';
 
 describe('Settlement Calculation', () => {
@@ -19,8 +19,18 @@ describe('Settlement Calculation', () => {
   describe('calculateTotalPaid', () => {
     it('should calculate total paid by each member', () => {
       const payments: PaymentWithParticipants[] = [
-        { id: 'p1', payer_id: '1', amount: 3000, participant_ids: ['1', '2', '3'] },
-        { id: 'p2', payer_id: '2', amount: 6000, participant_ids: ['1', '2', '3'] },
+        {
+          id: 'p1',
+          payer_id: '1',
+          amount: 3000,
+          participant_ids: ['1', '2', '3'],
+        },
+        {
+          id: 'p2',
+          payer_id: '2',
+          amount: 6000,
+          participant_ids: ['1', '2', '3'],
+        },
       ];
 
       const totalPaid = calculateTotalPaid(payments, members);
@@ -43,7 +53,12 @@ describe('Settlement Calculation', () => {
   describe('calculateTotalOwed', () => {
     it('should calculate equal shares for all participants', () => {
       const payments: PaymentWithParticipants[] = [
-        { id: 'p1', payer_id: '1', amount: 3000, participant_ids: ['1', '2', '3'] },
+        {
+          id: 'p1',
+          payer_id: '1',
+          amount: 3000,
+          participant_ids: ['1', '2', '3'],
+        },
       ];
 
       const totalOwed = calculateTotalOwed(payments, members);
@@ -70,8 +85,18 @@ describe('Settlement Calculation', () => {
   describe('calculateMemberBalances', () => {
     it('should calculate correct balances', () => {
       const payments: PaymentWithParticipants[] = [
-        { id: 'p1', payer_id: '1', amount: 3000, participant_ids: ['1', '2', '3'] },
-        { id: 'p2', payer_id: '2', amount: 6000, participant_ids: ['1', '2', '3'] },
+        {
+          id: 'p1',
+          payer_id: '1',
+          amount: 3000,
+          participant_ids: ['1', '2', '3'],
+        },
+        {
+          id: 'p2',
+          payer_id: '2',
+          amount: 6000,
+          participant_ids: ['1', '2', '3'],
+        },
       ];
 
       const balances = calculateMemberBalances(payments, members);
@@ -90,7 +115,13 @@ describe('Settlement Calculation', () => {
       const balances = [
         { profile_id: '1', name: 'Alice', paid: 3000, owed: 3000, balance: 0 },
         { profile_id: '2', name: 'Bob', paid: 6000, owed: 3000, balance: 3000 },
-        { profile_id: '3', name: 'Charlie', paid: 0, owed: 3000, balance: -3000 },
+        {
+          profile_id: '3',
+          name: 'Charlie',
+          paid: 0,
+          owed: 3000,
+          balance: -3000,
+        },
       ];
 
       const transactions = generateSettlementTransactions(balances);
@@ -105,9 +136,21 @@ describe('Settlement Calculation', () => {
 
     it('should handle multiple debtors and creditors', () => {
       const balances = [
-        { profile_id: '1', name: 'Alice', paid: 5000, owed: 2500, balance: 2500 },
+        {
+          profile_id: '1',
+          name: 'Alice',
+          paid: 5000,
+          owed: 2500,
+          balance: 2500,
+        },
         { profile_id: '2', name: 'Bob', paid: 5000, owed: 2500, balance: 2500 },
-        { profile_id: '3', name: 'Charlie', paid: 0, owed: 2500, balance: -2500 },
+        {
+          profile_id: '3',
+          name: 'Charlie',
+          paid: 0,
+          owed: 2500,
+          balance: -2500,
+        },
         { profile_id: '4', name: 'David', paid: 0, owed: 2500, balance: -2500 },
       ];
 
@@ -136,8 +179,18 @@ describe('Settlement Calculation', () => {
   describe('calculateSettlement', () => {
     it('should calculate complete settlement', () => {
       const payments: PaymentWithParticipants[] = [
-        { id: 'p1', payer_id: '1', amount: 3000, participant_ids: ['1', '2', '3'] },
-        { id: 'p2', payer_id: '2', amount: 6000, participant_ids: ['1', '2', '3'] },
+        {
+          id: 'p1',
+          payer_id: '1',
+          amount: 3000,
+          participant_ids: ['1', '2', '3'],
+        },
+        {
+          id: 'p2',
+          payer_id: '2',
+          amount: 6000,
+          participant_ids: ['1', '2', '3'],
+        },
       ];
 
       const transactions = calculateSettlement(payments, members);
