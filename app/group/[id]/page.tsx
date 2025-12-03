@@ -3,11 +3,17 @@
 import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@/lib/supabase/client';
-
-type Profile = {
-  id: string;
-  name: string;
-};
+import {
+  getGroupMembers,
+  getGroupPayments,
+  type Profile,
+  type PaymentWithDetails,
+} from '@/app/actions/payments';
+import { PaymentForm } from './components/PaymentForm';
+import { PaymentList } from './components/PaymentList';
+import { SettlementDisplay } from './components/SettlementDisplay';
+import { InviteLinkButton } from './components/InviteLinkButton';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function GroupPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -17,7 +23,12 @@ export default function GroupPage({ params }: { params: { id: string } }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [nameInput, setNameInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [members, setMembers] = useState<Profile[]>([]);
+  const [payments, setPayments] = useState<PaymentWithDetails[]>([]);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(false);
 
+  // Load profile from localStorage
   useEffect(() => {
     const loadProfileForGroup = () => {
       const localProfile = localStorage.getItem(storageKey);
@@ -28,6 +39,29 @@ export default function GroupPage({ params }: { params: { id: string } }) {
     };
     loadProfileForGroup();
   }, [groupId, storageKey]);
+
+  // Fetch group members and payments when profile is loaded
+  useEffect(() => {
+    if (profile) {
+      loadGroupData();
+    }
+  }, [profile, groupId]);
+
+  const loadGroupData = async () => {
+    setIsLoadingData(true);
+    try {
+      const [fetchedMembers, fetchedPayments] = await Promise.all([
+        getGroupMembers(groupId),
+        getGroupPayments(groupId),
+      ]);
+      setMembers(fetchedMembers);
+      setPayments(fetchedPayments);
+    } catch (error) {
+      console.error('Error loading group data:', error);
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
 
   const handleJoinGroup = async () => {
     if (!nameInput.trim()) {
@@ -64,6 +98,13 @@ export default function GroupPage({ params }: { params: { id: string } }) {
     // 3. Save profile to localStorage for this specific group and update state
     localStorage.setItem(storageKey, JSON.stringify(newProfile));
     setProfile(newProfile);
+  };
+
+  const handlePaymentSuccess = async () => {
+    // Refresh payments and members after successful payment creation
+    await loadGroupData();
+    // Hide the payment form
+    setShowPaymentForm(false);
   };
 
   if (isLoading) {
@@ -106,17 +147,69 @@ export default function GroupPage({ params }: { params: { id: string } }) {
 
   // If profile is set for this group, show the main content
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-4">
-        Group: <span className="font-mono text-lg">{groupId}</span>
-      </h1>
-      <p className="text-xl">
-        Welcome, <span className="font-bold">{profile.name}</span>!
-      </p>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            Group Expenses
+          </h1>
+          <p className="text-gray-600 mb-4">
+            Welcome, <span className="font-bold">{profile.name}</span>!
+          </p>
 
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold">Next Step:</h2>
-        <p>Implement the payment form and list.</p>
+          {/* Invite Link */}
+          <InviteLinkButton groupId={groupId} />
+        </div>
+
+        {/* Add Payment Button/Form */}
+        <div>
+          <button
+            onClick={() => setShowPaymentForm(!showPaymentForm)}
+            className="w-full md:w-auto px-6 py-3 font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition flex items-center justify-center gap-2"
+          >
+            {showPaymentForm ? (
+              <>
+                <ChevronUp className="w-5 h-5" />
+                Hide Payment Form
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-5 h-5" />
+                Add New Payment
+              </>
+            )}
+          </button>
+
+          {showPaymentForm && (
+            <div className="mt-4">
+              {isLoadingData ? (
+                <div className="bg-white p-8 rounded-lg shadow-md text-center">
+                  <p className="text-gray-600">Loading members...</p>
+                </div>
+              ) : (
+                <PaymentForm
+                  groupId={groupId}
+                  currentUserId={profile.id}
+                  members={members}
+                  onSuccess={handlePaymentSuccess}
+                />
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Payment List */}
+        {isLoadingData ? (
+          <div className="bg-white p-8 rounded-lg shadow-md text-center">
+            <p className="text-gray-600">Loading payments...</p>
+          </div>
+        ) : (
+          <PaymentList payments={payments} />
+        )}
+
+        {/* Settlement Display */}
+        <SettlementDisplay groupId={groupId} />
       </div>
     </div>
   );
