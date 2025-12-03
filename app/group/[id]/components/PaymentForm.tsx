@@ -84,12 +84,18 @@ export function PaymentForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-md">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6 bg-white p-6 rounded-lg shadow-md"
+    >
       <h2 className="text-2xl font-bold text-gray-900">Add Payment</h2>
 
       {/* Description Input */}
       <div className="space-y-2">
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="description"
+          className="block text-sm font-medium text-gray-700"
+        >
           Description (optional)
         </label>
         <input
@@ -105,7 +111,10 @@ export function PaymentForm({
 
       {/* Amount Input */}
       <div className="space-y-2">
-        <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="amount"
+          className="block text-sm font-medium text-gray-700"
+        >
           Amount *
         </label>
         <input

@@ -46,7 +46,10 @@ export async function createPayment(
   try {
     // Validate inputs
     if (participantIds.length === 0) {
-      return { success: false, error: 'Please select at least one participant' };
+      return {
+        success: false,
+        error: 'Please select at least one participant',
+      };
     }
 
     if (!isValidAmount(amount)) {
@@ -79,7 +82,10 @@ export async function createPayment(
         payerId,
         error: paymentError.message,
       });
-      return { success: false, error: 'Failed to create payment. Please try again.' };
+      return {
+        success: false,
+        error: 'Failed to create payment. Please try again.',
+      };
     }
 
     // Insert participants
@@ -99,7 +105,10 @@ export async function createPayment(
         paymentId: payment.id,
         error: participantsError.message,
       });
-      return { success: false, error: 'Failed to add participants. Please try again.' };
+      return {
+        success: false,
+        error: 'Failed to add participants. Please try again.',
+      };
     }
 
     return { success: true };
@@ -115,7 +124,9 @@ export async function createPayment(
  * @param groupId - The ID of the group
  * @returns Array of payments with payer name and participant names
  */
-export async function getGroupPayments(groupId: string): Promise<PaymentWithDetails[]> {
+export async function getGroupPayments(
+  groupId: string,
+): Promise<PaymentWithDetails[]> {
   try {
     const supabase = await createClient();
 
@@ -147,16 +158,20 @@ export async function getGroupPayments(groupId: string): Promise<PaymentWithDeta
     }
 
     // Transform the data to match PaymentWithDetails interface
-    const paymentsWithDetails: PaymentWithDetails[] = payments.map((payment) => ({
-      id: payment.id,
-      group_id: payment.group_id,
-      payer_id: payment.payer_id,
-      amount: payment.amount,
-      description: payment.description,
-      created_at: payment.created_at,
-      payer_name: payment.payer?.name || 'Unknown',
-      participant_names: payment.participants?.map((p: any) => p.profile?.name || 'Unknown') || [],
-    }));
+    const paymentsWithDetails: PaymentWithDetails[] = payments.map(
+      (payment) => ({
+        id: payment.id,
+        group_id: payment.group_id,
+        payer_id: payment.payer_id,
+        amount: payment.amount,
+        description: payment.description,
+        created_at: payment.created_at,
+        payer_name: payment.payer?.name || 'Unknown',
+        participant_names:
+          payment.participants?.map((p: any) => p.profile?.name || 'Unknown') ||
+          [],
+      }),
+    );
 
     return paymentsWithDetails;
   } catch (error) {
