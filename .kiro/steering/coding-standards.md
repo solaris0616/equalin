@@ -282,25 +282,50 @@ const total = a + b;
 
 ## Git Commit Messages
 
-### Format
-```
-<type>: <short description>
+### Conventional Commits Format
 
-<optional longer description>
+Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
 ```
 
 ### Types
-- `feat`: New feature
-- `fix`: Bug fix
-- `refactor`: Code refactoring
-- `style`: Formatting changes
-- `docs`: Documentation updates
-- `test`: Adding or updating tests
-- `chore`: Maintenance tasks
+- `feat`: A new feature
+- `fix`: A bug fix
+- `docs`: Documentation only changes
+- `style`: Changes that do not affect the meaning of the code (white-space, formatting, etc)
+- `refactor`: A code change that neither fixes a bug nor adds a feature
+- `perf`: A code change that improves performance
+- `test`: Adding missing tests or correcting existing tests
+- `build`: Changes that affect the build system or external dependencies
+- `ci`: Changes to CI configuration files and scripts
+- `chore`: Other changes that don't modify src or test files
+- `revert`: Reverts a previous commit
+
+### Scope (Optional)
+The scope provides additional contextual information:
+- `payments`: Payment-related features
+- `settlement`: Settlement calculation
+- `ui`: User interface components
+- `db`: Database changes
+- `api`: API/Server Actions
+
+### Breaking Changes
+Add `!` after type/scope or add `BREAKING CHANGE:` in footer:
+```
+feat!: change payment amount storage to cents
+
+BREAKING CHANGE: Payment amounts are now stored as integers (cents) instead of decimals
+```
 
 ### Examples
 ```
-feat: add payment form with participant selection
+feat(payments): add payment form with participant selection
 
 Implements payment creation with description, amount input,
 and checkbox list for selecting participants.
@@ -309,8 +334,35 @@ Closes #123
 ```
 
 ```
-fix: prevent negative amounts in payment form
+fix(payments): prevent negative amounts in payment form
 
 Added validation to reject non-positive amounts and display
 error message to user.
 ```
+
+```
+docs: add Supabase guidelines to steering files
+```
+
+```
+refactor(settlement): optimize transaction minimization algorithm
+
+Improved the greedy algorithm to reduce the number of
+settlement transactions by 30% on average.
+```
+
+```
+test(payments): add property-based tests for amount conversion
+```
+
+```
+chore: update dependencies to latest versions
+```
+
+### Rules
+- Use lowercase for type and description
+- Use imperative mood ("add" not "added" or "adds")
+- Don't capitalize first letter of description
+- No period at the end of description
+- Body and footer are optional but recommended for complex changes
+- Reference issues/PRs in footer when applicable
