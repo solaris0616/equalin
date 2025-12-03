@@ -38,7 +38,7 @@
   - **Property 5: Participant persistence**
   - **Validates: Requirements 5.3**
 
-- [ ] 4. Create PaymentForm component
+- [x] 4. Create PaymentForm component
   - Create `app/group/[id]/components/PaymentForm.tsx` file
   - Add form state management for description, amount, and participant selection
   - Implement member list with checkboxes (all pre-selected by default)
