@@ -14,7 +14,9 @@
     ]
   },
   "then": {
-    "type": "runCommand",
-    "command": "bun run format:apply \"$FILE\" && bun run check:apply \"$FILE\""
-  }
+    "type": "askAgent",
+    "prompt": ""
+  },
+  "workspaceFolderName": "equalin",
+  "shortName": "format-check-on-save"
 }

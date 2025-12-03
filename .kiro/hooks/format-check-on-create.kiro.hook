@@ -1,0 +1,22 @@
+{
+  "enabled": true,
+  "name": "Format and Check on Create",
+  "description": "Automatically runs bun run format:apply and bun run check:apply on the current file when it is created, then reviews the changes and applies them as needed.",
+  "version": "1",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.json"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": ""
+  },
+  "workspaceFolderName": "equalin",
+  "shortName": "format-check-on-create"
+}
