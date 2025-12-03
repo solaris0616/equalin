@@ -88,7 +88,7 @@
   - **Property 11: Settlement debt resolution**
   - **Validates: Requirements 7.4**
 
-- [ ] 7. Create Server Action for settlement calculation
+- [x] 7. Create Server Action for settlement calculation
   - Add `calculateSettlement()` action to `app/actions/payments.ts`
   - Fetch all payments and participants for the group
   - Use settlement utility functions to compute transactions
