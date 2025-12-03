@@ -104,7 +104,7 @@
   - Show "All settled!" message when no transactions needed
   - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 9. Create InviteLinkButton component
+- [x] 9. Create InviteLinkButton component
   - Create `app/group/[id]/components/InviteLinkButton.tsx` file
   - Display current group URL
   - Add copy button that uses Clipboard API
