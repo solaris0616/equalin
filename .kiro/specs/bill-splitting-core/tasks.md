@@ -95,7 +95,7 @@
   - Return list of settlement transactions
   - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 8. Create SettlementDisplay component
+- [x] 8. Create SettlementDisplay component
   - Create `app/group/[id]/components/SettlementDisplay.tsx` file
   - Add button to trigger settlement calculation
   - Display loading state during calculation
