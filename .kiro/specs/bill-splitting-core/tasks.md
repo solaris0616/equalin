@@ -52,7 +52,7 @@
   - **Property 6: Payer participation flexibility**
   - **Validates: Requirements 5.5**
 
-- [ ] 5. Create PaymentList component
+- [x] 5. Create PaymentList component
   - Create `app/group/[id]/components/PaymentList.tsx` file
   - Display list of payments with payer name, description, amount, and participants
   - Format amounts using `integerToAmount()` utility
@@ -72,7 +72,7 @@
   - **Property 9: Payment chronological ordering**
   - **Validates: Requirements 6.4**
 
-- [ ] 6. Implement settlement calculation logic
+- [x] 6. Implement settlement calculation logic
   - Create `lib/utils/settlement.ts` file
   - Implement function to calculate each member's total paid
   - Implement function to calculate each member's total owed (share of expenses)
