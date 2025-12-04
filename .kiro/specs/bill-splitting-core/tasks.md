@@ -240,7 +240,7 @@
   - **Property 20: Language preference persistence round-trip**
   - **Validates: Requirements 11.4, 11.5**
 
-- [ ] 21. Create LanguageSelector component
+- [x] 21. Create LanguageSelector component
   - Create `components/LanguageSelector.tsx` file
   - Display dropdown/select with all supported languages
   - Show language names in their native script (English, 日本語, 中文, 한국어)
@@ -248,12 +248,12 @@
   - Call `setLanguage()` from context on selection
   - _Requirements: 11.1, 11.3_
 
-- [ ] 22. Integrate LanguageProvider into app layout
+- [x] 22. Integrate LanguageProvider into app layout
   - Update `app/layout.tsx` to wrap app with `LanguageProvider`
   - Ensure provider is client component ('use client')
   - _Requirements: 11.2_
 
-- [ ] 23. Update all UI components to use translations
+- [x] 23. Update all UI components to use translations
   - Update PaymentForm component to use translation function
   - Update PaymentList component to use translation function
   - Update SettlementDisplay component to use translation function
@@ -267,7 +267,7 @@
   - **Property 22: User content language independence**
   - **Validates: Requirements 11.8**
 
-- [ ] 24. Add LanguageSelector to UI
+- [x] 24. Add LanguageSelector to UI
   - Add LanguageSelector component to app header or navigation
   - Position it prominently for easy access
   - Style consistently with app theme
