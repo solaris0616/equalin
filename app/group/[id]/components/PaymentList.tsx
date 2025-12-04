@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import type { PaymentWithDetails } from '@/types/payment';
 import { deletePayment } from '@/app/actions/payments';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface PaymentListProps {
   payments: PaymentWithDetails[];
@@ -29,13 +30,12 @@ function formatTimestamp(timestamp: string): string {
 }
 
 export function PaymentList({ payments, groupId, onPaymentDeleted }: PaymentListProps) {
+  const { t } = useLanguage();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleDelete = async (paymentId: string) => {
     // Show confirmation dialog
-    const confirmed = window.confirm(
-      'Are you sure you want to delete this payment? This action cannot be undone.'
-    );
+    const confirmed = window.confirm(t('payment.deleteConfirm'));
 
     if (!confirmed) {
       return;
@@ -52,11 +52,11 @@ export function PaymentList({ payments, groupId, onPaymentDeleted }: PaymentList
         onPaymentDeleted();
       } else {
         // Show error message
-        alert(result.error || 'Failed to delete payment');
+        alert(result.error || t('errors.deletePaymentFailed'));
       }
     } catch (error) {
       console.error('Error deleting payment:', error);
-      alert('An unexpected error occurred');
+      alert(t('errors.unexpectedError'));
     } finally {
       setDeletingId(null);
     }
@@ -67,7 +67,7 @@ export function PaymentList({ payments, groupId, onPaymentDeleted }: PaymentList
     return (
       <div className="bg-white p-8 rounded-lg shadow-md text-center">
         <p className="text-gray-500 text-lg">
-          No payments yet. Add your first payment to get started!
+          {t('payment.noPayments')}
         </p>
       </div>
     );
@@ -75,7 +75,7 @@ export function PaymentList({ payments, groupId, onPaymentDeleted }: PaymentList
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-gray-900">Payment History</h2>
+      <h2 className="text-2xl font-bold text-gray-900">{t('payment.history')}</h2>
       <div className="space-y-3">
         {payments.map((payment) => (
           <div
@@ -85,7 +85,7 @@ export function PaymentList({ payments, groupId, onPaymentDeleted }: PaymentList
             {/* Header: Payer, Amount, and Delete Button */}
             <div className="flex justify-between items-start mb-3">
               <div className="flex-1">
-                <p className="text-sm text-gray-500">Paid by</p>
+                <p className="text-sm text-gray-500">{t('payment.paidBy')}</p>
                 <p className="text-lg font-bold text-gray-900">
                   {payment.payer_name}
                 </p>
@@ -121,7 +121,7 @@ export function PaymentList({ payments, groupId, onPaymentDeleted }: PaymentList
 
             {/* Participants */}
             <div className="mb-3">
-              <p className="text-sm text-gray-500 mb-1">Participants</p>
+              <p className="text-sm text-gray-500 mb-1">{t('payment.participants')}</p>
               <div className="flex flex-wrap gap-2">
                 {payment.participant_names.map((name, index) => (
                   <span

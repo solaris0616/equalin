@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { createPayment } from '@/app/actions/payments';
 import type { Profile } from '@/types/payment';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface PaymentFormProps {
   groupId: string;
@@ -18,6 +19,7 @@ export function PaymentForm({
   members,
   onSuccess,
 }: PaymentFormProps) {
+  const { t } = useLanguage();
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(
@@ -45,13 +47,13 @@ export function PaymentForm({
     // Parse amount as integer
     const amountValue = Number.parseInt(amount, 10);
     if (Number.isNaN(amountValue) || amountValue < 1) {
-      setError('Please enter a valid amount (minimum 1)');
+      setError(t('errors.validAmount'));
       return;
     }
 
     // Validate participants
     if (selectedParticipants.size === 0) {
-      setError('Please select at least one participant');
+      setError(t('errors.selectParticipants'));
       return;
     }
 
@@ -74,11 +76,11 @@ export function PaymentForm({
         setError(null);
         onSuccess();
       } else {
-        setError(result.error || 'Failed to create payment');
+        setError(result.error || t('errors.createPaymentFailed'));
       }
     } catch (err) {
       console.error('Error submitting payment:', err);
-      setError('An unexpected error occurred');
+      setError(t('errors.unexpectedError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -89,7 +91,7 @@ export function PaymentForm({
       onSubmit={handleSubmit}
       className="space-y-6 bg-white p-6 rounded-lg shadow-md"
     >
-      <h2 className="text-2xl font-bold text-gray-900">Add Payment</h2>
+      <h2 className="text-2xl font-bold text-gray-900">{t('payment.title')}</h2>
 
       {/* Description Input */}
       <div className="space-y-2">
@@ -97,14 +99,14 @@ export function PaymentForm({
           htmlFor="description"
           className="block text-sm font-medium text-gray-700"
         >
-          Description (optional)
+          {t('payment.description')}
         </label>
         <input
           id="description"
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="e.g., Dinner at restaurant"
+          placeholder={t('payment.descriptionPlaceholder')}
           className="w-full px-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           disabled={isSubmitting}
         />
@@ -116,7 +118,7 @@ export function PaymentForm({
           htmlFor="amount"
           className="block text-sm font-medium text-gray-700"
         >
-          Amount *
+          {t('payment.amountRequired')}
         </label>
         <input
           id="amount"
@@ -126,7 +128,7 @@ export function PaymentForm({
           max="999999999"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder="0"
+          placeholder={t('payment.amountPlaceholder')}
           className="w-full px-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           required
           disabled={isSubmitting}
@@ -136,7 +138,7 @@ export function PaymentForm({
       {/* Participant Selection */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">
-          Participants *
+          {t('payment.participantsRequired')}
         </label>
         <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-md p-3 bg-gray-50">
           {members.map((member) => (
@@ -159,7 +161,7 @@ export function PaymentForm({
           ))}
         </div>
         <p className="text-xs text-gray-500">
-          {selectedParticipants.size} of {members.length} selected
+          {t('payment.participantsSelected', { count: selectedParticipants.size, total: members.length })}
         </p>
       </div>
 
@@ -181,7 +183,7 @@ export function PaymentForm({
             : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-300',
         )}
       >
-        {isSubmitting ? 'Creating Payment...' : 'Create Payment'}
+        {isSubmitting ? t('payment.creating') : t('payment.create')}
       </button>
     </form>
   );

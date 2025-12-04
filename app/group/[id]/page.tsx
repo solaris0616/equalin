@@ -10,8 +10,11 @@ import { PaymentList } from './components/PaymentList';
 import { SettlementDisplay } from './components/SettlementDisplay';
 import { InviteLinkButton } from './components/InviteLinkButton';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 export default function GroupPage({ params }: { params: Promise<{ id: string }> }) {
+  const { t } = useLanguage();
   const supabase = createClient();
   const { id: groupId } = use(params);
   const storageKey = `equalin_profile_${groupId}`; // Key is now group-specific
@@ -64,7 +67,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
 
   const handleJoinGroup = async () => {
     if (!nameInput.trim()) {
-      alert('Please enter your name.');
+      alert(t('errors.enterName'));
       return;
     }
 
@@ -80,7 +83,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
       .insert(newProfile);
     if (profileError) {
       console.error('Error saving profile:', profileError);
-      alert('Could not save your profile. Please try again.');
+      alert(t('errors.saveProfileFailed'));
       return;
     }
 
@@ -90,7 +93,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
       .insert({ group_id: groupId, profile_id: newProfile.id });
     if (memberError) {
       console.error('Error joining group:', memberError);
-      alert('Could not join the group. Please try again.');
+      alert(t('errors.joinGroupFailed'));
       return;
     }
 
@@ -109,7 +112,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        Loading...
+        {t('common.loading')}
       </div>
     );
   }
@@ -119,24 +122,24 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
       <div className="min-h-screen bg-gray-50 flex justify-center items-center">
         <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-lg shadow-md">
           <h2 className="text-2xl font-bold text-center text-gray-900">
-            Join this Group
+            {t('group.joinTitle')}
           </h2>
           <p className="text-center text-gray-600">
-            Set your name for this group.
+            {t('group.joinDescription')}
           </p>
           <div className="space-y-4">
             <input
               type="text"
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
-              placeholder="Your Name"
+              placeholder={t('group.namePlaceholder')}
               className="w-full px-4 py-2 text-gray-900 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
               onClick={handleJoinGroup}
               className="w-full px-4 py-2 font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Join
+              {t('group.joinButton')}
             </button>
           </div>
         </div>
@@ -150,12 +153,17 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-            Group Expenses
-          </h1>
-          <p className="text-gray-600 mb-4">
-            Welcome, <span className="font-bold">{profile.name}</span>!
-          </p>
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex-1">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                {t('group.title')}
+              </h1>
+              <p className="text-gray-600">
+                {t('group.welcome', { name: profile.name })}
+              </p>
+            </div>
+            <LanguageSelector className="px-3 py-2 text-sm bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
 
           {/* Invite Link */}
           <InviteLinkButton groupId={groupId} />
@@ -170,12 +178,12 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
             {showPaymentForm ? (
               <>
                 <ChevronUp className="w-5 h-5" />
-                Hide Payment Form
+                {t('payment.hideForm')}
               </>
             ) : (
               <>
                 <ChevronDown className="w-5 h-5" />
-                Add New Payment
+                {t('payment.addNew')}
               </>
             )}
           </button>
@@ -184,7 +192,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
             <div className="mt-4">
               {isLoadingData ? (
                 <div className="bg-white p-8 rounded-lg shadow-md text-center">
-                  <p className="text-gray-600">Loading members...</p>
+                  <p className="text-gray-600">{t('group.loadingMembers')}</p>
                 </div>
               ) : (
                 <PaymentForm
@@ -201,7 +209,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
         {/* Payment List */}
         {isLoadingData ? (
           <div className="bg-white p-8 rounded-lg shadow-md text-center">
-            <p className="text-gray-600">Loading payments...</p>
+            <p className="text-gray-600">{t('group.loadingPayments')}</p>
           </div>
         ) : (
           <PaymentList
