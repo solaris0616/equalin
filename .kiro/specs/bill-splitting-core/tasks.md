@@ -173,7 +173,7 @@
   - **Property 2: Profile participant cascade deletion**
   - **Validates: Requirements 3.3**
 
-- [ ] 16. Implement payment deletion functionality
+- [x] 16. Implement payment deletion functionality
   - Add `deletePayment()` server action to `app/actions/payments.ts`
   - Validate payment belongs to specified group before deletion
   - Handle database errors with user-friendly messages
@@ -188,7 +188,7 @@
   - **Property 17: Payment deletion cascades to participants**
   - **Validates: Requirements 10.4**
 
-- [ ] 17. Add delete button to PaymentList component
+- [x] 17. Add delete button to PaymentList component
   - Update `PaymentList.tsx` to add delete button for each payment
   - Implement confirmation dialog before deletion (use browser confirm or custom modal)
   - Call `deletePayment()` action on confirmation
@@ -197,7 +197,7 @@
   - Display error message if deletion fails
   - _Requirements: 10.1, 10.2, 10.5_
 
-- [ ] 18. Update settlement to reflect deletions
+- [x] 18. Update settlement to reflect deletions
   - Verify settlement calculation automatically uses current payments
   - Test that deleting a payment updates settlement results
   - _Requirements: 10.6_
