@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { calculateSettlement } from '@/app/actions/payments';
 import type { SettlementTransaction } from '@/types/payment';
 
 interface SettlementDisplayProps {
   groupId: string;
+  refreshTrigger?: number; // Optional prop to trigger recalculation
 }
 
-export function SettlementDisplay({ groupId }: SettlementDisplayProps) {
+export function SettlementDisplay({ groupId, refreshTrigger }: SettlementDisplayProps) {
   const [transactions, setTransactions] = useState<SettlementTransaction[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
   const [hasCalculated, setHasCalculated] = useState(false);
@@ -29,6 +30,13 @@ export function SettlementDisplay({ groupId }: SettlementDisplayProps) {
       setIsCalculating(false);
     }
   };
+
+  // Auto-recalculate when refreshTrigger changes (e.g., after payment deletion)
+  useEffect(() => {
+    if (hasCalculated && refreshTrigger !== undefined) {
+      handleCalculateSettlement();
+    }
+  }, [refreshTrigger]);
 
   return (
     <div className="space-y-4">

@@ -23,6 +23,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
   const [payments, setPayments] = useState<PaymentWithDetails[]>([]);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [settlementRefreshTrigger, setSettlementRefreshTrigger] = useState(0);
 
   // Load profile from localStorage
   useEffect(() => {
@@ -52,6 +53,8 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
       ]);
       setMembers(fetchedMembers);
       setPayments(fetchedPayments);
+      // Trigger settlement recalculation
+      setSettlementRefreshTrigger(prev => prev + 1);
     } catch (error) {
       console.error('Error loading group data:', error);
     } finally {
@@ -201,11 +204,15 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
             <p className="text-gray-600">Loading payments...</p>
           </div>
         ) : (
-          <PaymentList payments={payments} />
+          <PaymentList
+            payments={payments}
+            groupId={groupId}
+            onPaymentDeleted={loadGroupData}
+          />
         )}
 
         {/* Settlement Display */}
-        <SettlementDisplay groupId={groupId} />
+        <SettlementDisplay groupId={groupId} refreshTrigger={settlementRefreshTrigger} />
       </div>
     </div>
   );

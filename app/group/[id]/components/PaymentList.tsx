@@ -1,9 +1,14 @@
 'use client';
 
+import { useState } from 'react';
+import { Trash2 } from 'lucide-react';
 import type { PaymentWithDetails } from '@/types/payment';
+import { deletePayment } from '@/app/actions/payments';
 
 interface PaymentListProps {
   payments: PaymentWithDetails[];
+  groupId: string;
+  onPaymentDeleted: () => void;
 }
 
 /**
@@ -23,7 +28,40 @@ function formatTimestamp(timestamp: string): string {
   });
 }
 
-export function PaymentList({ payments }: PaymentListProps) {
+export function PaymentList({ payments, groupId, onPaymentDeleted }: PaymentListProps) {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (paymentId: string) => {
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this payment? This action cannot be undone.'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    // Set loading state
+    setDeletingId(paymentId);
+
+    try {
+      const result = await deletePayment(paymentId, groupId);
+
+      if (result.success) {
+        // Refresh payment list
+        onPaymentDeleted();
+      } else {
+        // Show error message
+        alert(result.error || 'Failed to delete payment');
+      }
+    } catch (error) {
+      console.error('Error deleting payment:', error);
+      alert('An unexpected error occurred');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   // Show empty state if no payments exist
   if (payments.length === 0) {
     return (
@@ -44,7 +82,7 @@ export function PaymentList({ payments }: PaymentListProps) {
             key={payment.id}
             className="bg-white p-5 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition"
           >
-            {/* Header: Payer and Amount */}
+            {/* Header: Payer, Amount, and Delete Button */}
             <div className="flex justify-between items-start mb-3">
               <div className="flex-1">
                 <p className="text-sm text-gray-500">Paid by</p>
@@ -52,10 +90,25 @@ export function PaymentList({ payments }: PaymentListProps) {
                   {payment.payer_name}
                 </p>
               </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-blue-600">
-                  ¥{payment.amount.toLocaleString()}
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-blue-600">
+                    ¥{payment.amount.toLocaleString()}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleDelete(payment.id)}
+                  disabled={deletingId === payment.id}
+                  aria-label="Delete payment"
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Delete payment"
+                >
+                  {deletingId === payment.id ? (
+                    <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Trash2 className="w-5 h-5" />
+                  )}
+                </button>
               </div>
             </div>
 
