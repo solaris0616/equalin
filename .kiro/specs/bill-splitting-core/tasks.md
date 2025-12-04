@@ -173,5 +173,128 @@
   - **Property 2: Profile participant cascade deletion**
   - **Validates: Requirements 3.3**
 
-- [ ] 16. Final Checkpoint - Ensure all tests pass
+- [ ] 16. Implement payment deletion functionality
+  - Add `deletePayment()` server action to `app/actions/payments.ts`
+  - Validate payment belongs to specified group before deletion
+  - Handle database errors with user-friendly messages
+  - Return success/error response
+  - _Requirements: 10.3_
+
+- [ ]* 16.1 Write property test for payment deletion removes record
+  - **Property 16: Payment deletion removes record**
+  - **Validates: Requirements 10.3**
+
+- [ ]* 16.2 Write property test for payment deletion cascades to participants
+  - **Property 17: Payment deletion cascades to participants**
+  - **Validates: Requirements 10.4**
+
+- [ ] 17. Add delete button to PaymentList component
+  - Update `PaymentList.tsx` to add delete button for each payment
+  - Implement confirmation dialog before deletion (use browser confirm or custom modal)
+  - Call `deletePayment()` action on confirmation
+  - Show loading state during deletion
+  - Refresh payment list after successful deletion
+  - Display error message if deletion fails
+  - _Requirements: 10.1, 10.2, 10.5_
+
+- [ ] 18. Update settlement to reflect deletions
+  - Verify settlement calculation automatically uses current payments
+  - Test that deleting a payment updates settlement results
+  - _Requirements: 10.6_
+
+- [ ]* 18.1 Write property test for settlement recalculation after deletion
+  - **Property 18: Settlement recalculation after deletion**
+  - **Validates: Requirements 10.6**
+
+- [ ] 19. Create translation infrastructure
+  - Create `lib/i18n/translations/` directory
+  - Create translation files: `en.json`, `ja.json`, `zh.json`, `ko.json`
+  - Define translation structure with nested keys (common, payment, settlement, group, errors)
+  - Populate English translations for all UI text
+  - Populate Japanese translations for all UI text
+  - Populate Chinese (Simplified) translations for all UI text
+  - Populate Korean translations for all UI text
+  - _Requirements: 11.3, 11.7_
+
+- [ ]* 19.1 Write property test for translation completeness
+  - **Property 21: Translation completeness**
+  - **Validates: Requirements 11.7**
+
+- [ ] 20. Create language context and provider
+  - Create `lib/i18n/LanguageContext.tsx` file
+  - Define `Language` type ('en' | 'ja' | 'zh' | 'ko')
+  - Implement `LanguageProvider` component with React Context
+  - Add state management for current language
+  - Implement translation lookup function with nested key support
+  - Add fallback to English for missing translations
+  - Load language preference from localStorage on mount
+  - Save language preference to localStorage on change
+  - Default to English when no preference exists
+  - _Requirements: 11.2, 11.4, 11.5, 11.6_
+
+- [ ]* 20.1 Write property test for language selection updates translations
+  - **Property 19: Language selection updates translations**
+  - **Validates: Requirements 11.2**
+
+- [ ]* 20.2 Write property test for language preference persistence round-trip
+  - **Property 20: Language preference persistence round-trip**
+  - **Validates: Requirements 11.4, 11.5**
+
+- [ ] 21. Create LanguageSelector component
+  - Create `components/LanguageSelector.tsx` file
+  - Display dropdown/select with all supported languages
+  - Show language names in their native script (English, 日本語, 中文, 한국어)
+  - Add flag emojis for visual identification
+  - Call `setLanguage()` from context on selection
+  - _Requirements: 11.1, 11.3_
+
+- [ ] 22. Integrate LanguageProvider into app layout
+  - Update `app/layout.tsx` to wrap app with `LanguageProvider`
+  - Ensure provider is client component ('use client')
+  - _Requirements: 11.2_
+
+- [ ] 23. Update all UI components to use translations
+  - Update PaymentForm component to use translation function
+  - Update PaymentList component to use translation function
+  - Update SettlementDisplay component to use translation function
+  - Update InviteLinkButton component to use translation function
+  - Update group page to use translation function
+  - Replace all hardcoded text with translation keys
+  - Ensure user-generated content (descriptions, names) remains unchanged
+  - _Requirements: 11.2, 11.7, 11.8_
+
+- [ ]* 23.1 Write property test for user content language independence
+  - **Property 22: User content language independence**
+  - **Validates: Requirements 11.8**
+
+- [ ] 24. Add LanguageSelector to UI
+  - Add LanguageSelector component to app header or navigation
+  - Position it prominently for easy access
+  - Style consistently with app theme
+  - _Requirements: 11.1_
+
+- [ ] 25. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ]* 26. Write unit tests for deletion functionality
+  - Test delete confirmation dialog appears
+  - Test payment removed from list after deletion
+  - Test error handling for failed deletion
+  - _Requirements: 10.1, 10.2, 10.5_
+
+- [ ]* 27. Write unit tests for translation functions
+  - Test translation lookup with valid key returns correct text
+  - Test translation lookup with missing key falls back to English
+  - Test nested key support (e.g., "payment.addPayment")
+  - Test default language is English when no preference exists
+  - Test each supported language has required keys
+  - _Requirements: 11.2, 11.6, 11.7_
+
+- [ ]* 28. Write integration tests for new features
+  - Test delete payment → verify removed from list → verify settlement recalculated
+  - Test switch language → verify UI text updates → verify user content unchanged
+  - Test select language → reload page → verify language persists
+  - _Requirements: 10.3, 10.5, 10.6, 11.2, 11.4, 11.5, 11.8_
+
+- [ ] 29. Final Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
