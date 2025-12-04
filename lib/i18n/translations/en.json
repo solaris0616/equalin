@@ -1,0 +1,74 @@
+{
+  "common": {
+    "add": "Add",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "loading": "Loading...",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "close": "Close",
+    "open": "Open"
+  },
+  "home": {
+    "title": "Equalin",
+    "subtitle": "The simplest way to split expenses.",
+    "createGroup": "Create a New Group"
+  },
+  "group": {
+    "title": "Group Expenses",
+    "welcome": "Welcome, {name}!",
+    "joinTitle": "Join this Group",
+    "joinDescription": "Set your name for this group.",
+    "joinButton": "Join",
+    "inviteLink": "Invite Link",
+    "namePlaceholder": "Your Name",
+    "loadingMembers": "Loading members...",
+    "loadingPayments": "Loading payments..."
+  },
+  "payment": {
+    "title": "Add Payment",
+    "addNew": "Add New Payment",
+    "hideForm": "Hide Payment Form",
+    "description": "Description (optional)",
+    "descriptionPlaceholder": "e.g., Dinner at restaurant",
+    "amount": "Amount",
+    "amountRequired": "Amount *",
+    "amountPlaceholder": "0",
+    "participants": "Participants",
+    "participantsRequired": "Participants *",
+    "participantsSelected": "{count} of {total} selected",
+    "paidBy": "Paid by",
+    "creating": "Creating Payment...",
+    "create": "Create Payment",
+    "history": "Payment History",
+    "noPayments": "No payments yet. Add your first payment to get started!",
+    "deleteConfirm": "Are you sure you want to delete this payment? This action cannot be undone."
+  },
+  "settlement": {
+    "title": "Settlement",
+    "calculate": "Calculate Settlement",
+    "calculating": "Calculating...",
+    "calculatingMessage": "Calculating settlement...",
+    "allSettled": "All settled!",
+    "noPaymentsNeeded": "No payments needed.",
+    "transactionsNeeded": "{count} transaction needed to settle all debts:|{count} transactions needed to settle all debts:"
+  },
+  "errors": {
+    "enterName": "Please enter your name.",
+    "saveProfileFailed": "Could not save your profile. Please try again.",
+    "joinGroupFailed": "Could not join the group. Please try again.",
+    "validAmount": "Please enter a valid amount (minimum 1)",
+    "selectParticipants": "Please select at least one participant",
+    "createPaymentFailed": "Failed to create payment",
+    "unexpectedError": "An unexpected error occurred",
+    "deletePaymentFailed": "Failed to delete payment",
+    "calculateSettlementFailed": "Failed to calculate settlement. Please try again.",
+    "copyLinkFailed": "Failed to copy link. Please try again.",
+    "createGroupFailed": "Failed to create a group. Please try again."
+  },
+  "success": {
+    "linkCopied": "Link copied to clipboard!"
+  }
+}

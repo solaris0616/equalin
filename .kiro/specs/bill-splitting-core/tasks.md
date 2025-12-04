@@ -206,7 +206,7 @@
   - **Property 18: Settlement recalculation after deletion**
   - **Validates: Requirements 10.6**
 
-- [ ] 19. Create translation infrastructure
+- [x] 19. Create translation infrastructure
   - Create `lib/i18n/translations/` directory
   - Create translation files: `en.json`, `ja.json`, `zh.json`, `ko.json`
   - Define translation structure with nested keys (common, payment, settlement, group, errors)
