@@ -1,7 +1,6 @@
 'use client';
 
 import type { PaymentWithDetails } from '@/types/payment';
-import { integerToAmount } from '@/lib/utils/currency';
 
 interface PaymentListProps {
   payments: PaymentWithDetails[];
@@ -55,7 +54,7 @@ export function PaymentList({ payments }: PaymentListProps) {
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-blue-600">
-                  ${integerToAmount(payment.amount)}
+                  ¥{payment.amount.toLocaleString()}
                 </p>
               </div>
             </div>

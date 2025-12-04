@@ -42,10 +42,10 @@ export function PaymentForm({
     e.preventDefault();
     setError(null);
 
-    // Parse amount
-    const amountValue = Number.parseFloat(amount);
-    if (Number.isNaN(amountValue)) {
-      setError('Please enter a valid amount');
+    // Parse amount as integer
+    const amountValue = Number.parseInt(amount, 10);
+    if (Number.isNaN(amountValue) || amountValue < 1) {
+      setError('Please enter a valid amount (minimum 1)');
       return;
     }
 
@@ -121,12 +121,12 @@ export function PaymentForm({
         <input
           id="amount"
           type="number"
-          step="0.01"
-          min="0.01"
-          max="999999999.99"
+          step="1"
+          min="1"
+          max="999999999"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder="0.00"
+          placeholder="0"
           className="w-full px-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           required
           disabled={isSubmitting}

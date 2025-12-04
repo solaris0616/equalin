@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { calculateSettlement } from '@/app/actions/payments';
-import { integerToAmount } from '@/lib/utils/currency';
 import type { SettlementTransaction } from '@/types/payment';
 
 interface SettlementDisplayProps {
@@ -96,7 +95,7 @@ export function SettlementDisplay({ groupId }: SettlementDisplayProps) {
                     </span>
                   </div>
                   <span className="text-xl font-bold text-green-600">
-                    ${integerToAmount(transaction.amount)}
+                    ¥{transaction.amount.toLocaleString()}
                   </span>
                 </div>
               ))}

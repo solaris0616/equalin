@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@/lib/supabase/client';
 import { getGroupMembers, getGroupPayments } from '@/app/actions/payments';
@@ -11,9 +11,9 @@ import { SettlementDisplay } from './components/SettlementDisplay';
 import { InviteLinkButton } from './components/InviteLinkButton';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
-export default function GroupPage({ params }: { params: { id: string } }) {
+export default function GroupPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = createClient();
-  const groupId = params.id;
+  const { id: groupId } = use(params);
   const storageKey = `equalin_profile_${groupId}`; // Key is now group-specific
 
   const [profile, setProfile] = useState<Profile | null>(null);

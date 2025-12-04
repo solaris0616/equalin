@@ -22,7 +22,7 @@ export type { Profile, Payment, PaymentWithDetails, SettlementTransaction };
  *
  * @param groupId - The ID of the group
  * @param payerId - The ID of the user making the payment
- * @param amount - The payment amount in decimal format (e.g., 100.50)
+ * @param amount - The payment amount as integer (e.g., 1000 for 1000 yen)
  * @param description - Optional description of the payment
  * @param participantIds - Array of profile IDs who share this expense
  * @returns Object with success status and optional error message
@@ -43,25 +43,23 @@ export async function createPayment(
       };
     }
 
-    if (!isValidAmount(amount)) {
+    // Validate amount is positive integer
+    if (!Number.isInteger(amount) || amount < 1 || amount > 999999999) {
       return {
         success: false,
-        error: 'Amount must be greater than zero and not exceed 999,999,999.99',
+        error: 'Amount must be a positive integer and not exceed 999,999,999',
       };
     }
 
     const supabase = await createClient();
 
-    // Convert amount to integer cents for storage
-    const amountInCents = amountToInteger(amount);
-
-    // Insert payment
+    // Insert payment (amount is already an integer)
     const { data: payment, error: paymentError } = await supabase
       .from('payments')
       .insert({
         group_id: groupId,
         payer_id: payerId,
-        amount: amountInCents,
+        amount: amount,
         description: description || null,
       })
       .select()
