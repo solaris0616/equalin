@@ -1,12 +1,13 @@
 'use client';
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Check, Copy, Globe, Menu } from 'lucide-react';
+import { Copy, Globe, Menu } from 'lucide-react';
 import { useState } from 'react';
 import { type Language, useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface HeaderMenuProps {
   groupId: string;
+  onShowToast: (message: string, type: 'success' | 'error' | 'info') => void;
   className?: string;
 }
 
@@ -14,11 +15,13 @@ interface HeaderMenuProps {
  * HeaderMenu Component
  * Combines language selection and invite link functionality in a dropdown menu
  */
-export function HeaderMenu({ groupId, className }: HeaderMenuProps) {
+export function HeaderMenu({
+  groupId,
+  onShowToast,
+  className,
+}: HeaderMenuProps) {
   const { t, language, setLanguage } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Generate the group URL
   const groupUrl =
@@ -36,21 +39,10 @@ export function HeaderMenu({ groupId, className }: HeaderMenuProps) {
   const handleCopyInviteLink = async () => {
     try {
       await navigator.clipboard.writeText(groupUrl);
-      setCopied(true);
-      setError(null);
-
-      // Reset success message after 2 seconds
-      setTimeout(() => {
-        setCopied(false);
-      }, 2000);
+      onShowToast(t('success.linkCopied'), 'success');
     } catch (err) {
       console.error('Failed to copy to clipboard:', err);
-      setError(t('errors.copyLinkFailed'));
-
-      // Clear error message after 3 seconds
-      setTimeout(() => {
-        setError(null);
-      }, 3000);
+      onShowToast(t('errors.copyLinkFailed'), 'error');
     }
   };
 
@@ -111,25 +103,10 @@ export function HeaderMenu({ groupId, className }: HeaderMenuProps) {
             onSelect={handleCopyInviteLink}
           >
             <div className="flex items-center gap-2">
-              {copied ? (
-                <>
-                  <Check className="w-4 h-4 text-green-600" />
-                  <span className="text-green-600">{t('common.copied')}</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4" />
-                  <span>{t('group.inviteLink')}</span>
-                </>
-              )}
+              <Copy className="w-4 h-4" />
+              <span>{t('group.inviteLink')}</span>
             </div>
           </DropdownMenu.Item>
-
-          {error && (
-            <div className="px-3 py-2 text-xs text-destructive" role="alert">
-              {error}
-            </div>
-          )}
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>

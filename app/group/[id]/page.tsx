@@ -12,6 +12,7 @@ import { PaymentForm } from './components/PaymentForm';
 import { PaymentList } from './components/PaymentList';
 import { RefreshButton } from './components/RefreshButton';
 import { SettlementDisplay } from './components/SettlementDisplay';
+import { Toast } from './components/Toast';
 
 export default function GroupPage({
   params,
@@ -32,25 +33,10 @@ export default function GroupPage({
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [settlementRefreshTrigger, setSettlementRefreshTrigger] = useState(0);
   const [refreshError, setRefreshError] = useState<string | null>(null);
-
-  // Load profile from localStorage
-  useEffect(() => {
-    const loadProfileForGroup = () => {
-      const localProfile = localStorage.getItem(storageKey);
-      if (localProfile) {
-        setProfile(JSON.parse(localProfile));
-      }
-      setIsLoading(false);
-    };
-    loadProfileForGroup();
-  }, [groupId, storageKey]);
-
-  // Fetch group members and payments when profile is loaded
-  useEffect(() => {
-    if (profile) {
-      loadGroupData();
-    }
-  }, [profile, groupId]);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>(
+    'success'
+  );
 
   const loadGroupData = async () => {
     setIsLoadingData(true);
@@ -116,6 +102,35 @@ export default function GroupPage({
     setShowPaymentForm(false);
   };
 
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToastMessage(message);
+    setToastType(type);
+  };
+
+  const hideToast = () => {
+    setToastMessage(null);
+  };
+
+  // Load profile from localStorage
+  useEffect(() => {
+    const loadProfileForGroup = () => {
+      const localProfile = localStorage.getItem(storageKey);
+      if (localProfile) {
+        setProfile(JSON.parse(localProfile));
+      }
+      setIsLoading(false);
+    };
+    loadProfileForGroup();
+  }, [storageKey]);
+
+  // Fetch group members and payments when profile is loaded
+  useEffect(() => {
+    if (profile) {
+      loadGroupData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -143,6 +158,7 @@ export default function GroupPage({
               className="w-full px-4 py-2 text-gray-900 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
+              type="button"
               onClick={handleJoinGroup}
               className="w-full px-4 py-2 font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
@@ -169,7 +185,7 @@ export default function GroupPage({
                 {t('group.welcome', { name: profile.name })}
               </p>
             </div>
-            <HeaderMenu groupId={groupId} />
+            <HeaderMenu groupId={groupId} onShowToast={showToast} />
           </div>
         </div>
 
@@ -183,6 +199,7 @@ export default function GroupPage({
               <p className="font-medium">{refreshError}</p>
             </div>
             <button
+              type="button"
               onClick={() => setRefreshError(null)}
               className="text-red-600 hover:text-red-800 focus:outline-none"
               aria-label={t('common.close')}
@@ -195,6 +212,7 @@ export default function GroupPage({
         {/* Add Payment Button/Form */}
         <div>
           <button
+            type="button"
             onClick={() => setShowPaymentForm(!showPaymentForm)}
             className="w-full md:w-auto px-6 py-3 font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition flex items-center justify-center gap-2"
           >
@@ -251,6 +269,15 @@ export default function GroupPage({
         {/* Floating Refresh Button */}
         <RefreshButton onRefresh={loadGroupData} />
       </div>
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          onClose={hideToast}
+        />
+      )}
     </div>
   );
 }

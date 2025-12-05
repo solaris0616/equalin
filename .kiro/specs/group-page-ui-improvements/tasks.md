@@ -17,7 +17,7 @@
   - Test entrance and exit animations
   - _Requirements: 3.4, 3.5_
 
-- [ ] 2. Update HeaderMenu component to use toast
+- [x] 2. Update HeaderMenu component to use toast
   - Update HeaderMenu to accept onShowToast callback prop
   - Remove internal copied state management
   - Trigger toast notification on successful invite link copy
@@ -31,7 +31,7 @@
   - Test error handling triggers error toast
   - _Requirements: 3.2, 3.3, 3.4_
 
-- [ ] 3. Create RefreshButton component
+- [x] 3. Create RefreshButton component ✓
   - Create new component file at `app/group/[id]/components/RefreshButton.tsx`
   - Implement floating action button with fixed positioning
   - Add loading state with spinner animation
@@ -48,7 +48,7 @@
   - Test debounce functionality
   - _Requirements: 2.2, 2.3_
 
-- [ ] 4. Update GroupPage layout and integrate new components
+- [x] 4. Update GroupPage layout and integrate new components ✓
   - Add toast state management (toastMessage, toastType, showToast, hideToast)
   - Import HeaderMenu, RefreshButton, and Toast components
   - Replace LanguageSelector and InviteLinkButton in header with HeaderMenu
@@ -68,7 +68,7 @@
   - Test mobile responsiveness
   - _Requirements: 1.1, 2.2, 2.4, 3.4, 3.5_
 
-- [ ] 5. Add error handling for refresh operation
+- [x] 5. Add error handling for refresh operation ✓
   - Add error state to GroupPage for refresh failures
   - Display user-friendly error message when refresh fails
   - Maintain current data state on error (don't clear existing data)
@@ -76,7 +76,7 @@
   - Add translation keys for error messages
   - _Requirements: 2.2, 2.4_
 
-- [ ] 6. Update translation files
+- [x] 6. Update translation files ✓
   - Add translation key for toast success message: "招待リンクをコピーしました！"
   - Add translation keys for HeaderMenu labels
   - Add translation keys for refresh button
@@ -84,7 +84,7 @@
   - Update all supported languages (en, ja, zh, ko)
   - _Requirements: 2.1, 3.2, 3.4, 3.5_
 
-- [ ] 7. Clean up unused code
+- [x] 7. Clean up unused code ✓
   - Remove standalone InviteLinkButton import from GroupPage
   - Remove standalone LanguageSelector import from GroupPage (if not used elsewhere)
   - Clean up any unused CSS classes

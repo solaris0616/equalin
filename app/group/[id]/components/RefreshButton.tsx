@@ -2,7 +2,6 @@
 
 import { RefreshCw } from 'lucide-react';
 import { useCallback, useState } from 'react';
-import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface RefreshButtonProps {
   onRefresh: () => Promise<void>;
@@ -12,16 +11,15 @@ interface RefreshButtonProps {
 /**
  * RefreshButton Component
  * Floating action button for refreshing page data
- * Positioned in bottom-right corner with loading state
+ * Fixed positioning in bottom-right corner with loading state feedback
  */
 export function RefreshButton({ onRefresh, className }: RefreshButtonProps) {
-  const { t } = useLanguage();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Debounced refresh handler to prevent rapid repeated clicks
   const handleRefresh = useCallback(async () => {
+    // Prevent rapid repeated clicks (debounce)
     if (isRefreshing) {
-      return; // Prevent multiple simultaneous refresh operations
+      return;
     }
 
     setIsRefreshing(true);
@@ -29,8 +27,8 @@ export function RefreshButton({ onRefresh, className }: RefreshButtonProps) {
     try {
       await onRefresh();
     } catch (error) {
-      console.error('Refresh failed:', error);
-      // Error handling is managed by parent component
+      console.error('Error during refresh:', error);
+      // Error handling is done by parent component
     } finally {
       setIsRefreshing(false);
     }
@@ -41,12 +39,23 @@ export function RefreshButton({ onRefresh, className }: RefreshButtonProps) {
       type="button"
       onClick={handleRefresh}
       disabled={isRefreshing}
-      className={`fixed bottom-4 right-4 z-40 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 focus:outline-none focus:ring-4 focus:ring-primary/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed ${className || ''}`}
-      aria-label={t('common.refresh') || 'Refresh'}
-      title={t('common.refresh') || 'Refresh'}
+      className={`
+        fixed bottom-4 right-4 z-40
+        w-14 h-14
+        bg-primary text-primary-foreground
+        rounded-full shadow-lg
+        flex items-center justify-center
+        hover:bg-primary/90
+        focus:outline-none focus:ring-4 focus:ring-primary/30
+        transition-all duration-200
+        disabled:opacity-70 disabled:cursor-not-allowed
+        ${className || ''}
+      `}
+      aria-label={isRefreshing ? 'Refreshing data...' : 'Refresh data'}
     >
       <RefreshCw
-        className={`w-6 h-6 mx-auto ${isRefreshing ? 'animate-spin' : ''}`}
+        className={`w-6 h-6 ${isRefreshing ? 'animate-spin' : ''}`}
+        aria-hidden="true"
       />
     </button>
   );
