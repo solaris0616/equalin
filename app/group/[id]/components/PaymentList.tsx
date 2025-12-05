@@ -1,9 +1,15 @@
 'use client';
 
+import { Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { deletePayment } from '@/app/actions/payments';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import type { PaymentWithDetails } from '@/types/payment';
 
 interface PaymentListProps {
   payments: PaymentWithDetails[];
+  groupId: string;
+  onPaymentDeleted: () => void;
 }
 
 /**
@@ -23,39 +29,90 @@ function formatTimestamp(timestamp: string): string {
   });
 }
 
-export function PaymentList({ payments }: PaymentListProps) {
+export function PaymentList({
+  payments,
+  groupId,
+  onPaymentDeleted,
+}: PaymentListProps) {
+  const { t } = useLanguage();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (paymentId: string) => {
+    // Show confirmation dialog
+    const confirmed = window.confirm(t('payment.deleteConfirm'));
+
+    if (!confirmed) {
+      return;
+    }
+
+    // Set loading state
+    setDeletingId(paymentId);
+
+    try {
+      const result = await deletePayment(paymentId, groupId);
+
+      if (result.success) {
+        // Refresh payment list
+        onPaymentDeleted();
+      } else {
+        // Show error message
+        alert(result.error || t('errors.deletePaymentFailed'));
+      }
+    } catch (error) {
+      console.error('Error deleting payment:', error);
+      alert(t('errors.unexpectedError'));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   // Show empty state if no payments exist
   if (payments.length === 0) {
     return (
       <div className="bg-white p-8 rounded-lg shadow-md text-center">
-        <p className="text-gray-500 text-lg">
-          No payments yet. Add your first payment to get started!
-        </p>
+        <p className="text-gray-500 text-lg">{t('payment.noPayments')}</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-gray-900">Payment History</h2>
+      <h2 className="text-2xl font-bold text-gray-900">
+        {t('payment.history')}
+      </h2>
       <div className="space-y-3">
         {payments.map((payment) => (
           <div
             key={payment.id}
             className="bg-white p-5 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition"
           >
-            {/* Header: Payer and Amount */}
+            {/* Header: Payer, Amount, and Delete Button */}
             <div className="flex justify-between items-start mb-3">
               <div className="flex-1">
-                <p className="text-sm text-gray-500">Paid by</p>
+                <p className="text-sm text-gray-500">{t('payment.paidBy')}</p>
                 <p className="text-lg font-bold text-gray-900">
                   {payment.payer_name}
                 </p>
               </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-blue-600">
-                  ¥{payment.amount.toLocaleString()}
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-blue-600">
+                    ¥{payment.amount.toLocaleString()}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleDelete(payment.id)}
+                  disabled={deletingId === payment.id}
+                  aria-label="Delete payment"
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Delete payment"
+                >
+                  {deletingId === payment.id ? (
+                    <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Trash2 className="w-5 h-5" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -68,7 +125,9 @@ export function PaymentList({ payments }: PaymentListProps) {
 
             {/* Participants */}
             <div className="mb-3">
-              <p className="text-sm text-gray-500 mb-1">Participants</p>
+              <p className="text-sm text-gray-500 mb-1">
+                {t('payment.participants')}
+              </p>
               <div className="flex flex-wrap gap-2">
                 {payment.participant_names.map((name, index) => (
                   <span

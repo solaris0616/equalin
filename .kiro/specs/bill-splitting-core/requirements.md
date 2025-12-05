@@ -126,3 +126,31 @@ This specification defines the core bill-splitting functionality for Equalin, a 
 3. WHEN displaying payment amounts, THE System SHALL format them as decimal numbers with 2 decimal places
 4. WHEN a user enters an amount with more than 2 decimal places, THE System SHALL round to 2 decimal places
 5. THE System SHALL accept amounts up to 999,999,999.99 in the base currency unit
+
+### Requirement 10: Payment Deletion
+
+**User Story:** As a user, I want to delete a payment that was recorded incorrectly, so that the expense history and settlement calculations remain accurate.
+
+#### Acceptance Criteria
+
+1. WHEN a user views a payment in the payment list, THE System SHALL display a delete button for that payment
+2. WHEN a user clicks the delete button, THE System SHALL prompt for confirmation before deletion
+3. WHEN a user confirms deletion, THE System SHALL remove the payment record from the database
+4. WHEN a payment is deleted, THE System SHALL automatically remove all associated participant records
+5. WHEN a payment is deleted, THE System SHALL update the payment list to reflect the deletion
+6. WHEN a payment is deleted, THE System SHALL recalculate settlement balances automatically
+
+### Requirement 11: Multi-Language Support
+
+**User Story:** As a user, I want to switch the interface language between English, Japanese, Chinese, and Korean, so that I can use the application in my preferred language.
+
+#### Acceptance Criteria
+
+1. THE System SHALL provide a language selector in the user interface
+2. WHEN a user selects a language, THE System SHALL update all interface text to the selected language
+3. THE System SHALL support English, Japanese, Chinese (Simplified), and Korean languages
+4. WHEN a user selects a language, THE System SHALL store the language preference in local storage
+5. WHEN a user returns to the application, THE System SHALL load their previously selected language from local storage
+6. WHEN no language preference exists, THE System SHALL default to English
+7. THE System SHALL translate all static UI elements including labels, buttons, messages, and placeholders
+8. THE System SHALL maintain user-generated content in its original language regardless of interface language selection

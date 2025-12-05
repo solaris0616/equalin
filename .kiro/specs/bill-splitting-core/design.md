@@ -104,6 +104,21 @@ type SettlementTransaction = {
   to: string; // profile name
   amount: number;
 };
+
+// Language types
+type Language = 'en' | 'ja' | 'zh' | 'ko';
+
+type TranslationKey = string; // e.g., "payment.addPayment"
+
+type Translations = {
+  [key: string]: string | Translations; // supports nested keys
+};
+
+type LanguageContextType = {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: TranslationKey) => string;
+};
 ```
 
 ### 3. Server Actions
@@ -118,6 +133,11 @@ export async function createPayment(
   amount: number,
   description: string,
   participantIds: string[]
+): Promise<{ success: boolean; error?: string }>;
+
+export async function deletePayment(
+  paymentId: string,
+  groupId: string
 ): Promise<{ success: boolean; error?: string }>;
 
 export async function getGroupPayments(
@@ -147,6 +167,13 @@ interface PaymentFormProps {
 // PaymentList Component
 interface PaymentListProps {
   payments: PaymentWithDetails[];
+  onDelete: (paymentId: string) => Promise<void>;
+}
+
+// PaymentListItem Component (internal)
+interface PaymentListItemProps {
+  payment: PaymentWithDetails;
+  onDelete: (paymentId: string) => Promise<void>;
 }
 
 // SettlementDisplay Component
@@ -157,6 +184,16 @@ interface SettlementDisplayProps {
 // InviteLinkButton Component
 interface InviteLinkButtonProps {
   groupId: string;
+}
+
+// LanguageSelector Component
+interface LanguageSelectorProps {
+  className?: string;
+}
+
+// LanguageProvider Component
+interface LanguageProviderProps {
+  children: React.ReactNode;
 }
 ```
 
@@ -265,6 +302,34 @@ Property 15: Amount storage round-trip
 *For any* amount entered by the user, storing it as an integer (cents) and then displaying it should preserve the value with exactly 2 decimal places
 **Validates: Requirements 9.2, 9.3**
 
+Property 16: Payment deletion removes record
+*For any* payment in the database, when that payment is deleted, querying for that payment ID should return no results
+**Validates: Requirements 10.3**
+
+Property 17: Payment deletion cascades to participants
+*For any* payment with associated participant records, when the payment is deleted, all participant records with that payment_id should also be deleted
+**Validates: Requirements 10.4**
+
+Property 18: Settlement recalculation after deletion
+*For any* group with payments, deleting a payment should result in settlement calculations that reflect only the remaining payments
+**Validates: Requirements 10.6**
+
+Property 19: Language selection updates translations
+*For any* supported language (en, ja, zh, ko), when that language is selected, all translation keys should return text in the selected language
+**Validates: Requirements 11.2**
+
+Property 20: Language preference persistence round-trip
+*For any* supported language, when a user selects that language, it should be stored in localStorage, and upon reloading the application, the same language should be loaded
+**Validates: Requirements 11.4, 11.5**
+
+Property 21: Translation completeness
+*For any* translation key defined in the English translation file, all supported languages (ja, zh, ko) should have a corresponding non-empty translation
+**Validates: Requirements 11.7**
+
+Property 22: User content language independence
+*For any* user-generated content (payment descriptions), changing the interface language should not modify the content
+**Validates: Requirements 11.8**
+
 ## Error Handling
 
 ### Input Validation Errors
@@ -280,6 +345,13 @@ Property 15: Amount storage round-trip
 - **Failed participant save**: Rollback payment creation, display error "Failed to save participants. Please try again."
 - **Failed to load payments**: Display error "Failed to load payment history"
 - **Failed to load members**: Display error "Failed to load group members"
+- **Failed payment deletion**: Display error "Failed to delete payment. Please try again."
+
+### Translation Errors
+
+- **Missing translation key**: Fall back to English translation
+- **Missing language file**: Fall back to English
+- **Invalid language code**: Ignore and keep current language
 
 ### Edge Cases
 
@@ -315,6 +387,20 @@ Unit tests will cover specific examples and edge cases:
    - Test payment list displays all payments
    - Test empty state message
    - Test settlement display formatting
+   - Test delete button appears for each payment
+   - Test language selector displays all supported languages
+
+5. **Payment deletion**
+   - Test delete confirmation dialog appears
+   - Test payment removed from list after deletion
+   - Test settlement updates after deletion
+
+6. **Translation functions**
+   - Test translation lookup with valid key returns correct text
+   - Test translation lookup with missing key falls back to English
+   - Test nested key support (e.g., "payment.addPayment")
+   - Test default language is English when no preference exists
+   - Test each supported language (en, ja, zh, ko) has required keys
 
 ### Property-Based Testing
 
@@ -338,6 +424,13 @@ Property tests to implement:
 9. **Property 11: Settlement debt resolution** - Generate random payments, verify settlement transactions sum to zero
 10. **Property 14: Decimal amount acceptance** - Generate random valid decimal amounts, verify acceptance
 11. **Property 15: Amount storage round-trip** - Generate random amounts, verify storage and display preserve value
+12. **Property 16: Payment deletion removes record** - Generate random payments, delete them, verify they no longer exist
+13. **Property 17: Payment deletion cascades to participants** - Generate payments with participants, delete payment, verify participants removed
+14. **Property 18: Settlement recalculation after deletion** - Generate payments, delete one, verify settlement reflects remaining payments
+15. **Property 19: Language selection updates translations** - For each language, verify all keys return text in that language
+16. **Property 20: Language preference persistence round-trip** - Select random language, reload, verify same language loaded
+17. **Property 21: Translation completeness** - Verify all keys in English exist in all other languages with non-empty values
+18. **Property 22: User content language independence** - Generate payment descriptions, switch languages, verify descriptions unchanged
 
 ### Integration Testing
 
@@ -345,9 +438,12 @@ Integration tests will verify end-to-end workflows:
 
 1. Create payment → verify in database → verify in payment list
 2. Create payment with participants → verify participants in database
-3. Delete payment → verify participants also deleted
+3. Delete payment → verify participants also deleted → verify settlement updates
 4. Calculate settlement → verify transactions balance all debts
 5. Copy group link → verify clipboard contains correct URL
+6. Delete payment → verify removed from list → verify settlement recalculated
+7. Switch language → verify UI text updates → verify user content unchanged
+8. Select language → reload page → verify language persists
 
 ### Testing Framework Configuration
 
@@ -468,12 +564,292 @@ export async function createPayment(...): Promise<{ success: boolean; error?: st
 }
 ```
 
+### Payment Deletion Implementation
+
+```typescript
+export async function deletePayment(
+  paymentId: string,
+  groupId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient();
+
+    // Delete payment (CASCADE will handle participants)
+    const { error } = await supabase
+      .from('payments')
+      .delete()
+      .eq('id', paymentId)
+      .eq('group_id', groupId); // Verify payment belongs to group
+
+    if (error) {
+      console.error('Database error:', error);
+      return { success: false, error: 'Failed to delete payment. Please try again.' };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: 'An unexpected error occurred' };
+  }
+}
+```
+
+### Translation Lookup Implementation
+
+```typescript
+// lib/i18n/useTranslation.ts
+export function useTranslation() {
+  const { language, t } = useLanguage();
+  return { t, language };
+}
+
+// Translation lookup with nested key support
+function getNestedTranslation(obj: Translations, path: string): string | undefined {
+  const keys = path.split('.');
+  let current: any = obj;
+
+  for (const key of keys) {
+    if (current && typeof current === 'object' && key in current) {
+      current = current[key];
+    } else {
+      return undefined;
+    }
+  }
+
+  return typeof current === 'string' ? current : undefined;
+}
+
+// Main translation function with fallback
+function translate(key: string, language: Language, translations: Record<Language, Translations>): string {
+  // Try to get translation in selected language
+  const translation = getNestedTranslation(translations[language], key);
+  if (translation) return translation;
+
+  // Fallback to English
+  const fallback = getNestedTranslation(translations.en, key);
+  if (fallback) return fallback;
+
+  // Return key if no translation found
+  return key;
+}
+```
+
+## Payment Deletion Design
+
+### Server Action
+
+```typescript
+// app/actions/payments.ts
+export async function deletePayment(
+  paymentId: string,
+  groupId: string
+): Promise<{ success: boolean; error?: string }>;
+```
+
+### UI Component Updates
+
+The `PaymentList` component will be updated to include a delete button for each payment:
+
+```typescript
+interface PaymentListItemProps {
+  payment: PaymentWithDetails;
+  onDelete: (paymentId: string) => void;
+}
+```
+
+### Deletion Flow
+
+1. User clicks delete button on a payment
+2. System displays confirmation dialog
+3. On confirmation, call `deletePayment` server action
+4. Server action deletes payment (CASCADE deletes participants automatically)
+5. Refresh payment list and settlement display
+
+### Confirmation Dialog
+
+Use a simple browser `confirm()` dialog or implement a custom modal:
+- Message: "Are you sure you want to delete this payment? This action cannot be undone."
+- Buttons: "Cancel" and "Delete"
+
+## Multi-Language Support Design
+
+### Architecture
+
+The multi-language support will use a client-side internationalization approach:
+
+```
+┌─────────────────────────────────────────┐
+│         Client (Browser)                │
+│  ┌────────────────────────────────┐    │
+│  │  Language Context Provider     │    │
+│  │  - Current language state      │    │
+│  │  - Translation function        │    │
+│  │  - Language switcher           │    │
+│  └────────────────────────────────┘    │
+│              │                          │
+│  ┌───────────▼──────────────────┐      │
+│  │  Translation Files (JSON)    │      │
+│  │  - en.json (English)         │      │
+│  │  - ja.json (Japanese)        │      │
+│  │  - zh.json (Chinese)         │      │
+│  │  - ko.json (Korean)          │      │
+│  └──────────────────────────────┘      │
+│              │                          │
+│  ┌───────────▼──────────────────┐      │
+│  │  localStorage                │      │
+│  │  Key: "equalin_language"    │      │
+│  └──────────────────────────────┘      │
+└─────────────────────────────────────────┘
+```
+
+### Translation File Structure
+
+```typescript
+// lib/i18n/translations/en.json
+{
+  "common": {
+    "add": "Add",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save"
+  },
+  "payment": {
+    "title": "Payments",
+    "addPayment": "Add Payment",
+    "description": "Description",
+    "amount": "Amount",
+    "payer": "Payer",
+    "participants": "Participants",
+    "deleteConfirm": "Are you sure you want to delete this payment? This action cannot be undone.",
+    "noPayments": "No payments yet. Add your first payment to get started!"
+  },
+  "settlement": {
+    "title": "Settlement",
+    "from": "From",
+    "to": "To",
+    "amount": "Amount",
+    "allSettled": "All settled! No payments needed."
+  },
+  "errors": {
+    "selectParticipants": "Please select at least one participant",
+    "positiveAmount": "Amount must be greater than zero",
+    "createPaymentFailed": "Failed to create payment. Please try again.",
+    "deletePaymentFailed": "Failed to delete payment. Please try again."
+  }
+}
+```
+
+### Language Context
+
+```typescript
+// lib/i18n/LanguageContext.tsx
+'use client';
+
+type Language = 'en' | 'ja' | 'zh' | 'ko';
+
+interface LanguageContextType {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
+}
+
+export const LanguageContext = createContext<LanguageContextType | null>(null);
+
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const [language, setLanguageState] = useState<Language>('en');
+
+  useEffect(() => {
+    // Load from localStorage
+    const saved = localStorage.getItem('equalin_language') as Language;
+    if (saved && ['en', 'ja', 'zh', 'ko'].includes(saved)) {
+      setLanguageState(saved);
+    }
+  }, []);
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem('equalin_language', lang);
+  };
+
+  const t = (key: string): string => {
+    // Translation lookup logic
+  };
+
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
+
+export function useLanguage() {
+  const context = useContext(LanguageContext);
+  if (!context) throw new Error('useLanguage must be used within LanguageProvider');
+  return context;
+}
+```
+
+### Language Selector Component
+
+```typescript
+// components/LanguageSelector.tsx
+'use client';
+
+interface LanguageSelectorProps {
+  className?: string;
+}
+
+export function LanguageSelector({ className }: LanguageSelectorProps) {
+  const { language, setLanguage } = useLanguage();
+
+  const languages = [
+    { code: 'en', label: 'English', flag: '🇺🇸' },
+    { code: 'ja', label: '日本語', flag: '🇯🇵' },
+    { code: 'zh', label: '中文', flag: '🇨🇳' },
+    { code: 'ko', label: '한국어', flag: '🇰🇷' },
+  ];
+
+  return (
+    <select
+      value={language}
+      onChange={(e) => setLanguage(e.target.value as Language)}
+      className={className}
+    >
+      {languages.map((lang) => (
+        <option key={lang.code} value={lang.code}>
+          {lang.flag} {lang.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+```
+
+### Translation Keys Organization
+
+Translation keys will be organized hierarchically:
+- `common.*`: Shared UI elements (buttons, labels)
+- `payment.*`: Payment-related text
+- `settlement.*`: Settlement-related text
+- `group.*`: Group-related text
+- `errors.*`: Error messages
+- `validation.*`: Validation messages
+
+### Implementation Approach
+
+1. **Simple JSON-based approach**: Store translations in JSON files, load based on selected language
+2. **No build-time compilation**: Keep it simple, load translations at runtime
+3. **Fallback to English**: If a translation key is missing, fall back to English
+4. **Nested key support**: Support dot notation for nested keys (e.g., `payment.addPayment`)
+
 ## Performance Considerations
 
 - **Payment list pagination**: For groups with many payments, implement pagination or virtual scrolling
 - **Settlement calculation caching**: Cache settlement results and invalidate on new payment
 - **Optimistic UI updates**: Update UI immediately, rollback on error
 - **Database indexes**: Add indexes on `group_id` and `created_at` for payment queries
+- **Translation loading**: Load all translations at once (small file size), cache in memory
 
 ## Security Considerations
 
@@ -481,3 +857,4 @@ export async function createPayment(...): Promise<{ success: boolean; error?: st
 - **SQL injection prevention**: Use parameterized queries (Supabase client handles this)
 - **Amount limits**: Enforce maximum amount to prevent overflow
 - **Group access**: Verify user is a member before allowing payment operations (future enhancement)
+- **XSS prevention**: Sanitize user-generated content (payment descriptions) when displaying

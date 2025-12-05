@@ -1,20 +1,23 @@
 'use client';
 
+import { Check, Copy } from 'lucide-react';
 import { useState } from 'react';
-import { Copy, Check } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface InviteLinkButtonProps {
   groupId: string;
 }
 
 export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Generate the group URL
-  const groupUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/group/${groupId}`
-    : '';
+  const groupUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/group/${groupId}`
+      : '';
 
   const handleCopy = async () => {
     try {
@@ -32,7 +35,7 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
     } catch (err) {
       // Handle clipboard API errors gracefully
       console.error('Failed to copy to clipboard:', err);
-      setError('Failed to copy link. Please try again.');
+      setError(t('errors.copyLinkFailed'));
 
       // Clear error message after 3 seconds
       setTimeout(() => {
@@ -44,7 +47,7 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium text-foreground">
-        Invite Link
+        {t('group.inviteLink')}
       </label>
 
       <div className="flex gap-2">
@@ -64,12 +67,12 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
           {copied ? (
             <>
               <Check className="w-4 h-4" />
-              <span className="text-sm">Copied!</span>
+              <span className="text-sm">{t('common.copied')}</span>
             </>
           ) : (
             <>
               <Copy className="w-4 h-4" />
-              <span className="text-sm">Copy</span>
+              <span className="text-sm">{t('common.copy')}</span>
             </>
           )}
         </button>
@@ -83,7 +86,7 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
 
       {copied && !error && (
         <p className="text-sm text-green-600" role="status">
-          Link copied to clipboard!
+          {t('success.linkCopied')}
         </p>
       )}
     </div>

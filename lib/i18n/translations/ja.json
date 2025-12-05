@@ -1,0 +1,76 @@
+{
+  "common": {
+    "add": "追加",
+    "delete": "削除",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "save": "保存",
+    "loading": "読み込み中...",
+    "copy": "コピー",
+    "copied": "コピーしました！",
+    "close": "閉じる",
+    "open": "開く",
+    "language": "言語",
+    "refresh": "更新"
+  },
+  "home": {
+    "title": "Equalin",
+    "subtitle": "最もシンプルな割り勘アプリ",
+    "createGroup": "新しいグループを作成"
+  },
+  "group": {
+    "title": "グループの支出",
+    "welcome": "ようこそ、{name}さん！",
+    "joinTitle": "このグループに参加",
+    "joinDescription": "このグループでの名前を設定してください。",
+    "joinButton": "参加",
+    "inviteLink": "招待リンク",
+    "namePlaceholder": "あなたの名前",
+    "loadingMembers": "メンバーを読み込み中...",
+    "loadingPayments": "支払いを読み込み中..."
+  },
+  "payment": {
+    "title": "支払いを追加",
+    "addNew": "新しい支払いを追加",
+    "hideForm": "支払いフォームを非表示",
+    "description": "説明（任意）",
+    "descriptionPlaceholder": "例：レストランでの夕食",
+    "amount": "金額",
+    "amountRequired": "金額 *",
+    "amountPlaceholder": "0",
+    "participants": "参加者",
+    "participantsRequired": "参加者 *",
+    "participantsSelected": "{total}人中{count}人選択",
+    "paidBy": "支払者",
+    "creating": "支払いを作成中...",
+    "create": "支払いを作成",
+    "history": "支払い履歴",
+    "noPayments": "まだ支払いがありません。最初の支払いを追加しましょう！",
+    "deleteConfirm": "この支払いを削除してもよろしいですか？この操作は元に戻せません。"
+  },
+  "settlement": {
+    "title": "精算",
+    "calculate": "精算を計算",
+    "calculating": "計算中...",
+    "calculatingMessage": "精算を計算中...",
+    "allSettled": "精算完了！",
+    "noPaymentsNeeded": "支払いは必要ありません。",
+    "transactionsNeeded": "すべての債務を精算するには{count}件の取引が必要です:"
+  },
+  "errors": {
+    "enterName": "名前を入力してください。",
+    "saveProfileFailed": "プロフィールを保存できませんでした。もう一度お試しください。",
+    "joinGroupFailed": "グループに参加できませんでした。もう一度お試しください。",
+    "validAmount": "有効な金額を入力してください（最小値：1）",
+    "selectParticipants": "少なくとも1人の参加者を選択してください",
+    "createPaymentFailed": "支払いの作成に失敗しました",
+    "unexpectedError": "予期しないエラーが発生しました",
+    "deletePaymentFailed": "支払いの削除に失敗しました",
+    "calculateSettlementFailed": "精算の計算に失敗しました。もう一度お試しください。",
+    "copyLinkFailed": "リンクのコピーに失敗しました。もう一度お試しください。",
+    "createGroupFailed": "グループの作成に失敗しました。もう一度お試しください。"
+  },
+  "success": {
+    "linkCopied": "リンクをクリップボードにコピーしました！"
+  }
+}

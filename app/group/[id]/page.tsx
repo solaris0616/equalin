@@ -1,17 +1,25 @@
 'use client';
 
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { use, useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { createClient } from '@/lib/supabase/client';
 import { getGroupMembers, getGroupPayments } from '@/app/actions/payments';
-import type { Profile, PaymentWithDetails } from '@/types/payment';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { createClient } from '@/lib/supabase/client';
+import type { PaymentWithDetails, Profile } from '@/types/payment';
+import { HeaderMenu } from './components/HeaderMenu';
 import { PaymentForm } from './components/PaymentForm';
 import { PaymentList } from './components/PaymentList';
+import { RefreshButton } from './components/RefreshButton';
 import { SettlementDisplay } from './components/SettlementDisplay';
-import { InviteLinkButton } from './components/InviteLinkButton';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { Toast } from './components/Toast';
 
-export default function GroupPage({ params }: { params: Promise<{ id: string }> }) {
+export default function GroupPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { t } = useLanguage();
   const supabase = createClient();
   const { id: groupId } = use(params);
   const storageKey = `equalin_profile_${groupId}`; // Key is now group-specific
@@ -23,28 +31,16 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
   const [payments, setPayments] = useState<PaymentWithDetails[]>([]);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
-
-  // Load profile from localStorage
-  useEffect(() => {
-    const loadProfileForGroup = () => {
-      const localProfile = localStorage.getItem(storageKey);
-      if (localProfile) {
-        setProfile(JSON.parse(localProfile));
-      }
-      setIsLoading(false);
-    };
-    loadProfileForGroup();
-  }, [groupId, storageKey]);
-
-  // Fetch group members and payments when profile is loaded
-  useEffect(() => {
-    if (profile) {
-      loadGroupData();
-    }
-  }, [profile, groupId]);
+  const [settlementRefreshTrigger, setSettlementRefreshTrigger] = useState(0);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>(
+    'success'
+  );
 
   const loadGroupData = async () => {
     setIsLoadingData(true);
+    setRefreshError(null);
     try {
       const [fetchedMembers, fetchedPayments] = await Promise.all([
         getGroupMembers(groupId),
@@ -52,8 +48,11 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
       ]);
       setMembers(fetchedMembers);
       setPayments(fetchedPayments);
+      // Trigger settlement recalculation
+      setSettlementRefreshTrigger((prev) => prev + 1);
     } catch (error) {
       console.error('Error loading group data:', error);
+      setRefreshError(t('errors.calculateSettlementFailed'));
     } finally {
       setIsLoadingData(false);
     }
@@ -61,7 +60,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
 
   const handleJoinGroup = async () => {
     if (!nameInput.trim()) {
-      alert('Please enter your name.');
+      alert(t('errors.enterName'));
       return;
     }
 
@@ -77,7 +76,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
       .insert(newProfile);
     if (profileError) {
       console.error('Error saving profile:', profileError);
-      alert('Could not save your profile. Please try again.');
+      alert(t('errors.saveProfileFailed'));
       return;
     }
 
@@ -87,7 +86,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
       .insert({ group_id: groupId, profile_id: newProfile.id });
     if (memberError) {
       console.error('Error joining group:', memberError);
-      alert('Could not join the group. Please try again.');
+      alert(t('errors.joinGroupFailed'));
       return;
     }
 
@@ -103,10 +102,39 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
     setShowPaymentForm(false);
   };
 
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToastMessage(message);
+    setToastType(type);
+  };
+
+  const hideToast = () => {
+    setToastMessage(null);
+  };
+
+  // Load profile from localStorage
+  useEffect(() => {
+    const loadProfileForGroup = () => {
+      const localProfile = localStorage.getItem(storageKey);
+      if (localProfile) {
+        setProfile(JSON.parse(localProfile));
+      }
+      setIsLoading(false);
+    };
+    loadProfileForGroup();
+  }, [storageKey]);
+
+  // Fetch group members and payments when profile is loaded
+  useEffect(() => {
+    if (profile) {
+      loadGroupData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        Loading...
+        {t('common.loading')}
       </div>
     );
   }
@@ -116,24 +144,25 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
       <div className="min-h-screen bg-gray-50 flex justify-center items-center">
         <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-lg shadow-md">
           <h2 className="text-2xl font-bold text-center text-gray-900">
-            Join this Group
+            {t('group.joinTitle')}
           </h2>
           <p className="text-center text-gray-600">
-            Set your name for this group.
+            {t('group.joinDescription')}
           </p>
           <div className="space-y-4">
             <input
               type="text"
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
-              placeholder="Your Name"
+              placeholder={t('group.namePlaceholder')}
               className="w-full px-4 py-2 text-gray-900 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
+              type="button"
               onClick={handleJoinGroup}
               className="w-full px-4 py-2 font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Join
+              {t('group.joinButton')}
             </button>
           </div>
         </div>
@@ -147,32 +176,55 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-            Group Expenses
-          </h1>
-          <p className="text-gray-600 mb-4">
-            Welcome, <span className="font-bold">{profile.name}</span>!
-          </p>
-
-          {/* Invite Link */}
-          <InviteLinkButton groupId={groupId} />
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                {t('group.title')}
+              </h1>
+              <p className="text-gray-600">
+                {t('group.welcome', { name: profile.name })}
+              </p>
+            </div>
+            <HeaderMenu groupId={groupId} onShowToast={showToast} />
+          </div>
         </div>
+
+        {/* Error Message */}
+        {refreshError && (
+          <div
+            className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start gap-3"
+            role="alert"
+          >
+            <div className="flex-1">
+              <p className="font-medium">{refreshError}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setRefreshError(null)}
+              className="text-red-600 hover:text-red-800 focus:outline-none"
+              aria-label={t('common.close')}
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Add Payment Button/Form */}
         <div>
           <button
+            type="button"
             onClick={() => setShowPaymentForm(!showPaymentForm)}
             className="w-full md:w-auto px-6 py-3 font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition flex items-center justify-center gap-2"
           >
             {showPaymentForm ? (
               <>
                 <ChevronUp className="w-5 h-5" />
-                Hide Payment Form
+                {t('payment.hideForm')}
               </>
             ) : (
               <>
                 <ChevronDown className="w-5 h-5" />
-                Add New Payment
+                {t('payment.addNew')}
               </>
             )}
           </button>
@@ -181,7 +233,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
             <div className="mt-4">
               {isLoadingData ? (
                 <div className="bg-white p-8 rounded-lg shadow-md text-center">
-                  <p className="text-gray-600">Loading members...</p>
+                  <p className="text-gray-600">{t('group.loadingMembers')}</p>
                 </div>
               ) : (
                 <PaymentForm
@@ -195,18 +247,37 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
           )}
         </div>
 
+        {/* Settlement Display */}
+        <SettlementDisplay
+          groupId={groupId}
+          refreshTrigger={settlementRefreshTrigger}
+        />
+
         {/* Payment List */}
         {isLoadingData ? (
           <div className="bg-white p-8 rounded-lg shadow-md text-center">
-            <p className="text-gray-600">Loading payments...</p>
+            <p className="text-gray-600">{t('group.loadingPayments')}</p>
           </div>
         ) : (
-          <PaymentList payments={payments} />
+          <PaymentList
+            payments={payments}
+            groupId={groupId}
+            onPaymentDeleted={loadGroupData}
+          />
         )}
 
-        {/* Settlement Display */}
-        <SettlementDisplay groupId={groupId} />
+        {/* Floating Refresh Button */}
+        <RefreshButton onRefresh={loadGroupData} />
       </div>
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          onClose={hideToast}
+        />
+      )}
     </div>
   );
 }

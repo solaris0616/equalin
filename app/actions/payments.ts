@@ -8,9 +8,9 @@ import {
   type PaymentWithParticipants,
 } from '@/lib/utils/settlement';
 import type {
-  Profile,
   Payment,
   PaymentWithDetails,
+  Profile,
   SettlementTransaction,
 } from '@/types/payment';
 
@@ -205,6 +205,49 @@ export async function getGroupMembers(groupId: string): Promise<Profile[]> {
   } catch (error) {
     console.error('Unexpected error fetching group members:', error);
     return [];
+  }
+}
+
+/**
+ * Deletes a payment from the database.
+ * Validates that the payment belongs to the specified group before deletion.
+ * CASCADE DELETE will automatically remove associated participant records.
+ *
+ * @param paymentId - The ID of the payment to delete
+ * @param groupId - The ID of the group (for validation)
+ * @returns Object with success status and optional error message
+ */
+export async function deletePayment(
+  paymentId: string,
+  groupId: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient();
+
+    // Delete payment (CASCADE will handle participants)
+    // The .eq('group_id', groupId) ensures the payment belongs to the specified group
+    const { error } = await supabase
+      .from('payments')
+      .delete()
+      .eq('id', paymentId)
+      .eq('group_id', groupId);
+
+    if (error) {
+      console.error('Failed to delete payment:', {
+        paymentId,
+        groupId,
+        error: error.message,
+      });
+      return {
+        success: false,
+        error: 'Failed to delete payment. Please try again.',
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Unexpected error deleting payment:', error);
+    return { success: false, error: 'An unexpected error occurred' };
   }
 }
 
