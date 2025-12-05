@@ -28,6 +28,14 @@ RootLayout (app/layout.tsx)
 5. All text elements use `t()` function to retrieve translated strings
 6. Translation system returns strings from appropriate language JSON file
 
+### Initial Load Flow
+
+1. HomePage loads and LanguageProvider initializes
+2. LanguageProvider checks localStorage for saved language preference
+3. If found, LanguageProvider sets language state to saved value
+4. If not found, LanguageProvider defaults to English
+5. HomePage renders with appropriate language from initial state
+
 ## Components and Interfaces
 
 ### Modified Components
@@ -100,6 +108,12 @@ interface LanguageContextType {
 
 **Validates: Requirements 1.4**
 
+### Property 5: Language persistence on return
+
+*For any* language selection made on the home page, when a user navigates away and returns to the home page, the selected language should be restored from localStorage and displayed.
+
+**Validates: Requirements 1.5**
+
 ### Property 2: Translation key fallback consistency
 
 *For any* translation key used on the home page, if the translation is missing in the selected language, the system should return the English translation or the key itself (never undefined or null).
@@ -117,6 +131,12 @@ interface LanguageContextType {
 *For any* language change on the home page, all translated text elements should update synchronously within the same render cycle.
 
 **Validates: Requirements 1.2**
+
+### Property 6: Layout stability during interaction
+
+*For any* interaction with the LanguageSelector (opening dropdown, selecting option), the positions of other page elements should remain unchanged (no layout shift).
+
+**Validates: Requirements 3.5**
 
 ## Error Handling
 
@@ -200,6 +220,22 @@ Property-based tests will verify universal properties using **fast-check** (Java
    - **Tag:** `Feature: home-language-selector, Property 4: Immediate translation update`
    - **Validates: Requirements 1.2**
 
+5. **Property 5: Language persistence on return**
+   - Generate random language selections
+   - Simulate navigation away and return
+   - Verify language is restored from localStorage
+   - Verify page renders with correct language
+   - **Tag:** `Feature: home-language-selector, Property 5: Language persistence on return`
+   - **Validates: Requirements 1.5**
+
+6. **Property 6: Layout stability during interaction**
+   - Generate random viewport sizes
+   - Simulate dropdown interactions
+   - Verify no layout shifts occur
+   - Verify element positions remain stable
+   - **Tag:** `Feature: home-language-selector, Property 6: Layout stability during interaction`
+   - **Validates: Requirements 3.5**
+
 ### Integration Tests
 
 Integration tests will verify the complete user flow:
@@ -240,7 +276,7 @@ fc.assert(
 
 ### Styling Approach
 
-The LanguageSelector will be positioned using absolute positioning within a relative container:
+The LanguageSelector will be positioned using absolute positioning within a relative container to prevent layout shifts:
 
 ```tsx
 <div className="relative min-h-screen">
@@ -251,6 +287,12 @@ The LanguageSelector will be positioned using absolute positioning within a rela
 </div>
 ```
 
+**Rationale for absolute positioning:**
+- Removes LanguageSelector from document flow, preventing layout shifts when dropdown opens
+- Ensures consistent positioning across different viewport sizes
+- Maintains visual hierarchy with z-index layering
+- Allows main content to remain centered without offset
+
 ### Responsive Design
 
 - Desktop: Top-right corner with adequate spacing
@@ -259,9 +301,11 @@ The LanguageSelector will be positioned using absolute positioning within a rela
 
 ### Accessibility
 
-- LanguageSelector already includes `aria-label="Select language"`
-- Focus indicators handled by Tailwind focus classes
-- Keyboard navigation works with native `<select>` element
+- LanguageSelector already includes `aria-label="Select language"` for screen readers
+- Focus indicators are provided by Tailwind focus classes (e.g., `focus:ring-2`, `focus:ring-primary`)
+- Keyboard navigation works with native `<select>` element (Tab to focus, Arrow keys to select, Enter to confirm)
+- Focus state is visually distinct to meet WCAG 2.1 Level AA requirements
+- Color contrast ratios meet accessibility standards
 
 ### Performance
 
