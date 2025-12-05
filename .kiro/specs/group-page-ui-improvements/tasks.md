@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Create Toast component
+- [x] 1. Create Toast component ✓
   - Create new component file at `app/group/[id]/components/Toast.tsx`
   - Implement toast notification with message and type (success/error/info)
   - Add auto-dismiss functionality with configurable duration (default 3 seconds)
