@@ -35,7 +35,7 @@ export default function GroupPage({
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>(
-    'success'
+    'success',
   );
 
   const loadGroupData = async () => {
@@ -272,11 +272,7 @@ export default function GroupPage({
 
       {/* Toast Notification */}
       {toastMessage && (
-        <Toast
-          message={toastMessage}
-          type={toastType}
-          onClose={hideToast}
-        />
+        <Toast message={toastMessage} type={toastType} onClose={hideToast} />
       )}
     </div>
   );

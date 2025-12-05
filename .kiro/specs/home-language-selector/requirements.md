@@ -6,10 +6,12 @@ This feature adds language selection capability to the home page (group creation
 
 ## Glossary
 
+- **Equalin**: The web application for fair and effortless bill splitting
 - **Home Page**: The initial landing page at the root path ("/") where users can create a new group
-- **LanguageSelector**: An existing React component that provides a dropdown interface for selecting between supported languages (English, Japanese, Chinese, Korean)
+- **LanguageSelector Component**: An existing React component that provides a dropdown interface for selecting between supported languages (English, Japanese, Chinese, Korean)
 - **LanguageProvider**: A React context provider that manages the current language state and provides translation functions
-- **Translation Keys**: Dot-notation keys used to retrieve localized strings from translation JSON files (e.g., "home.title")
+- **Translation System**: The i18n infrastructure that retrieves localized strings using dot-notation keys from translation JSON files (e.g., "home.title")
+- **localStorage**: Browser storage mechanism for persisting user preferences across sessions
 
 ## Requirements
 
@@ -19,11 +21,11 @@ This feature adds language selection capability to the home page (group creation
 
 #### Acceptance Criteria
 
-1. WHEN a user visits the home page THEN the system SHALL display a language selector component in a visible location
-2. WHEN a user selects a language from the selector THEN the system SHALL update all text on the home page to the selected language immediately
-3. WHEN a user selects a language THEN the system SHALL persist the language preference to localStorage
-4. WHEN a user creates a group after selecting a language THEN the system SHALL maintain the selected language on the group page
-5. WHEN a user returns to the home page THEN the system SHALL display the previously selected language
+1. WHEN a user visits the Home Page THEN the Home Page SHALL display the LanguageSelector Component in a visible location
+2. WHEN a user selects a language from the LanguageSelector Component THEN the Home Page SHALL update all displayed text to the selected language immediately
+3. WHEN a user selects a language from the LanguageSelector Component THEN the LanguageProvider SHALL persist the language preference to localStorage
+4. WHEN a user creates a group after selecting a language THEN the Translation System SHALL maintain the selected language on the group page
+5. WHEN a user returns to the Home Page THEN the Home Page SHALL display content in the previously selected language from localStorage
 
 ### Requirement 2
 
@@ -31,11 +33,11 @@ This feature adds language selection capability to the home page (group creation
 
 #### Acceptance Criteria
 
-1. WHEN the home page renders THEN the system SHALL display the title using the translation key "home.title"
-2. WHEN the home page renders THEN the system SHALL display the subtitle using the translation key "home.subtitle"
-3. WHEN the home page renders THEN the system SHALL display the create group button text using the translation key "home.createGroup"
-4. WHEN translation keys are missing for the selected language THEN the system SHALL fall back to English translations
-5. WHEN all translation keys are missing THEN the system SHALL display the translation key itself
+1. WHEN the Home Page renders THEN the Translation System SHALL display the title using the translation key "home.title"
+2. WHEN the Home Page renders THEN the Translation System SHALL display the subtitle using the translation key "home.subtitle"
+3. WHEN the Home Page renders THEN the Translation System SHALL display the create group button text using the translation key "home.createGroup"
+4. WHEN translation keys are missing for the selected language THEN the Translation System SHALL fall back to English translations
+5. WHEN translation keys are missing in all languages THEN the Translation System SHALL display the translation key itself
 
 ### Requirement 3
 
@@ -43,8 +45,8 @@ This feature adds language selection capability to the home page (group creation
 
 #### Acceptance Criteria
 
-1. WHEN the home page renders THEN the system SHALL position the language selector in the top-right corner of the page
-2. WHEN the language selector is displayed THEN the system SHALL style it consistently with the existing design system
-3. WHEN the page is viewed on mobile devices THEN the system SHALL ensure the language selector remains accessible and usable
-4. WHEN the language selector is focused THEN the system SHALL provide visible focus indicators for accessibility
-5. WHILE the user interacts with the language selector THEN the system SHALL maintain the overall page layout without shifting other elements
+1. WHEN the Home Page renders THEN the Home Page SHALL position the LanguageSelector Component in the top-right corner of the page
+2. WHEN the LanguageSelector Component is displayed THEN the LanguageSelector Component SHALL apply styles consistent with the existing design system
+3. WHEN the Home Page is viewed on mobile devices THEN the LanguageSelector Component SHALL remain accessible and usable
+4. WHEN the LanguageSelector Component receives focus THEN the LanguageSelector Component SHALL display visible focus indicators for accessibility
+5. WHILE the user interacts with the LanguageSelector Component THEN the Home Page SHALL maintain the overall page layout without shifting other elements
