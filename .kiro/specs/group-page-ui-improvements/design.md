@@ -20,17 +20,23 @@ The changes will affect the following components:
    - Combines language selection and invite link functionality
    - Implements dropdown menu pattern
    - Replaces separate LanguageSelector and InviteLinkButton in header
+   - Triggers toast notification on successful invite link copy
 
-3. **RefreshButton** (new component: `app/group/[id]/components/RefreshButton.tsx`)
+3. **Toast** (new component: `app/group/[id]/components/Toast.tsx`)
+   - Displays temporary notification messages at bottom of screen
+   - Auto-dismisses after configurable duration (default 3 seconds)
+   - Supports success, error, and info message types
+
+4. **RefreshButton** (new component: `app/group/[id]/components/RefreshButton.tsx`)
    - Floating action button for refreshing page data
    - Fixed positioning in bottom-right corner
    - Provides loading state feedback
 
-4. **SettlementDisplay** (`app/group/[id]/components/SettlementDisplay.tsx`)
+5. **SettlementDisplay** (`app/group/[id]/components/SettlementDisplay.tsx`)
    - No structural changes required
    - Will be repositioned in parent layout
 
-5. **PaymentList** (`app/group/[id]/components/PaymentList.tsx`)
+6. **PaymentList** (`app/group/[id]/components/PaymentList.tsx`)
    - No changes required
    - Will be repositioned after settlement display
 
@@ -41,22 +47,45 @@ The changes will affect the following components:
 ```typescript
 interface HeaderMenuProps {
   groupId: string;
+  onShowToast: (message: string, type: 'success' | 'error' | 'info') => void;
   className?: string;
 }
 
-export function HeaderMenu({ groupId, className }: HeaderMenuProps): JSX.Element
+export function HeaderMenu({ groupId, onShowToast, className }: HeaderMenuProps): JSX.Element
 ```
 
 **Responsibilities:**
 - Display a compact menu button/icon in the header
 - Show dropdown menu with language selection and invite link options
 - Handle invite link copying with clipboard API
-- Provide visual feedback for user actions
+- Trigger toast notification on successful copy
 
 **State:**
 - `isOpen: boolean` - Controls dropdown visibility
-- `copied: boolean` - Tracks clipboard copy success
 - `error: string | null` - Stores error messages
+
+### Toast Component
+
+```typescript
+interface ToastProps {
+  message: string;
+  type: 'success' | 'error' | 'info';
+  duration?: number; // milliseconds, default 3000
+  onClose: () => void;
+}
+
+export function Toast({ message, type, duration = 3000, onClose }: ToastProps): JSX.Element
+```
+
+**Responsibilities:**
+- Display notification message at bottom of screen
+- Auto-dismiss after specified duration
+- Provide visual styling based on message type (success/error/info)
+- Support manual dismissal via close button
+- Animate entrance and exit
+
+**State:**
+- No internal state (controlled by parent component)
 
 ### RefreshButton Component
 
@@ -97,6 +126,27 @@ The page layout will be reorganized as follows:
                                     ┌──┐
                                     │🔄│ Floating Refresh Button
                                     └──┘
+┌─────────────────────────────────────┐
+│ 招待リンクをコピーしました！ ✓      │ Toast Notification (bottom)
+└─────────────────────────────────────┘
+```
+
+**GroupPage State Management:**
+
+```typescript
+// Toast state
+const [toastMessage, setToastMessage] = useState<string | null>(null);
+const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
+
+// Toast handler
+const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+  setToastMessage(message);
+  setToastType(type);
+};
+
+const hideToast = () => {
+  setToastMessage(null);
+};
 ```
 
 ## Data Models
@@ -146,8 +196,13 @@ This function will be reused by the RefreshButton component.
 
 ### Property 5: Invite link copy functionality
 
-*For any* invite link copy action from the dropdown menu, the system should copy the correct group URL to the clipboard and provide visual feedback
+*For any* invite link copy action from the dropdown menu, the system should copy the correct group URL to the clipboard and display a toast notification
 **Validates: Requirements 3.3, 3.4**
+
+### Property 6: Toast notification auto-dismiss
+
+*For any* toast notification displayed, the notification should automatically disappear after the specified duration (default 3 seconds)
+**Validates: Requirements 3.5**
 
 ## Error Handling
 
@@ -155,17 +210,17 @@ This function will be reused by the RefreshButton component.
 
 When copying the invite link fails:
 - Catch clipboard API exceptions
-- Display user-friendly error message in Japanese
+- Display error toast notification in Japanese
 - Log technical details to console
-- Auto-dismiss error after 3 seconds
+- Auto-dismiss error toast after 3 seconds
 
 ```typescript
 try {
   await navigator.clipboard.writeText(groupUrl);
-  setCopied(true);
+  onShowToast(t('success.inviteLinkCopied'), 'success');
 } catch (err) {
   console.error('Failed to copy to clipboard:', err);
-  setError(t('errors.copyLinkFailed'));
+  onShowToast(t('errors.copyLinkFailed'), 'error');
 }
 ```
 
@@ -202,17 +257,25 @@ try {
    - Test invite link copy functionality
    - Test language selection changes
    - Test error handling for clipboard failures
+   - Test toast callback is triggered on successful copy
 
-2. **RefreshButton Component**
+2. **Toast Component**
+   - Test toast displays with correct message and type
+   - Test toast auto-dismisses after specified duration
+   - Test manual dismissal via close button
+   - Test entrance and exit animations
+
+3. **RefreshButton Component**
    - Test button triggers refresh callback
    - Test loading state during refresh
    - Test button remains clickable after refresh completes
    - Test button positioning on different screen sizes
 
-3. **GroupPage Layout**
+4. **GroupPage Layout**
    - Test settlement display appears before payment list
    - Test all components render in correct order
    - Test refresh button integration
+   - Test toast notification integration
 
 ### Property-Based Tests
 
@@ -242,6 +305,12 @@ Property-based testing will use **fast-check** library for TypeScript/React. Eac
    - Generate random group IDs
    - Trigger copy action
    - Assert correct URL is copied to clipboard
+   - Assert toast notification is displayed
+
+6. **Property 6: Toast notification auto-dismiss**
+   - Generate random toast messages
+   - Display toast with specified duration
+   - Assert toast disappears after duration expires
 
 ### Integration Tests
 
@@ -258,6 +327,9 @@ Property-based testing will use **fast-check** library for TypeScript/React. Eac
 - [ ] All translations work correctly in dropdown
 - [ ] Invite link copies successfully on iOS Safari
 - [ ] Invite link copies successfully on Android Chrome
+- [ ] Toast notification appears at bottom of screen with correct message
+- [ ] Toast notification auto-dismisses after 3 seconds
+- [ ] Toast notification doesn't overlap with floating refresh button
 - [ ] Page layout looks good on various screen sizes (320px to 1920px width)
 
 ## Implementation Notes
@@ -268,6 +340,7 @@ Property-based testing will use **fast-check** library for TypeScript/React. Eac
 2. **Floating Button**: Position with adequate padding from screen edges (16px minimum)
 3. **Dropdown Menu**: Use native-like animations for smooth mobile experience
 4. **Loading States**: Provide clear visual feedback for all async operations
+5. **Toast Positioning**: Position toast at bottom with adequate padding, ensure it doesn't overlap with floating button
 
 ### Accessibility
 
@@ -292,14 +365,17 @@ Property-based testing will use **fast-check** library for TypeScript/React. Eac
 ## Migration Strategy
 
 ### Phase 1: Create New Components
-- Implement HeaderMenu component
+- Implement Toast component
+- Implement HeaderMenu component with toast integration
 - Implement RefreshButton component
 - Add unit tests for new components
 
 ### Phase 2: Update GroupPage Layout
+- Add toast state management to GroupPage
 - Reorder components (settlement before payment list)
-- Integrate HeaderMenu in header
+- Integrate HeaderMenu in header with toast callback
 - Add RefreshButton to page
+- Add Toast component to page
 - Update styling for new layout
 
 ### Phase 3: Remove Old Components
@@ -310,6 +386,7 @@ Property-based testing will use **fast-check** library for TypeScript/React. Eac
 ### Phase 4: Testing and Refinement
 - Run full test suite
 - Test on multiple devices and browsers
+- Test toast notification on various screen sizes
 - Gather user feedback
 - Make adjustments as needed
 

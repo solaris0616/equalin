@@ -12,6 +12,7 @@ This specification defines UI improvements for the group expense page to enhance
 - **Invite Link**: The shareable URL for inviting new members to the group
 - **Floating Button**: A button that remains fixed on the screen, typically in the bottom-right corner
 - **Dropdown Menu**: A collapsible menu that reveals options when clicked
+- **Toast Notification**: A temporary message that appears at the bottom of the screen to provide feedback to the user
 
 ## Requirements
 
@@ -46,6 +47,7 @@ This specification defines UI improvements for the group expense page to enhance
 1. WHEN a user views the group page THEN the system SHALL display a dropdown menu in the header area
 2. WHEN a user opens the dropdown menu THEN the system SHALL reveal both language selection and invite link copy options
 3. WHEN a user selects the invite link option from the dropdown THEN the system SHALL copy the invite link to the clipboard
-4. WHEN the invite link is copied THEN the system SHALL provide visual feedback confirming the action
-5. WHEN a user selects a language from the dropdown THEN the system SHALL change the interface language immediately
-6. WHILE the dropdown is closed THEN the system SHALL display a minimal icon or button that does not dominate the header space
+4. WHEN the invite link is copied THEN the system SHALL display a toast notification at the bottom of the screen with the message "招待リンクをコピーしました！"
+5. WHEN the toast notification is displayed THEN the system SHALL automatically dismiss it after 3 seconds
+6. WHEN a user selects a language from the dropdown THEN the system SHALL change the interface language immediately
+7. WHILE the dropdown is closed THEN the system SHALL display a minimal icon or button that does not dominate the header space
