@@ -231,7 +231,13 @@ console.error('Failed to create payment:', {
 </button>
 ```
 
-## Testing (When Implemented)
+## Testing
+
+### Test Runner
+- Use **Bun's built-in test runner** (no additional dependencies required)
+- Run tests with `bun test`
+- Watch mode: `bun test --watch`
+- Coverage: `bun test --coverage`
 
 ### Test File Naming
 - Unit tests: `*.test.ts` or `*.test.tsx`
@@ -239,14 +245,89 @@ console.error('Failed to create payment:', {
 - Place tests next to source files or in `__tests__` directory
 
 ### Test Structure
+Use Bun's test API with `describe`, `test`/`it`, and `expect`:
+
 ```typescript
+import { describe, test, expect } from 'bun:test';
+import { amountToInteger } from './currency';
+
 describe('amountToInteger', () => {
-  it('should convert decimal to cents', () => {
+  test('should convert decimal to cents', () => {
     expect(amountToInteger(100.50)).toBe(10050);
   });
 
-  it('should handle zero', () => {
+  test('should handle zero', () => {
     expect(amountToInteger(0)).toBe(0);
+  });
+
+  test('should round to nearest cent', () => {
+    expect(amountToInteger(100.555)).toBe(10056);
+  });
+});
+```
+
+### Running Tests
+```bash
+bun test                    # Run all tests
+bun test settlement.test.ts # Run specific test file
+bun test --watch           # Watch mode for development
+bun test --coverage        # Generate coverage report
+```
+
+### Mocking
+Use Bun's built-in mocking capabilities:
+
+```typescript
+import { mock } from 'bun:test';
+
+const mockFn = mock((x: number) => x * 2);
+mockFn(5); // returns 10
+expect(mockFn).toHaveBeenCalledWith(5);
+```
+
+### Async Tests
+```typescript
+test('async operation', async () => {
+  const result = await fetchData();
+  expect(result).toBeDefined();
+});
+```
+
+### Test Organization
+- Group related tests with `describe` blocks
+- Use descriptive test names that explain the expected behavior
+- Follow AAA pattern: Arrange, Act, Assert
+- Keep tests focused on a single behavior
+
+### Example Test File
+```typescript
+import { describe, test, expect, beforeEach } from 'bun:test';
+import { calculateSettlements } from './settlement';
+
+describe('calculateSettlements', () => {
+  let payments: Payment[];
+
+  beforeEach(() => {
+    // Arrange: Set up test data
+    payments = [
+      { id: '1', payer_id: 'alice', amount: 3000, participants: ['alice', 'bob'] },
+      { id: '2', payer_id: 'bob', amount: 5000, participants: ['alice', 'bob', 'charlie'] },
+    ];
+  });
+
+  test('should calculate correct balances', () => {
+    // Act
+    const settlements = calculateSettlements(payments);
+
+    // Assert
+    expect(settlements).toHaveLength(2);
+    expect(settlements[0].from).toBe('alice');
+    expect(settlements[0].to).toBe('bob');
+  });
+
+  test('should return empty array for no payments', () => {
+    const settlements = calculateSettlements([]);
+    expect(settlements).toEqual([]);
   });
 });
 ```
