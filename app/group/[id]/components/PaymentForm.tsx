@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { createPayment } from '@/app/actions/payments';
-import type { Profile } from '@/types/payment';
-import { cn } from '@/lib/utils';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { cn } from '@/lib/utils';
+import type { Profile } from '@/types/payment';
 
 interface PaymentFormProps {
   groupId: string;
@@ -161,7 +161,10 @@ export function PaymentForm({
           ))}
         </div>
         <p className="text-xs text-gray-500">
-          {t('payment.participantsSelected', { count: selectedParticipants.size, total: members.length })}
+          {t('payment.participantsSelected', {
+            count: selectedParticipants.size,
+            total: members.length,
+          })}
         </p>
       </div>
 

@@ -8,9 +8,9 @@ import {
   type PaymentWithParticipants,
 } from '@/lib/utils/settlement';
 import type {
-  Profile,
   Payment,
   PaymentWithDetails,
+  Profile,
   SettlementTransaction,
 } from '@/types/payment';
 

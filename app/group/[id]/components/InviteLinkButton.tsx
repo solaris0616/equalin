@@ -1,7 +1,7 @@
 'use client';
 
+import { Check, Copy } from 'lucide-react';
 import { useState } from 'react';
-import { Copy, Check } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface InviteLinkButtonProps {
@@ -14,9 +14,10 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
   const [error, setError] = useState<string | null>(null);
 
   // Generate the group URL
-  const groupUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/group/${groupId}`
-    : '';
+  const groupUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/group/${groupId}`
+      : '';
 
   const handleCopy = async () => {
     try {

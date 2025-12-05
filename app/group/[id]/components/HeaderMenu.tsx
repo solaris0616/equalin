@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Menu, Copy, Check, Globe } from 'lucide-react';
+import { Check, Copy, Globe, Menu } from 'lucide-react';
+import { useState } from 'react';
 import { type Language, useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface HeaderMenuProps {
@@ -21,9 +21,10 @@ export function HeaderMenu({ groupId, className }: HeaderMenuProps) {
   const [error, setError] = useState<string | null>(null);
 
   // Generate the group URL
-  const groupUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/group/${groupId}`
-    : '';
+  const groupUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/group/${groupId}`
+      : '';
 
   const languages: Array<{ code: Language; label: string; flag: string }> = [
     { code: 'en', label: 'English', flag: '🇺🇸' },
@@ -61,6 +62,7 @@ export function HeaderMenu({ groupId, className }: HeaderMenuProps) {
     <DropdownMenu.Root open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenu.Trigger asChild>
         <button
+          type="button"
           className={`p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors ${className || ''}`}
           aria-label="Open menu"
         >

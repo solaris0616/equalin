@@ -1,12 +1,18 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 // Import translation files
 import enTranslations from './translations/en.json';
 import jaTranslations from './translations/ja.json';
-import zhTranslations from './translations/zh.json';
 import koTranslations from './translations/ko.json';
+import zhTranslations from './translations/zh.json';
 
 // Type definitions
 export type Language = 'en' | 'ja' | 'zh' | 'ko';
@@ -43,7 +49,10 @@ const STORAGE_KEY = 'equalin_language';
  * @param path - The dot-separated path (e.g., "payment.title")
  * @returns The translation string or undefined if not found
  */
-function getNestedTranslation(obj: Translations, path: string): string | undefined {
+function getNestedTranslation(
+  obj: Translations,
+  path: string,
+): string | undefined {
   const keys = path.split('.');
   let current: TranslationValue = obj;
 
@@ -64,7 +73,10 @@ function getNestedTranslation(obj: Translations, path: string): string | undefin
  * @param params - The parameters to replace (e.g., { name: "John" })
  * @returns The text with placeholders replaced
  */
-function replacePlaceholders(text: string, params?: Record<string, string | number>): string {
+function replacePlaceholders(
+  text: string,
+  params?: Record<string, string | number>,
+): string {
   if (!params) return text;
 
   return text.replace(/\{(\w+)\}/g, (match, key) => {
@@ -79,7 +91,11 @@ function replacePlaceholders(text: string, params?: Record<string, string | numb
  * @param params - Optional parameters for placeholder replacement
  * @returns The translated string
  */
-function translate(key: string, language: Language, params?: Record<string, string | number>): string {
+function translate(
+  key: string,
+  language: Language,
+  params?: Record<string, string | number>,
+): string {
   // Try to get translation in selected language
   const translation = getNestedTranslation(translations[language], key);
   if (translation) {

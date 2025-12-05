@@ -1,19 +1,23 @@
 'use client';
 
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { use, useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { createClient } from '@/lib/supabase/client';
 import { getGroupMembers, getGroupPayments } from '@/app/actions/payments';
-import type { Profile, PaymentWithDetails } from '@/types/payment';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { createClient } from '@/lib/supabase/client';
+import type { PaymentWithDetails, Profile } from '@/types/payment';
+import { HeaderMenu } from './components/HeaderMenu';
 import { PaymentForm } from './components/PaymentForm';
 import { PaymentList } from './components/PaymentList';
+import { RefreshButton } from './components/RefreshButton';
 import { SettlementDisplay } from './components/SettlementDisplay';
-import { InviteLinkButton } from './components/InviteLinkButton';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { useLanguage } from '@/lib/i18n/LanguageContext';
-import { LanguageSelector } from '@/components/LanguageSelector';
 
-export default function GroupPage({ params }: { params: Promise<{ id: string }> }) {
+export default function GroupPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { t } = useLanguage();
   const supabase = createClient();
   const { id: groupId } = use(params);
@@ -27,6 +31,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [settlementRefreshTrigger, setSettlementRefreshTrigger] = useState(0);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
 
   // Load profile from localStorage
   useEffect(() => {
@@ -49,6 +54,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
 
   const loadGroupData = async () => {
     setIsLoadingData(true);
+    setRefreshError(null);
     try {
       const [fetchedMembers, fetchedPayments] = await Promise.all([
         getGroupMembers(groupId),
@@ -57,9 +63,10 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
       setMembers(fetchedMembers);
       setPayments(fetchedPayments);
       // Trigger settlement recalculation
-      setSettlementRefreshTrigger(prev => prev + 1);
+      setSettlementRefreshTrigger((prev) => prev + 1);
     } catch (error) {
       console.error('Error loading group data:', error);
+      setRefreshError(t('errors.calculateSettlementFailed'));
     } finally {
       setIsLoadingData(false);
     }
@@ -153,7 +160,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex justify-between items-start">
             <div className="flex-1">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
                 {t('group.title')}
@@ -162,12 +169,28 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
                 {t('group.welcome', { name: profile.name })}
               </p>
             </div>
-            <LanguageSelector className="px-3 py-2 text-sm bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <HeaderMenu groupId={groupId} />
           </div>
-
-          {/* Invite Link */}
-          <InviteLinkButton groupId={groupId} />
         </div>
+
+        {/* Error Message */}
+        {refreshError && (
+          <div
+            className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start gap-3"
+            role="alert"
+          >
+            <div className="flex-1">
+              <p className="font-medium">{refreshError}</p>
+            </div>
+            <button
+              onClick={() => setRefreshError(null)}
+              className="text-red-600 hover:text-red-800 focus:outline-none"
+              aria-label={t('common.close')}
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Add Payment Button/Form */}
         <div>
@@ -206,6 +229,12 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
           )}
         </div>
 
+        {/* Settlement Display */}
+        <SettlementDisplay
+          groupId={groupId}
+          refreshTrigger={settlementRefreshTrigger}
+        />
+
         {/* Payment List */}
         {isLoadingData ? (
           <div className="bg-white p-8 rounded-lg shadow-md text-center">
@@ -219,8 +248,8 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
           />
         )}
 
-        {/* Settlement Display */}
-        <SettlementDisplay groupId={groupId} refreshTrigger={settlementRefreshTrigger} />
+        {/* Floating Refresh Button */}
+        <RefreshButton onRefresh={loadGroupData} />
       </div>
     </div>
   );

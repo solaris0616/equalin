@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
-import type { PaymentWithDetails } from '@/types/payment';
+import { useState } from 'react';
 import { deletePayment } from '@/app/actions/payments';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import type { PaymentWithDetails } from '@/types/payment';
 
 interface PaymentListProps {
   payments: PaymentWithDetails[];
@@ -29,7 +29,11 @@ function formatTimestamp(timestamp: string): string {
   });
 }
 
-export function PaymentList({ payments, groupId, onPaymentDeleted }: PaymentListProps) {
+export function PaymentList({
+  payments,
+  groupId,
+  onPaymentDeleted,
+}: PaymentListProps) {
   const { t } = useLanguage();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -66,16 +70,16 @@ export function PaymentList({ payments, groupId, onPaymentDeleted }: PaymentList
   if (payments.length === 0) {
     return (
       <div className="bg-white p-8 rounded-lg shadow-md text-center">
-        <p className="text-gray-500 text-lg">
-          {t('payment.noPayments')}
-        </p>
+        <p className="text-gray-500 text-lg">{t('payment.noPayments')}</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-gray-900">{t('payment.history')}</h2>
+      <h2 className="text-2xl font-bold text-gray-900">
+        {t('payment.history')}
+      </h2>
       <div className="space-y-3">
         {payments.map((payment) => (
           <div
@@ -121,7 +125,9 @@ export function PaymentList({ payments, groupId, onPaymentDeleted }: PaymentList
 
             {/* Participants */}
             <div className="mb-3">
-              <p className="text-sm text-gray-500 mb-1">{t('payment.participants')}</p>
+              <p className="text-sm text-gray-500 mb-1">
+                {t('payment.participants')}
+              </p>
               <div className="flex flex-wrap gap-2">
                 {payment.participant_names.map((name, index) => (
                   <span

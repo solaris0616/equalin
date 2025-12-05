@@ -1,16 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { calculateSettlement } from '@/app/actions/payments';
-import type { SettlementTransaction } from '@/types/payment';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import type { SettlementTransaction } from '@/types/payment';
 
 interface SettlementDisplayProps {
   groupId: string;
   refreshTrigger?: number; // Optional prop to trigger recalculation
 }
 
-export function SettlementDisplay({ groupId, refreshTrigger }: SettlementDisplayProps) {
+export function SettlementDisplay({
+  groupId,
+  refreshTrigger,
+}: SettlementDisplayProps) {
   const { t } = useLanguage();
   const [transactions, setTransactions] = useState<SettlementTransaction[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -43,7 +46,9 @@ export function SettlementDisplay({ groupId, refreshTrigger }: SettlementDisplay
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">{t('settlement.title')}</h2>
+        <h2 className="text-2xl font-bold text-gray-900">
+          {t('settlement.title')}
+        </h2>
         <button
           type="button"
           onClick={handleCalculateSettlement}
@@ -54,7 +59,9 @@ export function SettlementDisplay({ groupId, refreshTrigger }: SettlementDisplay
               : 'bg-green-600 hover:bg-green-700 focus:ring-green-300'
           }`}
         >
-          {isCalculating ? t('settlement.calculating') : t('settlement.calculate')}
+          {isCalculating
+            ? t('settlement.calculating')
+            : t('settlement.calculate')}
         </button>
       </div>
 
@@ -69,7 +76,9 @@ export function SettlementDisplay({ groupId, refreshTrigger }: SettlementDisplay
       {isCalculating && (
         <div className="bg-white p-8 rounded-lg shadow-md text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
-          <p className="mt-4 text-gray-600">{t('settlement.calculatingMessage')}</p>
+          <p className="mt-4 text-gray-600">
+            {t('settlement.calculatingMessage')}
+          </p>
         </div>
       )}
 
@@ -81,12 +90,16 @@ export function SettlementDisplay({ groupId, refreshTrigger }: SettlementDisplay
               <p className="text-2xl font-bold text-green-600 mb-2">
                 {t('settlement.allSettled')}
               </p>
-              <p className="text-gray-600">{t('settlement.noPaymentsNeeded')}</p>
+              <p className="text-gray-600">
+                {t('settlement.noPaymentsNeeded')}
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
               <p className="text-sm text-gray-600 mb-4">
-                {t('settlement.transactionsNeeded', { count: transactions.length })}
+                {t('settlement.transactionsNeeded', {
+                  count: transactions.length,
+                })}
               </p>
               {transactions.map((transaction, index) => (
                 <div
