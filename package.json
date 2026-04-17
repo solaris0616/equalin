@@ -4,6 +4,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
+    "test": "bun test",
     "lint": "biome lint .",
     "format": "biome format .",
     "format:apply": "biome format --write .",
