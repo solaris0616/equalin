@@ -1,143 +1,34 @@
----
-inclusion: always
----
-
 # Equalin Project Overview
 
-## Project Description
+Equalinは、シンプルで公平な割り勘を実現するためのオープンソースWebアプリケーションです。グループでの支出を記録し、誰が誰にいくら支払うべきかを自動的に計算します。
 
-Equalin is an open-source web application for fair and effortless bill splitting. It enables groups to track shared expenses and automatically calculate who owes whom.
+## コア機能
+- **グループ管理**: グループ作成と招待リンクによる共有
+- **支出記録**: 支払者、金額、参加者を選択して記録
+- **精算計算**: 最小の取引回数で精算できるアルゴリズム
+- **匿名利用**: ログイン不要。localStorageによる簡易的なプロフィール管理
 
-## Core Features
+## 技術スタック
+- **Frontend**: Next.js 15 (App Router), React 19
+- **Backend**: Supabase (PostgreSQL, SSR Client)
+- **Architecture**: Clean Architecture (Domain, Application, Infrastructure, Presentation)
+- **Tooling**: Bun, Biome, TypeScript
 
-- **Group Management**: Create groups and invite members via shareable links
-- **Expense Tracking**: Record payments with descriptions and amounts
-- **Participant Selection**: Choose which members share each expense
-- **Settlement Calculation**: Automatically calculate optimal payment transactions
-- **Anonymous Usage**: No login required, profile stored in localStorage
+## システムアーキテクチャ
+クリーンアーキテクチャを採用し、依存関係を以下のように制御しています：
 
-## Technology Stack
+1. **Domain Layer (`src/domain/`)**:
+   - `entities/`: ビジネスエンティティ（Payment, Profile等）の定義。外部依存ゼロ。
+   - `services/`: 純粋なビジネスロジック（SettlementService）。
+   - `repositories/`: データ永続化のインターフェース。
+2. **Application Layer (`src/application/`)**:
+   - `use-cases/`: 特定の業務フロー（精算計算など）を実現。リポジトリインターフェースに依存。
+3. **Infrastructure Layer (`src/infrastructure/`)**:
+   - `repositories/`: Supabase等を使用したリポジトリの実装。
+4. **Presentation Layer (`app/actions/`, `app/group/`)**:
+   - Server ActionsとReactコンポーネント。ユースケースまたはリポジトリを呼び出す。
 
-### Frontend
-- **Framework**: Next.js (latest) with App Router
-- **Language**: TypeScript 5
-- **UI Library**: React 19
-- **Styling**: Tailwind CSS 3.4 with custom theme
-- **Component Library**: Radix UI (checkbox, dropdown, label, slot)
-- **Icons**: lucide-react
-- **Theme Management**: next-themes
-
-### Backend
-- **Database**: Supabase (PostgreSQL)
-- **Data Fetching**: Supabase SSR client
-- **Server Actions**: Next.js Server Actions for mutations
-
-### Development Tools
-- **Runtime**: Bun (package manager and runtime)
-- **Linter/Formatter**: Biome 2.3.1 (replaces ESLint + Prettier)
-- **Type Checking**: TypeScript strict mode
-- **Version Control**: Git
-
-### Build & Deploy
-- **Build Tool**: Next.js with Turbopack (dev mode)
-- **CSS Processing**: PostCSS with Autoprefixer
-- **Animations**: tailwindcss-animate
-
-## Project Structure
-
-```
-equalin/
-├── app/                    # Next.js App Router pages
-│   ├── group/[id]/        # Dynamic group pages
-│   ├── layout.tsx         # Root layout
-│   ├── page.tsx           # Home page
-│   └── globals.css        # Global styles
-├── lib/                   # Utility functions and clients
-│   ├── supabase/         # Supabase client configurations
-│   └── utils.ts          # General utilities
-├── types/                 # TypeScript type definitions (to be created)
-├── supabase/             # Database migrations
-│   └── migrations/       # SQL migration files
-├── .kiro/                # Kiro IDE configuration
-│   ├── specs/           # Feature specifications
-│   └── steering/        # Project guidelines (this file)
-└── docs/                 # Documentation (if needed)
-```
-
-## Key Conventions
-
-### File Naming
-- Components: PascalCase (e.g., `PaymentForm.tsx`)
-- Utilities: camelCase (e.g., `currency.ts`)
-- Server Actions: camelCase in `actions/` directory
-- Types: PascalCase in `types/` directory
-
-### Import Aliases
-- `@/*` maps to project root (configured in tsconfig.json)
-- Example: `import { createClient } from '@/lib/supabase/client'`
-
-### Component Organization
-- Page components in `app/` directory
-- Reusable components in `app/[route]/components/` or shared `components/` directory
-- Server Actions in `app/actions/` directory
-
-## Database Schema
-
-### Tables
-- `groups`: Expense-sharing groups
-- `profiles`: User profiles (client-generated UUIDs)
-- `group_members`: Junction table for group membership
-- `payments`: Payment records
-- `payment_participants`: Junction table for payment participation
-
-### Key Principles
-- Use UUIDs for all primary keys
-- CASCADE DELETE for referential integrity
-- Store monetary amounts as BIGINT (cents/smallest unit)
-- Use TIMESTAMPTZ for all timestamps
-
-## Development Workflow
-
-### Running the Project
-```bash
-bun dev          # Start development server with Turbopack
-bun build        # Build for production
-bun start        # Start production server
-```
-
-### Code Quality
-```bash
-bun run check           # Run Biome checks (lint + format)
-bun run check:apply     # Auto-fix issues
-bun run format          # Check formatting only
-bun run format:apply    # Auto-format files
-```
-
-### Database Migrations
-```bash
-bunx supabase migration new <name>    # Create new migration
-bunx supabase db reset                # Reset local database
-bunx supabase db push                 # Push migrations to remote
-```
-
-## Environment Variables
-
-Required environment variables (see `.env.example`):
-- `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: Supabase anon/public key
-
-## Design Principles
-
-1. **Simplicity First**: Keep UI clean and intuitive
-2. **No Authentication**: Use localStorage for anonymous profiles
-3. **Mobile-Friendly**: Responsive design for all screen sizes
-4. **Fast Performance**: Optimize for quick load times
-5. **Type Safety**: Leverage TypeScript for reliability
-6. **Accessibility**: Follow WCAG guidelines with Radix UI
-
-## References
-
-- Spec Documents: `.kiro/specs/bill-splitting-core/`
-- Supabase Docs: https://supabase.com/docs
-- Next.js Docs: https://nextjs.org/docs
-- Radix UI: https://www.radix-ui.com/
+## 開発の原則
+1. **ビジネスロジックの隔離**: 精算計算などの核となるロジックは常に `domain/services` に記述し、外部ライブラリやDBに依存させない。
+2. **依存性の逆転**: 高位レイヤーは低位レイヤーのインターフェースに依存し、具象（Supabase等）には依存しない。
+3. **UIの簡素化**: 過剰な装飾を避け、直感的で高速なUIを維持する。

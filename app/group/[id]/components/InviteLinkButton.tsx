@@ -2,18 +2,15 @@
 
 import { Check, Copy } from 'lucide-react';
 import { useState } from 'react';
-import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface InviteLinkButtonProps {
   groupId: string;
 }
 
 export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
-  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Generate the group URL
   const groupUrl =
     typeof window !== 'undefined'
       ? `${window.location.origin}/group/${groupId}`
@@ -21,23 +18,15 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
 
   const handleCopy = async () => {
     try {
-      // Use Clipboard API to copy the URL
       await navigator.clipboard.writeText(groupUrl);
-
-      // Show success confirmation
       setCopied(true);
       setError(null);
-
-      // Reset the success message after 2 seconds
       setTimeout(() => {
         setCopied(false);
       }, 2000);
     } catch (err) {
-      // Handle clipboard API errors gracefully
       console.error('Failed to copy to clipboard:', err);
-      setError(t('errors.copyLinkFailed'));
-
-      // Clear error message after 3 seconds
+      setError('リンクのコピーに失敗しました。もう一度お試しください。');
       setTimeout(() => {
         setError(null);
       }, 3000);
@@ -46,49 +35,51 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-foreground">
-        {t('group.inviteLink')}
+      <label htmlFor="invite-url" className="text-sm font-medium text-gray-700">
+        招待リンク
       </label>
 
       <div className="flex gap-2">
         <input
+          id="invite-url"
           type="text"
           value={groupUrl}
           readOnly
-          className="flex-1 px-3 py-2 text-sm bg-muted border border-input rounded-md text-foreground"
+          className="flex-1 px-3 py-2 text-sm bg-gray-50 border border-gray-300 rounded-md text-gray-900"
           aria-label="Group invitation URL"
         />
 
         <button
+          type="button"
           onClick={handleCopy}
           aria-label="Copy group invitation link"
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors flex items-center gap-2"
         >
           {copied ? (
             <>
               <Check className="w-4 h-4" />
-              <span className="text-sm">{t('common.copied')}</span>
+              <span className="text-sm">コピーしました！</span>
             </>
           ) : (
             <>
               <Copy className="w-4 h-4" />
-              <span className="text-sm">{t('common.copy')}</span>
+              <span className="text-sm">コピー</span>
             </>
           )}
         </button>
       </div>
 
       {error && (
-        <p className="text-sm text-destructive" role="alert">
+        <p className="text-sm text-red-600" role="alert">
           {error}
         </p>
       )}
 
       {copied && !error && (
-        <p className="text-sm text-green-600" role="status">
-          {t('success.linkCopied')}
-        </p>
+        <output className="text-sm text-green-600">
+          リンクをクリップボードにコピーしました！
+        </output>
       )}
     </div>
   );
-}
+  }

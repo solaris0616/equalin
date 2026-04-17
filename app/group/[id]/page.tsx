@@ -3,26 +3,27 @@
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { use, useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { getGroupMembers, getGroupPayments } from '@/app/actions/payments';
-import { useLanguage } from '@/lib/i18n/LanguageContext';
-import { createClient } from '@/lib/supabase/client';
-import type { PaymentWithDetails, Profile } from '@/types/payment';
-import { HeaderMenu } from './components/HeaderMenu';
+import {
+  getGroupMembers,
+  getGroupPayments,
+  joinGroup,
+} from '@/app/actions/payments';
+import type {
+  PaymentWithDetails,
+  Profile,
+} from '@/src/domain/entities/payment';
+import { InviteLinkButton } from './components/InviteLinkButton';
 import { PaymentForm } from './components/PaymentForm';
 import { PaymentList } from './components/PaymentList';
-import { RefreshButton } from './components/RefreshButton';
 import { SettlementDisplay } from './components/SettlementDisplay';
-import { Toast } from './components/Toast';
 
 export default function GroupPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { t } = useLanguage();
-  const supabase = createClient();
   const { id: groupId } = use(params);
-  const storageKey = `equalin_profile_${groupId}`; // Key is now group-specific
+  const storageKey = `equalin_profile_${groupId}`;
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [nameInput, setNameInput] = useState('');
@@ -33,10 +34,6 @@ export default function GroupPage({
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [settlementRefreshTrigger, setSettlementRefreshTrigger] = useState(0);
   const [refreshError, setRefreshError] = useState<string | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>(
-    'success',
-  );
 
   const loadGroupData = async () => {
     setIsLoadingData(true);
@@ -48,11 +45,12 @@ export default function GroupPage({
       ]);
       setMembers(fetchedMembers);
       setPayments(fetchedPayments);
-      // Trigger settlement recalculation
       setSettlementRefreshTrigger((prev) => prev + 1);
     } catch (error) {
       console.error('Error loading group data:', error);
-      setRefreshError(t('errors.calculateSettlementFailed'));
+      setRefreshError(
+        'データの読み込みに失敗しました。もう一度お試しください。',
+      );
     } finally {
       setIsLoadingData(false);
     }
@@ -60,58 +58,27 @@ export default function GroupPage({
 
   const handleJoinGroup = async () => {
     if (!nameInput.trim()) {
-      alert(t('errors.enterName'));
+      alert('名前を入力してください。');
       return;
     }
 
     const newProfile: Profile = { id: uuidv4(), name: nameInput.trim() };
+    const result = await joinGroup(groupId, newProfile);
 
-    // Since a profile is unique to a user joining a group,
-    // we can insert both profile and group_member.
-    // A more robust solution might check if a profile with that name already exists for this group.
-
-    // 1. Save to 'profiles' table
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert(newProfile);
-    if (profileError) {
-      console.error('Error saving profile:', profileError);
-      alert(t('errors.saveProfileFailed'));
+    if (!result.success) {
+      alert(result.error || 'グループへの参加に失敗しました。');
       return;
     }
 
-    // 2. Save to 'group_members' table
-    const { error: memberError } = await supabase
-      .from('group_members')
-      .insert({ group_id: groupId, profile_id: newProfile.id });
-    if (memberError) {
-      console.error('Error joining group:', memberError);
-      alert(t('errors.joinGroupFailed'));
-      return;
-    }
-
-    // 3. Save profile to localStorage for this specific group and update state
     localStorage.setItem(storageKey, JSON.stringify(newProfile));
     setProfile(newProfile);
   };
 
   const handlePaymentSuccess = async () => {
-    // Refresh payments and members after successful payment creation
     await loadGroupData();
-    // Hide the payment form
     setShowPaymentForm(false);
   };
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
-    setToastMessage(message);
-    setToastType(type);
-  };
-
-  const hideToast = () => {
-    setToastMessage(null);
-  };
-
-  // Load profile from localStorage
   useEffect(() => {
     const loadProfileForGroup = () => {
       const localProfile = localStorage.getItem(storageKey);
@@ -123,18 +90,16 @@ export default function GroupPage({
     loadProfileForGroup();
   }, [storageKey]);
 
-  // Fetch group members and payments when profile is loaded
   useEffect(() => {
     if (profile) {
       loadGroupData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        {t('common.loading')}
+        読み込み中...
       </div>
     );
   }
@@ -144,17 +109,17 @@ export default function GroupPage({
       <div className="min-h-screen bg-gray-50 flex justify-center items-center">
         <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-lg shadow-md">
           <h2 className="text-2xl font-bold text-center text-gray-900">
-            {t('group.joinTitle')}
+            このグループに参加
           </h2>
           <p className="text-center text-gray-600">
-            {t('group.joinDescription')}
+            このグループでの名前を設定してください。
           </p>
           <div className="space-y-4">
             <input
               type="text"
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
-              placeholder={t('group.namePlaceholder')}
+              placeholder="あなたの名前"
               className="w-full px-4 py-2 text-gray-900 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
@@ -162,7 +127,7 @@ export default function GroupPage({
               onClick={handleJoinGroup}
               className="w-full px-4 py-2 font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              {t('group.joinButton')}
+              参加
             </button>
           </div>
         </div>
@@ -170,26 +135,21 @@ export default function GroupPage({
     );
   }
 
-  // If profile is set for this group, show the main content
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-4">
             <div className="flex-1">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                {t('group.title')}
+                グループの支出
               </h1>
-              <p className="text-gray-600">
-                {t('group.welcome', { name: profile.name })}
-              </p>
+              <p className="text-gray-600">ようこそ、{profile.name}さん！</p>
             </div>
-            <HeaderMenu groupId={groupId} onShowToast={showToast} />
+            <InviteLinkButton groupId={groupId} />
           </div>
         </div>
 
-        {/* Error Message */}
         {refreshError && (
           <div
             className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start gap-3"
@@ -202,14 +162,13 @@ export default function GroupPage({
               type="button"
               onClick={() => setRefreshError(null)}
               className="text-red-600 hover:text-red-800 focus:outline-none"
-              aria-label={t('common.close')}
+              aria-label="閉じる"
             >
               ✕
             </button>
           </div>
         )}
 
-        {/* Add Payment Button/Form */}
         <div>
           <button
             type="button"
@@ -219,12 +178,12 @@ export default function GroupPage({
             {showPaymentForm ? (
               <>
                 <ChevronUp className="w-5 h-5" />
-                {t('payment.hideForm')}
+                支払いフォームを非表示
               </>
             ) : (
               <>
                 <ChevronDown className="w-5 h-5" />
-                {t('payment.addNew')}
+                新しい支払いを追加
               </>
             )}
           </button>
@@ -233,7 +192,7 @@ export default function GroupPage({
             <div className="mt-4">
               {isLoadingData ? (
                 <div className="bg-white p-8 rounded-lg shadow-md text-center">
-                  <p className="text-gray-600">{t('group.loadingMembers')}</p>
+                  <p className="text-gray-600">メンバーを読み込み中...</p>
                 </div>
               ) : (
                 <PaymentForm
@@ -247,16 +206,14 @@ export default function GroupPage({
           )}
         </div>
 
-        {/* Settlement Display */}
         <SettlementDisplay
           groupId={groupId}
           refreshTrigger={settlementRefreshTrigger}
         />
 
-        {/* Payment List */}
         {isLoadingData ? (
           <div className="bg-white p-8 rounded-lg shadow-md text-center">
-            <p className="text-gray-600">{t('group.loadingPayments')}</p>
+            <p className="text-gray-600">支払いを読み込み中...</p>
           </div>
         ) : (
           <PaymentList
@@ -265,15 +222,7 @@ export default function GroupPage({
             onPaymentDeleted={loadGroupData}
           />
         )}
-
-        {/* Floating Refresh Button */}
-        <RefreshButton onRefresh={loadGroupData} />
       </div>
-
-      {/* Toast Notification */}
-      {toastMessage && (
-        <Toast message={toastMessage} type={toastType} onClose={hideToast} />
-      )}
     </div>
   );
 }

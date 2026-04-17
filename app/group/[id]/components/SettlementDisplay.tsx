@@ -1,26 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { calculateSettlement } from '@/app/actions/payments';
-import { useLanguage } from '@/lib/i18n/LanguageContext';
-import type { SettlementTransaction } from '@/types/payment';
+import type { SettlementTransaction } from '@/src/domain/entities/payment';
 
 interface SettlementDisplayProps {
   groupId: string;
-  refreshTrigger?: number; // Optional prop to trigger recalculation
+  refreshTrigger?: number;
 }
 
 export function SettlementDisplay({
   groupId,
   refreshTrigger,
 }: SettlementDisplayProps) {
-  const { t } = useLanguage();
   const [transactions, setTransactions] = useState<SettlementTransaction[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
   const [hasCalculated, setHasCalculated] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleCalculateSettlement = async () => {
+  const handleCalculateSettlement = useCallback(async () => {
     setIsCalculating(true);
     setError(null);
 
@@ -30,25 +28,22 @@ export function SettlementDisplay({
       setHasCalculated(true);
     } catch (err) {
       console.error('Error calculating settlement:', err);
-      setError(t('errors.calculateSettlementFailed'));
+      setError('精算の計算に失敗しました。もう一度お試しください。');
     } finally {
       setIsCalculating(false);
     }
-  };
+  }, [groupId]);
 
-  // Auto-recalculate when refreshTrigger changes (e.g., after payment deletion)
   useEffect(() => {
     if (hasCalculated && refreshTrigger !== undefined) {
       handleCalculateSettlement();
     }
-  }, [refreshTrigger]);
+  }, [hasCalculated, refreshTrigger, handleCalculateSettlement]);
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">
-          {t('settlement.title')}
-        </h2>
+        <h2 className="text-2xl font-bold text-gray-900">精算</h2>
         <button
           type="button"
           onClick={handleCalculateSettlement}
@@ -59,47 +54,37 @@ export function SettlementDisplay({
               : 'bg-green-600 hover:bg-green-700 focus:ring-green-300'
           }`}
         >
-          {isCalculating
-            ? t('settlement.calculating')
-            : t('settlement.calculate')}
+          {isCalculating ? '計算中...' : '精算を計算'}
         </button>
       </div>
 
-      {/* Error Display */}
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-md">
           <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
 
-      {/* Loading State */}
       {isCalculating && (
         <div className="bg-white p-8 rounded-lg shadow-md text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
-          <p className="mt-4 text-gray-600">
-            {t('settlement.calculatingMessage')}
-          </p>
+          <p className="mt-4 text-gray-600">精算を計算中...</p>
         </div>
       )}
 
-      {/* Settlement Results */}
       {!isCalculating && hasCalculated && (
         <div className="bg-white p-6 rounded-lg shadow-md">
           {transactions.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-2xl font-bold text-green-600 mb-2">
-                {t('settlement.allSettled')}
+                精算完了！
               </p>
-              <p className="text-gray-600">
-                {t('settlement.noPaymentsNeeded')}
-              </p>
+              <p className="text-gray-600">支払いは必要ありません。</p>
             </div>
           ) : (
             <div className="space-y-3">
               <p className="text-sm text-gray-600 mb-4">
-                {t('settlement.transactionsNeeded', {
-                  count: transactions.length,
-                })}
+                すべての債務を精算するには{transactions.length}
+                件の取引が必要です:
               </p>
               {transactions.map((transaction, index) => (
                 <div

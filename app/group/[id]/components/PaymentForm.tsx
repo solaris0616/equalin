@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import { createPayment } from '@/app/actions/payments';
-import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { cn } from '@/lib/utils';
-import type { Profile } from '@/types/payment';
+import type { Profile } from '@/src/domain/entities/payment';
 
 interface PaymentFormProps {
   groupId: string;
@@ -19,7 +18,6 @@ export function PaymentForm({
   members,
   onSuccess,
 }: PaymentFormProps) {
-  const { t } = useLanguage();
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(
@@ -44,16 +42,14 @@ export function PaymentForm({
     e.preventDefault();
     setError(null);
 
-    // Parse amount as integer
     const amountValue = Number.parseInt(amount, 10);
     if (Number.isNaN(amountValue) || amountValue < 1) {
-      setError(t('errors.validAmount'));
+      setError('有効な金額を入力してください（最小値：1）');
       return;
     }
 
-    // Validate participants
     if (selectedParticipants.size === 0) {
-      setError(t('errors.selectParticipants'));
+      setError('少なくとも1人の参加者を選択してください');
       return;
     }
 
@@ -69,18 +65,17 @@ export function PaymentForm({
       );
 
       if (result.success) {
-        // Reset form
         setDescription('');
         setAmount('');
         setSelectedParticipants(new Set(members.map((m) => m.id)));
         setError(null);
         onSuccess();
       } else {
-        setError(result.error || t('errors.createPaymentFailed'));
+        setError(result.error || '支払いの作成に失敗しました');
       }
     } catch (err) {
       console.error('Error submitting payment:', err);
-      setError(t('errors.unexpectedError'));
+      setError('予期しないエラーが発生しました');
     } finally {
       setIsSubmitting(false);
     }
@@ -91,34 +86,32 @@ export function PaymentForm({
       onSubmit={handleSubmit}
       className="space-y-6 bg-white p-6 rounded-lg shadow-md"
     >
-      <h2 className="text-2xl font-bold text-gray-900">{t('payment.title')}</h2>
+      <h2 className="text-2xl font-bold text-gray-900">支払いを追加</h2>
 
-      {/* Description Input */}
       <div className="space-y-2">
         <label
           htmlFor="description"
           className="block text-sm font-medium text-gray-700"
         >
-          {t('payment.description')}
+          説明（任意）
         </label>
         <input
           id="description"
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder={t('payment.descriptionPlaceholder')}
+          placeholder="例：レストランでの夕食"
           className="w-full px-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           disabled={isSubmitting}
         />
       </div>
 
-      {/* Amount Input */}
       <div className="space-y-2">
         <label
           htmlFor="amount"
           className="block text-sm font-medium text-gray-700"
         >
-          {t('payment.amountRequired')}
+          金額 *
         </label>
         <input
           id="amount"
@@ -128,19 +121,18 @@ export function PaymentForm({
           max="999999999"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder={t('payment.amountPlaceholder')}
+          placeholder="0"
           className="w-full px-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           required
           disabled={isSubmitting}
         />
       </div>
 
-      {/* Participant Selection */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          {t('payment.participantsRequired')}
-        </label>
-        <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-md p-3 bg-gray-50">
+        <span className="block text-sm font-medium text-gray-700">
+          参加者 *
+        </span>
+        <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-md p-3 bg-gray-50" role="group" aria-label="参加者選択">
           {members.map((member) => (
             <label
               key={member.id}
@@ -161,21 +153,16 @@ export function PaymentForm({
           ))}
         </div>
         <p className="text-xs text-gray-500">
-          {t('payment.participantsSelected', {
-            count: selectedParticipants.size,
-            total: members.length,
-          })}
+          {members.length}人中{selectedParticipants.size}人選択
         </p>
       </div>
 
-      {/* Error Display */}
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-md">
           <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
 
-      {/* Submit Button */}
       <button
         type="submit"
         disabled={isSubmitting}
@@ -186,7 +173,7 @@ export function PaymentForm({
             : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-300',
         )}
       >
-        {isSubmitting ? t('payment.creating') : t('payment.create')}
+        {isSubmitting ? '支払いを作成中...' : '支払いを作成'}
       </button>
     </form>
   );
