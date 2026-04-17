@@ -1,9 +1,8 @@
 'use client';
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Copy, Globe, Menu } from 'lucide-react';
+import { Copy, Menu } from 'lucide-react';
 import { useState } from 'react';
-import { type Language, useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface HeaderMenuProps {
   groupId: string;
@@ -13,14 +12,13 @@ interface HeaderMenuProps {
 
 /**
  * HeaderMenu Component
- * Combines language selection and invite link functionality in a dropdown menu
+ * Provides invite link functionality in a dropdown menu
  */
 export function HeaderMenu({
   groupId,
   onShowToast,
   className,
 }: HeaderMenuProps) {
-  const { t, language, setLanguage } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
 
   // Generate the group URL
@@ -29,25 +27,14 @@ export function HeaderMenu({
       ? `${window.location.origin}/group/${groupId}`
       : '';
 
-  const languages: Array<{ code: Language; label: string; flag: string }> = [
-    { code: 'en', label: 'English', flag: '🇺🇸' },
-    { code: 'ja', label: '日本語', flag: '🇯🇵' },
-    { code: 'zh', label: '中文', flag: '🇨🇳' },
-    { code: 'ko', label: '한국어', flag: '🇰🇷' },
-  ];
-
   const handleCopyInviteLink = async () => {
     try {
       await navigator.clipboard.writeText(groupUrl);
-      onShowToast(t('success.linkCopied'), 'success');
+      onShowToast('招待リンクをコピーしました', 'success');
     } catch (err) {
       console.error('Failed to copy to clipboard:', err);
-      onShowToast(t('errors.copyLinkFailed'), 'error');
+      onShowToast('リンクのコピーに失敗しました', 'error');
     }
-  };
-
-  const handleLanguageChange = (newLanguage: Language) => {
-    setLanguage(newLanguage);
   };
 
   return (
@@ -64,39 +51,10 @@ export function HeaderMenu({
 
       <DropdownMenu.Portal>
         <DropdownMenu.Content
-          className="min-w-[220px] bg-white rounded-lg shadow-lg border border-gray-200 p-2 z-50"
+          className="min-w-[200px] bg-white rounded-lg shadow-lg border border-gray-200 p-2 z-50"
           sideOffset={5}
           align="end"
         >
-          {/* Language Selection Section */}
-          <DropdownMenu.Label className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
-            <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4" />
-              {t('common.language') || 'Language'}
-            </div>
-          </DropdownMenu.Label>
-
-          <DropdownMenu.Separator className="h-px bg-gray-200 my-1" />
-
-          {languages.map((lang) => (
-            <DropdownMenu.Item
-              key={lang.code}
-              className={`px-3 py-2 text-sm rounded-md cursor-pointer outline-none transition-colors ${
-                language === lang.code
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-gray-700 hover:bg-gray-100 focus:bg-gray-100'
-              }`}
-              onSelect={() => handleLanguageChange(lang.code)}
-            >
-              <span className="flex items-center gap-2">
-                <span>{lang.flag}</span>
-                <span>{lang.label}</span>
-              </span>
-            </DropdownMenu.Item>
-          ))}
-
-          <DropdownMenu.Separator className="h-px bg-gray-200 my-1" />
-
           {/* Invite Link Section */}
           <DropdownMenu.Item
             className="px-3 py-2 text-sm text-gray-700 rounded-md cursor-pointer outline-none hover:bg-gray-100 focus:bg-gray-100 transition-colors"
@@ -104,7 +62,7 @@ export function HeaderMenu({
           >
             <div className="flex items-center gap-2">
               <Copy className="w-4 h-4" />
-              <span>{t('group.inviteLink')}</span>
+              <span>招待リンクをコピー</span>
             </div>
           </DropdownMenu.Item>
         </DropdownMenu.Content>

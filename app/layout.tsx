@@ -33,7 +33,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <LanguageProvider>{children}</LanguageProvider>
+          {children}
         </ThemeProvider>
       </body>
     </html>

@@ -14,7 +14,7 @@ export class SupabaseGroupRepository implements IGroupRepository {
     if (error) throw new Error(error.message);
     return {
       id: data.id,
-      created_at: data.created_at,
+      createdAt: data.created_at,
     };
   }
 
@@ -30,7 +30,7 @@ export class SupabaseGroupRepository implements IGroupRepository {
     return {
       id: data.id,
       name: data.name,
-      created_at: data.created_at,
+      createdAt: data.created_at,
     };
   }
 
