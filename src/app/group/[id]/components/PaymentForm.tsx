@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { createPayment } from '@/app/actions/payments';
 import { cn } from '@/lib/utils';
-import type { Profile } from '@/src/domain/entities/payment';
+import type { Profile } from '@/domain/entities/payment';
 
 interface PaymentFormProps {
   groupId: string;

@@ -11,7 +11,7 @@ import {
 import type {
   PaymentWithDetails,
   Profile,
-} from '@/src/domain/entities/payment';
+} from '@/domain/entities/payment';
 import { InviteLinkButton } from './components/InviteLinkButton';
 import { PaymentForm } from './components/PaymentForm';
 import { PaymentList } from './components/PaymentList';

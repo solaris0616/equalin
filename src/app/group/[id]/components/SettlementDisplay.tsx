@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { calculateSettlement } from '@/app/actions/payments';
-import type { SettlementTransaction } from '@/src/domain/entities/payment';
+import type { SettlementTransaction } from '@/domain/entities/payment';
 
 interface SettlementDisplayProps {
   groupId: string;

@@ -5,13 +5,13 @@ import type {
   PaymentWithDetails,
   Profile,
   SettlementTransaction,
-} from '@/src/domain/entities/payment';
+} from '@/domain/entities/payment';
 import {
   groupRepository,
   paymentRepository,
   profileRepository,
   settlementUseCase,
-} from '@/src/registry';
+} from '@/registry';
 
 /**
  * グループ作成
