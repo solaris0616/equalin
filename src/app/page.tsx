@@ -18,20 +18,29 @@ export default function Page() {
   };
 
   return (
-    <div className="relative min-h-screen bg-gray-50 flex flex-col justify-center items-center">
-      <div className="max-w-md w-full text-center p-8">
-        <h1 className="text-5xl font-bold text-gray-900 mb-4">Equalin</h1>
-        <p className="text-xl text-gray-600 mb-10">
-          最もシンプルな割り勘アプリ
+    <div className="relative min-h-screen bg-[#f0f0f0] flex flex-col justify-center items-center font-sans p-8 text-center">
+      <div className="max-w-md w-full">
+        <h1 className="text-8xl font-bold text-black mb-6 tracking-normal">
+          Equalin
+        </h1>
+        <div className="h-2 bg-black w-full mb-8" />
+        <p className="text-xl md:text-2xl text-black mb-16 font-bold tracking-widest leading-relaxed">
+          <span className="inline-block">貸し借りゼロで、</span>
+          <span className="inline-block">次の冒険へ。</span>
         </p>
-        <button
-          type="button"
-          onClick={handleCreateGroup}
-          className="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-300 ease-in-out text-lg shadow-md"
-        >
-          新しいグループを作成
-        </button>
+        <div className="max-w-xs mx-auto">
+          <button
+            type="button"
+            onClick={handleCreateGroup}
+            className="w-full bg-blue-500 text-white font-bold py-5 px-8 border-4 border-black shadow-pixel hover:bg-blue-600 active:shadow-pixel-active active:translate-x-1 active:translate-y-1 transition-all text-3xl uppercase tracking-widest"
+          >
+            START
+          </button>
+        </div>
       </div>
+      <p className="mt-16 text-black font-bold animate-pulse tracking-widest text-lg">
+        PUSH START BUTTON
+      </p>
     </div>
   );
 }

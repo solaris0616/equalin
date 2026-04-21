@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { calculateSettlement } from "@/app/actions/payments";
+import { cn } from "@/lib/utils";
 import type { SettlementTransaction } from "@/core/domain/entities/payment";
 
 interface SettlementDisplayProps {
@@ -41,64 +42,68 @@ export function SettlementDisplay({
   }, [hasCalculated, refreshTrigger, handleCalculateSettlement]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">精算</h2>
+    <div className="space-y-6">
+      <div className="pixel-card flex flex-col md:flex-row justify-between items-stretch md:items-center gap-6 bg-yellow-50 border-yellow-500">
+        <h2 className="text-3xl font-bold text-black uppercase tracking-normal">精算</h2>
         <button
           type="button"
           onClick={handleCalculateSettlement}
           disabled={isCalculating}
-          className={`px-6 py-2 font-bold text-white rounded-lg transition focus:outline-none focus:ring-4 ${
-            isCalculating
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-green-600 hover:bg-green-700 focus:ring-green-300"
-          }`}
+          className={cn(
+            'pixel-button-yellow text-xl uppercase tracking-widest',
+            isCalculating && 'opacity-50 cursor-not-allowed',
+          )}
         >
-          {isCalculating ? "計算中..." : "精算"}
+          {isCalculating ? '計算中...' : '計算する'}
         </button>
       </div>
 
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-800">{error}</p>
+        <div className="p-4 bg-red-500 border-4 border-black text-white font-bold shadow-pixel">
+          <p>{error}</p>
         </div>
       )}
 
       {isCalculating && (
-        <div className="bg-white p-8 rounded-lg shadow-md text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
-          <p className="mt-4 text-gray-600">精算を計算中...</p>
+        <div className="pixel-card text-center py-12">
+          <div className="inline-block animate-spin w-10 h-10 border-4 border-yellow-500 border-t-transparent" />
+          <p className="mt-6 text-black font-bold animate-pulse">計算しています...</p>
         </div>
       )}
 
       {!isCalculating && hasCalculated && (
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="pixel-card bg-white">
           {transactions.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-2xl font-bold text-green-600 mb-2">
-                精算完了！
+            <div className="text-center py-12">
+              <p className="text-3xl font-bold text-green-500 uppercase tracking-widest animate-bounce mb-4">
+                クエスト達成！
               </p>
-              <p className="text-gray-600">支払いは必要ありません。</p>
+              <p className="text-black font-bold italic">精算の必要はありません。</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
+              <div className="text-center mb-6">
+                <p className="text-xl font-bold text-black uppercase underline decoration-4 underline-offset-8">
+                  精算の方法
+                </p>
+              </div>
               {transactions.map((transaction, index) => (
                 <div
                   key={`${transaction.from}-${transaction.to}-${transaction.amount}-${index}`}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
+                  className="flex flex-col md:flex-row items-center justify-between p-6 bg-gray-50 border-4 border-black shadow-pixel-sm gap-4"
                 >
-                  <div className="flex items-center space-x-3">
-                    <span className="font-semibold text-gray-900">
+                  <div className="flex items-center gap-4 text-lg font-bold">
+                    <span className="text-red-600 bg-red-50 px-2 border-2 border-red-600 uppercase">
                       {transaction.from}
                     </span>
-                    <span className="text-gray-500">→</span>
-                    <span className="font-semibold text-gray-900">
+                    <span className="text-2xl">→</span>
+                    <span className="text-blue-600 bg-blue-50 px-2 border-2 border-blue-600 uppercase">
                       {transaction.to}
                     </span>
                   </div>
-                  <span className="text-xl font-bold text-green-600">
+                  <div className="text-3xl font-bold text-black bg-white px-4 py-2 border-4 border-black">
                     ¥{transaction.amount.toLocaleString()}
-                  </span>
+                  </div>
                 </div>
               ))}
             </div>

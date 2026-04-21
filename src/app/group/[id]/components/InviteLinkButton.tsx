@@ -2,6 +2,7 @@
 
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface InviteLinkButtonProps {
   groupId: string;
@@ -34,30 +35,24 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
   };
 
   return (
-    <div className="space-y-2 w-full md:w-auto">
-      {copied && !error ? (
-        <label
-          htmlFor="invite-url"
-          className="text-sm font-medium text-green-600"
-        >
-          コピーしました！
-        </label>
-      ) : (
-        <label
-          htmlFor="invite-url"
-          className="text-sm font-medium text-gray-700"
-        >
-          招待リンク
-        </label>
-      )}
+    <div className="space-y-4 w-full md:w-auto">
+      <label
+        htmlFor="invite-url"
+        className={cn(
+          "text-xs font-bold uppercase tracking-widest",
+          copied && !error ? "text-green-500" : "text-gray-500"
+        )}
+      >
+        {copied && !error ? 'コピーしました！' : '招待リンクをシェア'}
+      </label>
 
-      <div className="flex gap-2">
+      <div className="flex gap-4">
         <input
           id="invite-url"
           type="text"
           value={groupUrl}
           readOnly
-          className="flex-1 px-3 py-2 text-sm bg-gray-50 border border-gray-300 rounded-md text-gray-900"
+          className="flex-1 pixel-input text-sm"
           aria-label="Group invitation URL"
         />
 
@@ -65,14 +60,14 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
           type="button"
           onClick={handleCopy}
           aria-label="Copy group invitation link"
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors flex items-center gap-2"
+          className="pixel-button-primary flex items-center justify-center p-3"
         >
-          <Copy className="w-4 h-4" />
+          {copied ? <Check className="w-5 h-5 text-green-300" /> : <Copy className="w-5 h-5 text-white" />}
         </button>
       </div>
 
       {error && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm font-bold text-red-600 uppercase" role="alert">
           {error}
         </p>
       )}

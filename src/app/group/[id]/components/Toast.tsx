@@ -42,37 +42,37 @@ export function Toast({ message, type, duration = 3000, onClose }: ToastProps) {
 
   // Colors based on type
   const colorClasses = {
-    success: 'bg-green-600 text-white',
-    error: 'bg-destructive text-destructive-foreground',
-    info: 'bg-primary text-primary-foreground',
+    success: 'bg-green-500 text-white',
+    error: 'bg-red-500 text-white',
+    info: 'bg-blue-500 text-white',
   };
 
   return (
     <div
       className={`
-        fixed bottom-20 left-4 right-4 z-50
-        md:left-auto md:right-4 md:max-w-md
+        fixed bottom-10 left-4 right-4 z-50
+        md:left-auto md:right-8 md:max-w-md
         ${colorClasses[type]}
-        rounded-lg shadow-lg
-        px-4 py-3
-        flex items-center gap-3
-        transition-all duration-300 ease-in-out
-        ${isVisible && !isExiting ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}
+        pixel-card shadow-pixel
+        px-6 py-4
+        flex items-center gap-4
+        transition-all duration-300
+        ${isVisible && !isExiting ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}
       `}
       role="alert"
       aria-live="polite"
     >
-      <Icon className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
+      <Icon className="w-6 h-6 flex-shrink-0" aria-hidden="true" />
 
-      <p className="flex-1 text-sm font-medium">{message}</p>
+      <p className="flex-1 text-base font-bold uppercase tracking-widest">{message}</p>
 
       <button
         type="button"
         onClick={handleClose}
-        className="flex-shrink-0 p-1 rounded hover:bg-black/10 focus:outline-none focus:ring-2 focus:ring-white/50 transition-colors"
+        className="flex-shrink-0 p-1 font-bold hover:text-black transition-colors"
         aria-label="Close notification"
       >
-        <X className="w-4 h-4" />
+        [X]
       </button>
     </div>
   );
