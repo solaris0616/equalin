@@ -235,8 +235,8 @@ supabase migration new add_payment_participants_table
    ```sql
    -- Add payment_participants table for tracking expense sharing
    CREATE TABLE payment_participants (
-     payment_id UUID REFERENCES payments(id) ON DELETE CASCADE,
-     profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+     payment_id TEXT REFERENCES payments(id) ON DELETE CASCADE,
+     profile_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
      PRIMARY KEY (payment_id, profile_id)
    );
    ```
@@ -392,14 +392,14 @@ Supabase doesn't support transactions in the client, but you can:
 1. **Use Database Functions**
    ```sql
    CREATE OR REPLACE FUNCTION create_payment_with_participants(
-     p_group_id UUID,
-     p_payer_id UUID,
+     p_group_id TEXT,
+     p_payer_id TEXT,
      p_amount BIGINT,
      p_description TEXT,
-     p_participant_ids UUID[]
-   ) RETURNS UUID AS $$
+     p_participant_ids TEXT[]
+   ) RETURNS TEXT AS $$
    DECLARE
-     v_payment_id UUID;
+     v_payment_id TEXT;
    BEGIN
      -- Insert payment
      INSERT INTO payments (group_id, payer_id, amount, description)

@@ -2,7 +2,7 @@
 
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { use, useEffect, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { nanoid } from "nanoid";
 import {
   getGroupMembers,
   getGroupPayments,
@@ -62,7 +62,7 @@ export default function GroupPage({
       return;
     }
 
-    const newProfile: Profile = { id: uuidv4(), name: nameInput.trim() };
+    const newProfile: Profile = { id: nanoid(), name: nameInput.trim() };
     const result = await joinGroup(groupId, newProfile);
 
     if (!result.success) {

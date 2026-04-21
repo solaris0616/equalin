@@ -1,13 +1,15 @@
 import { createClient } from '@/lib/supabase/server';
 import type { Group, Profile } from '@/core/domain/entities/payment';
 import type { IGroupRepository } from '@/core/domain/repositories';
+import { nanoid } from 'nanoid';
 
 export class SupabaseGroupRepository implements IGroupRepository {
   async create(): Promise<Group> {
+    const id = nanoid();
     const supabase = await createClient();
     const { data, error } = await supabase
       .from('groups')
-      .insert([{}])
+      .insert([{ id }])
       .select('id, created_at')
       .single();
 
