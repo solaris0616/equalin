@@ -144,7 +144,6 @@ export default function GroupPage({
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
                 グループの支出
               </h1>
-              <p className="text-gray-600">ようこそ、{profile.name}さん！</p>
             </div>
             <InviteLinkButton groupId={groupId} />
           </div>
@@ -206,11 +205,6 @@ export default function GroupPage({
           )}
         </div>
 
-        <SettlementDisplay
-          groupId={groupId}
-          refreshTrigger={settlementRefreshTrigger}
-        />
-
         {isLoadingData ? (
           <div className="bg-white p-8 rounded-lg shadow-md text-center">
             <p className="text-gray-600">支払いを読み込み中...</p>
@@ -222,6 +216,11 @@ export default function GroupPage({
             onPaymentDeleted={loadGroupData}
           />
         )}
+
+        <SettlementDisplay
+          groupId={groupId}
+          refreshTrigger={settlementRefreshTrigger}
+        />
       </div>
     </div>
   );
