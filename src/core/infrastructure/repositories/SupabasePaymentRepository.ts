@@ -3,8 +3,8 @@ import type {
   Payment,
   PaymentWithDetails,
   PaymentWithParticipants,
-} from '@/domain/entities/payment';
-import type { IPaymentRepository } from '@/domain/repositories';
+} from '@/core/domain/entities/payment';
+import type { IPaymentRepository } from '@/core/domain/repositories';
 
 export class SupabasePaymentRepository implements IPaymentRepository {
   async create(

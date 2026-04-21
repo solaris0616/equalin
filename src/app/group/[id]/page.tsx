@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { use, useEffect, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { use, useEffect, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 import {
   getGroupMembers,
   getGroupPayments,
   joinGroup,
-} from '@/app/actions/payments';
+} from "@/app/actions/payments";
 import type {
   PaymentWithDetails,
   Profile,
-} from '@/domain/entities/payment';
-import { InviteLinkButton } from './components/InviteLinkButton';
-import { PaymentForm } from './components/PaymentForm';
-import { PaymentList } from './components/PaymentList';
-import { SettlementDisplay } from './components/SettlementDisplay';
+} from "@/core/domain/entities/payment";
+import { InviteLinkButton } from "./components/InviteLinkButton";
+import { PaymentForm } from "./components/PaymentForm";
+import { PaymentList } from "./components/PaymentList";
+import { SettlementDisplay } from "./components/SettlementDisplay";
 
 export default function GroupPage({
   params,
@@ -26,7 +26,7 @@ export default function GroupPage({
   const storageKey = `equalin_profile_${groupId}`;
 
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [nameInput, setNameInput] = useState('');
+  const [nameInput, setNameInput] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [members, setMembers] = useState<Profile[]>([]);
   const [payments, setPayments] = useState<PaymentWithDetails[]>([]);
@@ -47,9 +47,9 @@ export default function GroupPage({
       setPayments(fetchedPayments);
       setSettlementRefreshTrigger((prev) => prev + 1);
     } catch (error) {
-      console.error('Error loading group data:', error);
+      console.error("Error loading group data:", error);
       setRefreshError(
-        'データの読み込みに失敗しました。もう一度お試しください。',
+        "データの読み込みに失敗しました。もう一度お試しください。",
       );
     } finally {
       setIsLoadingData(false);
@@ -58,7 +58,7 @@ export default function GroupPage({
 
   const handleJoinGroup = async () => {
     if (!nameInput.trim()) {
-      alert('名前を入力してください。');
+      alert("名前を入力してください。");
       return;
     }
 
@@ -66,7 +66,7 @@ export default function GroupPage({
     const result = await joinGroup(groupId, newProfile);
 
     if (!result.success) {
-      alert(result.error || 'グループへの参加に失敗しました。');
+      alert(result.error || "グループへの参加に失敗しました。");
       return;
     }
 
@@ -139,7 +139,7 @@ export default function GroupPage({
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+          <div className="flex flex-col md:flex-row justify-between items-stretch md:items-start gap-4">
             <div className="flex-1">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
                 グループの支出
@@ -183,7 +183,7 @@ export default function GroupPage({
             ) : (
               <>
                 <ChevronDown className="w-5 h-5" />
-                新しい支払いを追加
+                支払いを追加
               </>
             )}
           </button>

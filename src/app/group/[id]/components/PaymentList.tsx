@@ -3,7 +3,7 @@
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { deletePayment } from '@/app/actions/payments';
-import type { PaymentWithDetails } from '@/domain/entities/payment';
+import type { PaymentWithDetails } from '@/core/domain/entities/payment';
 
 interface PaymentListProps {
   payments: PaymentWithDetails[];

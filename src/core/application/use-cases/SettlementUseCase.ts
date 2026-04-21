@@ -1,9 +1,9 @@
-import type { SettlementTransaction } from '@/domain/entities/payment';
+import type { SettlementTransaction } from '@/core/domain/entities/payment';
 import type {
   IGroupRepository,
   IPaymentRepository,
-} from '@/domain/repositories';
-import { SettlementService } from '@/domain/services/SettlementService';
+} from '@/core/domain/repositories';
+import { SettlementService } from '@/core/domain/services/SettlementService';
 
 export class SettlementUseCase {
   constructor(

@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
-import type { Group, Profile } from '@/domain/entities/payment';
-import type { IGroupRepository } from '@/domain/repositories';
+import type { Group, Profile } from '@/core/domain/entities/payment';
+import type { IGroupRepository } from '@/core/domain/repositories';
 
 export class SupabaseGroupRepository implements IGroupRepository {
   async create(): Promise<Group> {

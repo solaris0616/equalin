@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useState } from 'react';
-import { calculateSettlement } from '@/app/actions/payments';
-import type { SettlementTransaction } from '@/domain/entities/payment';
+import { useCallback, useEffect, useState } from "react";
+import { calculateSettlement } from "@/app/actions/payments";
+import type { SettlementTransaction } from "@/core/domain/entities/payment";
 
 interface SettlementDisplayProps {
   groupId: string;
@@ -27,8 +27,8 @@ export function SettlementDisplay({
       setTransactions(result);
       setHasCalculated(true);
     } catch (err) {
-      console.error('Error calculating settlement:', err);
-      setError('精算の計算に失敗しました。もう一度お試しください。');
+      console.error("Error calculating settlement:", err);
+      setError("計算に失敗しました。もう一度お試しください。");
     } finally {
       setIsCalculating(false);
     }
@@ -50,11 +50,11 @@ export function SettlementDisplay({
           disabled={isCalculating}
           className={`px-6 py-2 font-bold text-white rounded-lg transition focus:outline-none focus:ring-4 ${
             isCalculating
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-green-600 hover:bg-green-700 focus:ring-green-300'
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-green-600 hover:bg-green-700 focus:ring-green-300"
           }`}
         >
-          {isCalculating ? '計算中...' : '精算を計算'}
+          {isCalculating ? "計算中..." : "精算"}
         </button>
       </div>
 
@@ -82,10 +82,6 @@ export function SettlementDisplay({
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-sm text-gray-600 mb-4">
-                すべての債務を精算するには{transactions.length}
-                件の取引が必要です:
-              </p>
               {transactions.map((transaction, index) => (
                 <div
                   key={`${transaction.from}-${transaction.to}-${transaction.amount}-${index}`}
