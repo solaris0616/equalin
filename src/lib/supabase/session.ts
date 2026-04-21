@@ -43,7 +43,7 @@ export async function updateSession(request: NextRequest) {
   // issues with users being randomly logged out.
 
   // Authentication check is disabled for anonymous usage model
-  // Users are identified by client-generated UUIDs stored in localStorage
+  // Users are identified by client-generated IDs (NanoID) stored in localStorage
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:

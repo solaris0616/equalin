@@ -5,18 +5,21 @@ import type {
   PaymentWithParticipants,
 } from '@/core/domain/entities/payment';
 import type { IPaymentRepository } from '@/core/domain/repositories';
+import { nanoid } from 'nanoid';
 
 export class SupabasePaymentRepository implements IPaymentRepository {
   async create(
     payment: Omit<Payment, 'id' | 'createdAt'>,
     participantIds: string[],
   ): Promise<void> {
+    const id = nanoid();
     const supabase = await createClient();
 
     // Insert payment
     const { data: paymentData, error: paymentError } = await supabase
       .from('payments')
       .insert({
+        id,
         group_id: payment.groupId,
         payer_id: payment.payerId,
         amount: payment.amount,
