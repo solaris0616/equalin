@@ -58,33 +58,33 @@ export function PaymentList({
 
   if (payments.length === 0) {
     return (
-      <div className="bg-white p-8 rounded-lg shadow-md text-center">
-        <p className="text-gray-500 text-lg">
-          まだ支払いがありません。最初の支払いを追加しましょう！
+      <div className="pixel-card text-center py-12">
+        <p className="text-gray-500 text-xl font-bold italic uppercase">
+          ログがありません
         </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-gray-900">支払い履歴</h2>
-      <div className="space-y-3">
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-black uppercase tracking-normal">履歴</h2>
+      <div className="space-y-4">
         {payments.map((payment) => (
           <div
             key={payment.id}
-            className="bg-white p-5 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition"
+            className="pixel-card border-l-[12px] border-l-blue-500"
           >
-            <div className="flex justify-between items-start mb-3">
+            <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
-                <p className="text-sm text-gray-500">支払者</p>
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-xs font-bold text-gray-500 uppercase">支払った人</p>
+                <p className="text-xl font-bold text-black uppercase">
                   {payment.payerName}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-2xl font-bold text-blue-600 tracking-tighter">
                     ¥{payment.amount.toLocaleString()}
                   </p>
                 </div>
@@ -93,11 +93,11 @@ export function PaymentList({
                   onClick={() => handleDelete(payment.id)}
                   disabled={deletingId === payment.id}
                   aria-label="Delete payment"
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="pixel-button bg-red-500 text-white p-2"
                   title="Delete payment"
                 >
                   {deletingId === payment.id ? (
-                    <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-4 border-white border-t-transparent animate-spin" />
                   ) : (
                     <Trash2 className="w-5 h-5" />
                   )}
@@ -106,18 +106,18 @@ export function PaymentList({
             </div>
 
             {payment.description && (
-              <div className="mb-3">
-                <p className="text-gray-700">{payment.description}</p>
+              <div className="mb-4 p-2 bg-gray-50 border-2 border-dashed border-black">
+                <p className="text-black font-bold">{payment.description}</p>
               </div>
             )}
 
-            <div className="mb-3">
-              <p className="text-sm text-gray-500 mb-1">参加者</p>
+            <div className="mb-4">
+              <p className="text-xs font-bold text-gray-500 mb-2 uppercase">一緒にいた人</p>
               <div className="flex flex-wrap gap-2">
                 {payment.participantNames.map((name, index) => (
                   <span
                     key={`${payment.id}-participant-${index}`}
-                    className="inline-block px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full"
+                    className="inline-block px-2 py-1 text-xs font-bold bg-gray-200 border-2 border-black"
                   >
                     {name}
                   </span>
@@ -125,9 +125,9 @@ export function PaymentList({
               </div>
             </div>
 
-            <div className="pt-3 border-t border-gray-200">
-              <p className="text-xs text-gray-400">
-                {formatTimestamp(payment.createdAt)}
+            <div className="pt-3 border-t-2 border-black border-dotted">
+              <p className="text-xs font-bold text-gray-400">
+                記録日: {formatTimestamp(payment.createdAt).toUpperCase()}
               </p>
             </div>
           </div>

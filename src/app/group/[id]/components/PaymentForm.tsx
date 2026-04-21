@@ -84,24 +84,25 @@ export function PaymentForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-6 bg-white p-6 rounded-lg shadow-md"
+      className="space-y-6 pixel-card"
     >
-      <h2 className="text-2xl font-bold text-gray-900">支払いを追加</h2>
+      <h2 className="text-2xl font-bold text-black uppercase tracking-normal">支出の入力</h2>
+      <div className="h-1 bg-black w-full" />
 
       <div className="space-y-2">
         <label
           htmlFor="description"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-bold text-black"
         >
-          説明（任意）
+          何に使いましたか？
         </label>
         <input
           id="description"
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="例：レストランでの夕食"
-          className="w-full px-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="例：食事"
+          className="w-full pixel-input"
           disabled={isSubmitting}
         />
       </div>
@@ -109,9 +110,9 @@ export function PaymentForm({
       <div className="space-y-2">
         <label
           htmlFor="amount"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-bold text-black"
         >
-          金額 *
+          いくら使いましたか？ *
         </label>
         <input
           id="amount"
@@ -122,44 +123,44 @@ export function PaymentForm({
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="0"
-          className="w-full px-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full pixel-input"
           required
           disabled={isSubmitting}
         />
       </div>
 
       <div className="space-y-2">
-        <span className="block text-sm font-medium text-gray-700">
-          参加者 *
+        <span className="block text-sm font-bold text-black">
+          誰の分ですか？ *
         </span>
-        <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-md p-3 bg-gray-50" role="group" aria-label="参加者選択">
+        <div className="space-y-2 max-h-48 overflow-y-auto border-4 border-black p-3 bg-white" role="group" aria-label="参加者選択">
           {members.map((member) => (
             <label
               key={member.id}
               className={cn(
-                'flex items-center space-x-3 p-2 rounded cursor-pointer hover:bg-gray-100 transition',
-                selectedParticipants.has(member.id) && 'bg-blue-50',
+                'flex items-center space-x-3 p-2 cursor-pointer transition-all border-2 border-transparent',
+                selectedParticipants.has(member.id) ? 'bg-blue-100 border-black' : 'hover:bg-gray-100',
               )}
             >
               <input
                 type="checkbox"
                 checked={selectedParticipants.has(member.id)}
                 onChange={() => handleParticipantToggle(member.id)}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-6 h-6 border-4 border-black text-blue-500 focus:ring-0 rounded-none appearance-none checked:bg-blue-500 relative checked:after:content-['✓'] checked:after:absolute checked:after:text-white checked:after:font-bold checked:after:left-1 checked:after:top-[-4px]"
                 disabled={isSubmitting}
               />
-              <span className="text-sm text-gray-900">{member.name}</span>
+              <span className="text-sm font-bold text-black">{member.name}</span>
             </label>
           ))}
         </div>
-        <p className="text-xs text-gray-500">
-          {members.length}人中{selectedParticipants.size}人選択
+        <p className="text-xs font-bold text-gray-500">
+          {members.length}人中 {selectedParticipants.size}人 選択
         </p>
       </div>
 
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-800">{error}</p>
+        <div className="p-3 bg-red-500 border-4 border-black text-white font-bold">
+          <p className="text-sm">{error}</p>
         </div>
       )}
 
@@ -167,13 +168,11 @@ export function PaymentForm({
         type="submit"
         disabled={isSubmitting}
         className={cn(
-          'w-full py-3 px-6 font-bold text-white rounded-lg transition focus:outline-none focus:ring-4',
-          isSubmitting
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-300',
+          'w-full pixel-button-primary text-xl uppercase',
+          isSubmitting && 'opacity-50 cursor-not-allowed',
         )}
       >
-        {isSubmitting ? '支払いを作成中...' : '支払いを作成'}
+        {isSubmitting ? '記録中...' : '記録する'}
       </button>
     </form>
   );

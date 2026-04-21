@@ -98,36 +98,39 @@ export default function GroupPage({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        読み込み中...
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f0f0f0]">
+        <div className="pixel-card animate-pulse text-2xl font-bold">
+          ロード中...
+        </div>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gray-50 flex justify-center items-center">
-        <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold text-center text-gray-900">
-            このグループに参加
+      <div className="min-h-screen bg-[#f0f0f0] flex justify-center items-center p-4">
+        <div className="w-full max-w-sm p-8 space-y-6 pixel-card">
+          <h2 className="text-3xl font-bold text-center text-black tracking-normal">
+            パーティに参加する
           </h2>
-          <p className="text-center text-gray-600">
-            このグループでの名前を設定してください。
+          <div className="h-1 bg-black w-full" />
+          <p className="text-center text-black font-bold">
+            名前を入力してください
           </p>
-          <div className="space-y-4">
+          <div className="space-y-6">
             <input
               type="text"
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
               placeholder="あなたの名前"
-              className="w-full px-4 py-2 text-gray-900 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pixel-input"
             />
             <button
               type="button"
               onClick={handleJoinGroup}
-              className="w-full px-4 py-2 font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="w-full pixel-button-primary text-xl"
             >
-              参加
+              決定
             </button>
           </div>
         </div>
@@ -136,13 +139,13 @@ export default function GroupPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex flex-col md:flex-row justify-between items-stretch md:items-start gap-4">
+    <div className="min-h-screen bg-[#f0f0f0] p-4 md:p-8 font-sans">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <div className="pixel-card">
+          <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-6">
             <div className="flex-1">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                グループの支出
+              <h1 className="text-3xl md:text-4xl font-bold text-black tracking-normal uppercase">
+                支出ログ
               </h1>
             </div>
             <InviteLinkButton groupId={groupId} />
@@ -151,19 +154,19 @@ export default function GroupPage({
 
         {refreshError && (
           <div
-            className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start gap-3"
+            className="bg-red-500 border-4 border-black text-white px-4 py-3 shadow-pixel flex items-start gap-3"
             role="alert"
           >
-            <div className="flex-1">
-              <p className="font-medium">{refreshError}</p>
+            <div className="flex-1 font-bold">
+              <p>{refreshError}</p>
             </div>
             <button
               type="button"
               onClick={() => setRefreshError(null)}
-              className="text-red-600 hover:text-red-800 focus:outline-none"
+              className="text-white hover:text-black font-bold"
               aria-label="閉じる"
             >
-              ✕
+              [X]
             </button>
           </div>
         )}
@@ -172,26 +175,26 @@ export default function GroupPage({
           <button
             type="button"
             onClick={() => setShowPaymentForm(!showPaymentForm)}
-            className="w-full md:w-auto px-6 py-3 font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition flex items-center justify-center gap-2"
+            className="w-full md:w-auto pixel-button-primary flex items-center justify-center gap-2 text-lg"
           >
             {showPaymentForm ? (
               <>
                 <ChevronUp className="w-5 h-5" />
-                支払いフォームを非表示
+                入力を閉じる
               </>
             ) : (
               <>
                 <ChevronDown className="w-5 h-5" />
-                支払いを追加
+                支出を追加
               </>
             )}
           </button>
 
           {showPaymentForm && (
-            <div className="mt-4">
+            <div className="mt-6">
               {isLoadingData ? (
-                <div className="bg-white p-8 rounded-lg shadow-md text-center">
-                  <p className="text-gray-600">メンバーを読み込み中...</p>
+                <div className="pixel-card text-center py-8">
+                  <p className="text-black font-bold animate-pulse">メンバーを読み込み中...</p>
                 </div>
               ) : (
                 <PaymentForm
@@ -206,8 +209,8 @@ export default function GroupPage({
         </div>
 
         {isLoadingData ? (
-          <div className="bg-white p-8 rounded-lg shadow-md text-center">
-            <p className="text-gray-600">支払いを読み込み中...</p>
+          <div className="pixel-card text-center py-12">
+            <p className="text-black font-bold animate-pulse">ログを読み込み中...</p>
           </div>
         ) : (
           <PaymentList
