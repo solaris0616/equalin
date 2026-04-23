@@ -12,6 +12,7 @@ import {
   profileRepository,
   settlementUseCase,
 } from '@/core/registry';
+import { createClient } from '@/lib/supabase/server';
 
 /**
  * グループ作成
@@ -140,7 +141,8 @@ export async function deletePayment(
     return { success: true };
   } catch (error: unknown) {
     console.error('Error in deletePayment:', error);
-    const message = error instanceof Error ? error.message : '削除に失敗しました';
+    const message =
+      error instanceof Error ? error.message : '削除に失敗しました';
     return { success: false, error: message };
   }
 }

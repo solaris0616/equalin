@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { createPayment } from '@/app/actions/payments';
-import { cn } from '@/lib/utils';
 import type { Profile } from '@/core/domain/entities/payment';
+import { cn } from '@/lib/utils';
 
 interface PaymentFormProps {
   groupId: string;
@@ -82,11 +82,10 @@ export function PaymentForm({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-6 pixel-card"
-    >
-      <h2 className="text-2xl font-bold text-black uppercase tracking-normal">支出の入力</h2>
+    <form onSubmit={handleSubmit} className="space-y-6 pixel-card">
+      <h2 className="text-2xl font-bold text-black uppercase tracking-normal">
+        支出の入力
+      </h2>
       <div className="h-1 bg-black w-full" />
 
       <div className="space-y-2">
@@ -108,10 +107,7 @@ export function PaymentForm({
       </div>
 
       <div className="space-y-2">
-        <label
-          htmlFor="amount"
-          className="block text-sm font-bold text-black"
-        >
+        <label htmlFor="amount" className="block text-sm font-bold text-black">
           いくら使いましたか？ *
         </label>
         <input
@@ -133,13 +129,19 @@ export function PaymentForm({
         <span className="block text-sm font-bold text-black">
           誰の分ですか？ *
         </span>
-        <div className="space-y-2 max-h-48 overflow-y-auto border-4 border-black p-3 bg-white" role="group" aria-label="参加者選択">
+        <div
+          className="space-y-2 max-h-48 overflow-y-auto border-4 border-black p-3 bg-white"
+          role="group"
+          aria-label="参加者選択"
+        >
           {members.map((member) => (
             <label
               key={member.id}
               className={cn(
                 'flex items-center space-x-3 p-2 cursor-pointer transition-all border-2 border-transparent',
-                selectedParticipants.has(member.id) ? 'bg-blue-100 border-black' : 'hover:bg-gray-100',
+                selectedParticipants.has(member.id)
+                  ? 'bg-blue-100 border-black'
+                  : 'hover:bg-gray-100',
               )}
             >
               <input
@@ -149,7 +151,9 @@ export function PaymentForm({
                 className="w-6 h-6 border-4 border-black text-blue-500 focus:ring-0 rounded-none appearance-none checked:bg-blue-500 relative checked:after:content-['✓'] checked:after:absolute checked:after:text-white checked:after:font-bold checked:after:left-1 checked:after:top-[-4px]"
                 disabled={isSubmitting}
               />
-              <span className="text-sm font-bold text-black">{member.name}</span>
+              <span className="text-sm font-bold text-black">
+                {member.name}
+              </span>
             </label>
           ))}
         </div>

@@ -1,7 +1,7 @@
-import { createClient } from '@/lib/supabase/server';
+import { nanoid } from 'nanoid';
 import type { Group, Profile } from '@/core/domain/entities/payment';
 import type { IGroupRepository } from '@/core/domain/repositories';
-import { nanoid } from 'nanoid';
+import { createClient } from '@/lib/supabase/server';
 
 export class SupabaseGroupRepository implements IGroupRepository {
   async create(): Promise<Group> {
@@ -54,7 +54,10 @@ export class SupabaseGroupRepository implements IGroupRepository {
 
     if (error) throw new Error(error.message);
     return (data || [])
-      .map((m: any) => m.profile)
-      .filter((p: any) => p !== null);
+      .map((m: any) => {
+        const p = m.profile;
+        return Array.isArray(p) ? p[0] : p;
+      })
+      .filter((p): p is Profile => p !== null);
   }
 }

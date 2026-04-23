@@ -2,7 +2,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "type-check": "tsc --noEmit",
+    "build": "npm run type-check && next build",
     "start": "next start",
     "test": "bun test",
     "lint": "biome lint .",

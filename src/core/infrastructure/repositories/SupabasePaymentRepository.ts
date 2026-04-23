@@ -1,11 +1,12 @@
-import { createClient } from '@/lib/supabase/server';
+import { nanoid } from 'nanoid';
 import type {
   Payment,
   PaymentWithDetails,
   PaymentWithParticipants,
+  Profile,
 } from '@/core/domain/entities/payment';
 import type { IPaymentRepository } from '@/core/domain/repositories';
-import { nanoid } from 'nanoid';
+import { createClient } from '@/lib/supabase/server';
 
 export class SupabasePaymentRepository implements IPaymentRepository {
   async create(
@@ -65,16 +66,20 @@ export class SupabasePaymentRepository implements IPaymentRepository {
 
     if (error) throw new Error(error.message);
 
-    return (data || []).map((p: any) => ({
+    return (data || []).map((p) => ({
       id: p.id,
       groupId: p.group_id,
       payerId: p.payer_id,
       amount: p.amount,
       description: p.description,
       createdAt: p.created_at,
-      payerName: p.payer?.name || 'Unknown',
+      payerName: (p.payer as unknown as Profile)?.name || 'Unknown',
       participantNames:
-        p.participants?.map((pr: any) => pr.profile?.name || 'Unknown') || [],
+        (
+          p.participants as unknown as {
+            profile: Profile | null;
+          }[]
+        )?.map((pr) => pr.profile?.name || 'Unknown') || [],
     }));
   }
 
@@ -96,11 +101,14 @@ export class SupabasePaymentRepository implements IPaymentRepository {
 
     if (error) throw new Error(error.message);
 
-    return (data || []).map((p: any) => ({
+    return (data || []).map((p) => ({
       id: p.id,
       payerId: p.payer_id,
       amount: p.amount,
-      participantIds: p.participants?.map((pr: any) => pr.profile_id) || [],
+      participantIds:
+        (p.participants as unknown as { profile_id: string }[])?.map(
+          (pr) => pr.profile_id,
+        ) || [],
     }));
   }
 

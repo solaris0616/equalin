@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { Check, Copy } from "lucide-react";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { Check, Copy } from 'lucide-react';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface InviteLinkButtonProps {
   groupId: string;
@@ -13,9 +13,9 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
   const [error, setError] = useState<string | null>(null);
 
   const groupUrl =
-    typeof window !== "undefined"
+    typeof window !== 'undefined'
       ? `${window.location.origin}/group/${groupId}`
-      : "";
+      : '';
 
   const handleCopy = async () => {
     try {
@@ -26,8 +26,8 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
         setCopied(false);
       }, 2000);
     } catch (err) {
-      console.error("Failed to copy to clipboard:", err);
-      setError("リンクのコピーに失敗しました。もう一度お試しください。");
+      console.error('Failed to copy to clipboard:', err);
+      setError('リンクのコピーに失敗しました。もう一度お試しください。');
       setTimeout(() => {
         setError(null);
       }, 3000);
@@ -39,8 +39,8 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
       <label
         htmlFor="invite-url"
         className={cn(
-          "text-xs font-bold uppercase tracking-widest",
-          copied && !error ? "text-green-500" : "text-gray-500"
+          'text-xs font-bold uppercase tracking-widest',
+          copied && !error ? 'text-green-500' : 'text-gray-500',
         )}
       >
         {copied && !error ? 'コピーしました！' : '招待リンクをシェア'}
@@ -62,7 +62,11 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
           aria-label="Copy group invitation link"
           className="pixel-button-primary flex items-center justify-center p-3"
         >
-          {copied ? <Check className="w-5 h-5 text-green-300" /> : <Copy className="w-5 h-5 text-white" />}
+          {copied ? (
+            <Check className="w-5 h-5 text-green-300" />
+          ) : (
+            <Copy className="w-5 h-5 text-white" />
+          )}
         </button>
       </div>
 

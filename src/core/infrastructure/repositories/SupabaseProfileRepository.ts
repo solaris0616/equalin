@@ -1,6 +1,6 @@
-import { createClient } from '@/lib/supabase/server';
 import type { Profile } from '@/core/domain/entities/payment';
 import type { IProfileRepository } from '@/core/domain/repositories';
+import { createClient } from '@/lib/supabase/server';
 
 export class SupabaseProfileRepository implements IProfileRepository {
   async create(profile: Profile): Promise<void> {

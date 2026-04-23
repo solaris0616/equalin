@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useState } from "react";
-import { calculateSettlement } from "@/app/actions/payments";
-import { cn } from "@/lib/utils";
-import type { SettlementTransaction } from "@/core/domain/entities/payment";
+import { useCallback, useEffect, useState } from 'react';
+import { calculateSettlement } from '@/app/actions/payments';
+import type { SettlementTransaction } from '@/core/domain/entities/payment';
+import { cn } from '@/lib/utils';
 
 interface SettlementDisplayProps {
   groupId: string;
@@ -28,8 +28,8 @@ export function SettlementDisplay({
       setTransactions(result);
       setHasCalculated(true);
     } catch (err) {
-      console.error("Error calculating settlement:", err);
-      setError("計算に失敗しました。もう一度お試しください。");
+      console.error('Error calculating settlement:', err);
+      setError('計算に失敗しました。もう一度お試しください。');
     } finally {
       setIsCalculating(false);
     }
@@ -44,7 +44,9 @@ export function SettlementDisplay({
   return (
     <div className="space-y-6">
       <div className="pixel-card flex flex-col md:flex-row justify-between items-stretch md:items-center gap-6 bg-yellow-50 border-yellow-500">
-        <h2 className="text-3xl font-bold text-black uppercase tracking-normal">精算</h2>
+        <h2 className="text-3xl font-bold text-black uppercase tracking-normal">
+          精算
+        </h2>
         <button
           type="button"
           onClick={handleCalculateSettlement}
@@ -67,7 +69,9 @@ export function SettlementDisplay({
       {isCalculating && (
         <div className="pixel-card text-center py-12">
           <div className="inline-block animate-spin w-10 h-10 border-4 border-yellow-500 border-t-transparent" />
-          <p className="mt-6 text-black font-bold animate-pulse">計算しています...</p>
+          <p className="mt-6 text-black font-bold animate-pulse">
+            計算しています...
+          </p>
         </div>
       )}
 
@@ -78,7 +82,9 @@ export function SettlementDisplay({
               <p className="text-3xl font-bold text-green-500 uppercase tracking-widest animate-bounce mb-4">
                 クエスト達成！
               </p>
-              <p className="text-black font-bold italic">精算の必要はありません。</p>
+              <p className="text-black font-bold italic">
+                精算の必要はありません。
+              </p>
             </div>
           ) : (
             <div className="space-y-4">

@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { use, useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { use, useCallback, useEffect, useState } from 'react';
 import {
   getGroupMembers,
   getGroupPayments,
   joinGroup,
-} from "@/app/actions/payments";
+} from '@/app/actions/payments';
 import type {
   PaymentWithDetails,
   Profile,
-} from "@/core/domain/entities/payment";
-import { InviteLinkButton } from "./components/InviteLinkButton";
-import { PaymentForm } from "./components/PaymentForm";
-import { PaymentList } from "./components/PaymentList";
-import { SettlementDisplay } from "./components/SettlementDisplay";
+} from '@/core/domain/entities/payment';
+import { createClient } from '@/lib/supabase/client';
+import { InviteLinkButton } from './components/InviteLinkButton';
+import { PaymentForm } from './components/PaymentForm';
+import { PaymentList } from './components/PaymentList';
+import { SettlementDisplay } from './components/SettlementDisplay';
 
 export default function GroupPage({
   params,
@@ -26,7 +26,7 @@ export default function GroupPage({
   const supabase = createClient();
 
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [nameInput, setNameInput] = useState("");
+  const [nameInput, setNameInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [members, setMembers] = useState<Profile[]>([]);
   const [payments, setPayments] = useState<PaymentWithDetails[]>([]);
@@ -35,7 +35,7 @@ export default function GroupPage({
   const [settlementRefreshTrigger, setSettlementRefreshTrigger] = useState(0);
   const [refreshError, setRefreshError] = useState<string | null>(null);
 
-  const loadGroupData = async () => {
+  const loadGroupData = useCallback(async () => {
     setIsLoadingData(true);
     setRefreshError(null);
     try {
@@ -47,38 +47,39 @@ export default function GroupPage({
       setPayments(fetchedPayments);
       setSettlementRefreshTrigger((prev) => prev + 1);
     } catch (error) {
-      console.error("Error loading group data:", error);
+      console.error('Error loading group data:', error);
       setRefreshError(
-        "データの読み込みに失敗しました。もう一度お試しください。",
+        'データの読み込みに失敗しました。もう一度お試しください。',
       );
     } finally {
       setIsLoadingData(false);
     }
-  };
+  }, [groupId]);
 
   const handleJoinGroup = async () => {
     if (!nameInput.trim()) {
-      alert("名前を入力してください。");
+      alert('名前を入力してください。');
       return;
     }
 
     try {
       // 1. 匿名サインイン
-      const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
+      const { error: authError } =
+        await supabase.auth.signInAnonymously();
       if (authError) throw authError;
 
       // 2. グループ参加 (サーバー側でプロフィール作成)
       const result = await joinGroup(groupId, nameInput.trim());
 
       if (!result.success || !result.data) {
-        alert(result.error || "グループへの参加に失敗しました。");
+        alert(result.error || 'グループへの参加に失敗しました。');
         return;
       }
 
       setProfile(result.data);
     } catch (error) {
-      console.error("Error joining group:", error);
-      alert("エラーが発生しました。");
+      console.error('Error joining group:', error);
+      alert('エラーが発生しました。');
     }
   };
 
@@ -89,17 +90,19 @@ export default function GroupPage({
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
         // 既にログインしている場合、プロフィールを取得
         try {
           const fetchedMembers = await getGroupMembers(groupId);
-          const currentProfile = fetchedMembers.find(m => m.id === user.id);
+          const currentProfile = fetchedMembers.find((m) => m.id === user.id);
           if (currentProfile) {
             setProfile(currentProfile);
           }
         } catch (error) {
-          console.error("Error fetching current profile:", error);
+          console.error('Error fetching current profile:', error);
         }
       }
       setIsLoading(false);
@@ -111,7 +114,7 @@ export default function GroupPage({
     if (profile) {
       loadGroupData();
     }
-  }, [profile]);
+  }, [profile, loadGroupData]);
 
   if (isLoading) {
     return (
@@ -211,7 +214,9 @@ export default function GroupPage({
             <div className="mt-6">
               {isLoadingData ? (
                 <div className="pixel-card text-center py-8">
-                  <p className="text-black font-bold animate-pulse">メンバーを読み込み中...</p>
+                  <p className="text-black font-bold animate-pulse">
+                    メンバーを読み込み中...
+                  </p>
                 </div>
               ) : (
                 <PaymentForm
@@ -227,7 +232,9 @@ export default function GroupPage({
 
         {isLoadingData ? (
           <div className="pixel-card text-center py-12">
-            <p className="text-black font-bold animate-pulse">ログを読み込み中...</p>
+            <p className="text-black font-bold animate-pulse">
+              ログを読み込み中...
+            </p>
           </div>
         ) : (
           <PaymentList
