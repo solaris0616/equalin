@@ -240,6 +240,7 @@ export default function GroupPage({
           <PaymentList
             payments={payments}
             groupId={groupId}
+            currentUserId={profile.id}
             onPaymentDeleted={loadGroupData}
           />
         )}

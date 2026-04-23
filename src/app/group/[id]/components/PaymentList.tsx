@@ -8,6 +8,7 @@ import type { PaymentWithDetails } from '@/core/domain/entities/payment';
 interface PaymentListProps {
   payments: PaymentWithDetails[];
   groupId: string;
+  currentUserId: string;
   onPaymentDeleted: () => void;
 }
 
@@ -25,6 +26,7 @@ function formatTimestamp(timestamp: string): string {
 export function PaymentList({
   payments,
   groupId,
+  currentUserId,
   onPaymentDeleted,
 }: PaymentListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -92,20 +94,22 @@ export function PaymentList({
                     ¥{payment.amount.toLocaleString()}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(payment.id)}
-                  disabled={deletingId === payment.id}
-                  aria-label="Delete payment"
-                  className="pixel-button bg-red-500 text-white p-2"
-                  title="Delete payment"
-                >
-                  {deletingId === payment.id ? (
-                    <div className="w-5 h-5 border-4 border-white border-t-transparent animate-spin" />
-                  ) : (
-                    <Trash2 className="w-5 h-5" />
-                  )}
-                </button>
+                {payment.payerId === currentUserId && (
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(payment.id)}
+                    disabled={deletingId === payment.id}
+                    aria-label="Delete payment"
+                    className="pixel-button bg-red-500 text-white p-2"
+                    title="Delete payment"
+                  >
+                    {deletingId === payment.id ? (
+                      <div className="w-5 h-5 border-4 border-white border-t-transparent animate-spin" />
+                    ) : (
+                      <Trash2 className="w-5 h-5" />
+                    )}
+                  </button>
+                )}
               </div>
             </div>
 
