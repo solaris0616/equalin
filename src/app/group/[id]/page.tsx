@@ -2,7 +2,7 @@
 
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { use, useEffect, useState } from "react";
-import { nanoid } from "nanoid";
+import { createClient } from "@/lib/supabase/client";
 import {
   getGroupMembers,
   getGroupPayments,
@@ -23,7 +23,7 @@ export default function GroupPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: groupId } = use(params);
-  const storageKey = `equalin_profile_${groupId}`;
+  const supabase = createClient();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [nameInput, setNameInput] = useState("");
@@ -62,16 +62,24 @@ export default function GroupPage({
       return;
     }
 
-    const newProfile: Profile = { id: nanoid(), name: nameInput.trim() };
-    const result = await joinGroup(groupId, newProfile);
+    try {
+      // 1. 匿名サインイン
+      const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
+      if (authError) throw authError;
 
-    if (!result.success) {
-      alert(result.error || "グループへの参加に失敗しました。");
-      return;
+      // 2. グループ参加 (サーバー側でプロフィール作成)
+      const result = await joinGroup(groupId, nameInput.trim());
+
+      if (!result.success || !result.data) {
+        alert(result.error || "グループへの参加に失敗しました。");
+        return;
+      }
+
+      setProfile(result.data);
+    } catch (error) {
+      console.error("Error joining group:", error);
+      alert("エラーが発生しました。");
     }
-
-    localStorage.setItem(storageKey, JSON.stringify(newProfile));
-    setProfile(newProfile);
   };
 
   const handlePaymentSuccess = async () => {
@@ -80,15 +88,24 @@ export default function GroupPage({
   };
 
   useEffect(() => {
-    const loadProfileForGroup = () => {
-      const localProfile = localStorage.getItem(storageKey);
-      if (localProfile) {
-        setProfile(JSON.parse(localProfile));
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // 既にログインしている場合、プロフィールを取得
+        try {
+          const fetchedMembers = await getGroupMembers(groupId);
+          const currentProfile = fetchedMembers.find(m => m.id === user.id);
+          if (currentProfile) {
+            setProfile(currentProfile);
+          }
+        } catch (error) {
+          console.error("Error fetching current profile:", error);
+        }
       }
       setIsLoading(false);
     };
-    loadProfileForGroup();
-  }, [storageKey]);
+    checkAuth();
+  }, [groupId, supabase.auth]);
 
   useEffect(() => {
     if (profile) {

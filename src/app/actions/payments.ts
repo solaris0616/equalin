@@ -97,14 +97,26 @@ export async function getGroupMembers(groupId: string): Promise<Profile[]> {
  */
 export async function joinGroup(
   groupId: string,
-  profile: Profile,
-): Promise<{ success: boolean; error?: string }> {
+  name: string,
+): Promise<{ success: boolean; data?: Profile; error?: string }> {
   try {
-    // 1. プロフィール作成
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { success: false, error: '認証に失敗しました' };
+    }
+
+    const profile: Profile = { id: user.id, name };
+
+    // 1. プロフィール作成 (既に存在する場合は無視するか更新する設計に)
     await profileRepository.create(profile);
     // 2. グループメンバー追加
     await groupRepository.addMember(groupId, profile.id);
-    return { success: true };
+
+    return { success: true, data: profile };
   } catch (error: unknown) {
     console.error('Error in joinGroup:', error);
     const message =

@@ -5,7 +5,7 @@ import type { IProfileRepository } from '@/core/domain/repositories';
 export class SupabaseProfileRepository implements IProfileRepository {
   async create(profile: Profile): Promise<void> {
     const supabase = await createClient();
-    const { error } = await supabase.from('profiles').insert(profile);
+    const { error } = await supabase.from('profiles').upsert(profile);
 
     if (error) throw new Error(error.message);
   }
