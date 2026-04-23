@@ -45,6 +45,77 @@ export class SupabasePaymentRepository implements IPaymentRepository {
     }
   }
 
+  async update(
+    paymentId: string,
+    payment: Partial<Omit<Payment, 'id' | 'groupId' | 'createdAt'>>,
+    participantIds: string[],
+  ): Promise<void> {
+    const supabase = await createClient();
+
+    // 1. Update payment record
+    const { error: paymentError } = await supabase
+      .from('payments')
+      .update({
+        payer_id: payment.payerId,
+        amount: payment.amount,
+        description: payment.description,
+      })
+      .eq('id', paymentId);
+
+    if (paymentError) throw new Error(paymentError.message);
+
+    // 2. Update participants (delete and insert)
+    // First, delete existing participants
+    const { error: deleteError } = await supabase
+      .from('payment_participants')
+      .delete()
+      .eq('payment_id', paymentId);
+
+    if (deleteError) throw new Error(deleteError.message);
+
+    // Then, upsert new participants to avoid duplicate key errors
+    const participantRecords = participantIds.map((profileId) => ({
+      payment_id: paymentId,
+      profile_id: profileId,
+    }));
+
+    const { error: upsertError } = await supabase
+      .from('payment_participants')
+      .upsert(participantRecords);
+
+    if (upsertError) throw new Error(upsertError.message);
+  }
+
+  async getByIdWithParticipants(
+    paymentId: string,
+  ): Promise<PaymentWithParticipants | null> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('payments')
+      .select(
+        `
+        id,
+        payer_id,
+        amount,
+        participants:payment_participants(profile_id)
+      `,
+      )
+      .eq('id', paymentId)
+      .single();
+
+    if (error) return null;
+
+    return {
+      id: data.id,
+      payerId: data.payer_id,
+      amount: data.amount,
+      participantIds:
+        (data.participants as unknown as { profile_id: string }[])?.map(
+          (pr) => pr.profile_id,
+        ) || [],
+    };
+  }
+
   async getByGroupId(groupId: string): Promise<PaymentWithDetails[]> {
     const supabase = await createClient();
     const { data, error } = await supabase

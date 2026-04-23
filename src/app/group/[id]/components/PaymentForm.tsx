@@ -1,30 +1,48 @@
 'use client';
 
-import { useState } from 'react';
-import { createPayment } from '@/app/actions/payments';
-import type { Profile } from '@/core/domain/entities/payment';
+import { useEffect, useState } from 'react';
+import { createPayment, updatePayment } from '@/app/actions/payments';
+import type {
+  PaymentWithParticipants,
+  Profile,
+} from '@/core/domain/entities/payment';
 import { cn } from '@/lib/utils';
 
 interface PaymentFormProps {
   groupId: string;
   currentUserId: string;
   members: Profile[];
+  initialData?: PaymentWithParticipants & { description: string | null };
   onSuccess: () => void;
+  onCancel?: () => void;
 }
 
 export function PaymentForm({
   groupId,
   currentUserId,
   members,
+  initialData,
   onSuccess,
+  onCancel,
 }: PaymentFormProps) {
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState(
+    initialData?.description || '',
+  );
+  const [amount, setAmount] = useState(initialData?.amount.toString() || '');
   const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(
-    new Set(members.map((m) => m.id)),
+    new Set(initialData?.participantIds || members.map((m) => m.id)),
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Update form if initialData changes (e.g. when switching between edits)
+  useEffect(() => {
+    if (initialData) {
+      setDescription(initialData.description || '');
+      setAmount(initialData.amount.toString());
+      setSelectedParticipants(new Set(initialData.participantIds));
+    }
+  }, [initialData]);
 
   const handleParticipantToggle = (profileId: string) => {
     setSelectedParticipants((prev) => {
@@ -56,22 +74,38 @@ export function PaymentForm({
     setIsSubmitting(true);
 
     try {
-      const result = await createPayment(
-        groupId,
-        currentUserId,
-        amountValue,
-        description,
-        Array.from(selectedParticipants),
-      );
+      let result: { success: boolean; error?: string };
+      if (initialData) {
+        result = await updatePayment(
+          initialData.id,
+          initialData.payerId, // Keep original payer for now
+          amountValue,
+          description,
+          Array.from(selectedParticipants),
+        );
+      } else {
+        result = await createPayment(
+          groupId,
+          currentUserId,
+          amountValue,
+          description,
+          Array.from(selectedParticipants),
+        );
+      }
 
       if (result.success) {
-        setDescription('');
-        setAmount('');
-        setSelectedParticipants(new Set(members.map((m) => m.id)));
+        if (!initialData) {
+          setDescription('');
+          setAmount('');
+          setSelectedParticipants(new Set(members.map((m) => m.id)));
+        }
         setError(null);
         onSuccess();
       } else {
-        setError(result.error || '支払いの作成に失敗しました');
+        setError(
+          result.error ||
+            (initialData ? '更新に失敗しました' : '支払いの作成に失敗しました'),
+        );
       }
     } catch (err) {
       console.error('Error submitting payment:', err);
@@ -84,7 +118,7 @@ export function PaymentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6 pixel-card">
       <h2 className="text-2xl font-bold text-black uppercase tracking-normal">
-        支出の入力
+        {initialData ? '支出の編集' : '支出の入力'}
       </h2>
       <div className="h-1 bg-black w-full" />
 
@@ -168,16 +202,34 @@ export function PaymentForm({
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className={cn(
-          'w-full pixel-button-primary text-xl uppercase',
-          isSubmitting && 'opacity-50 cursor-not-allowed',
+      <div className="flex flex-col md:flex-row gap-4">
+        {initialData && onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isSubmitting}
+            className="w-full md:w-1/3 pixel-button bg-gray-200 text-black text-xl uppercase"
+          >
+            キャンセル
+          </button>
         )}
-      >
-        {isSubmitting ? '記録中...' : '記録する'}
-      </button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className={cn(
+            'flex-1 pixel-button-primary text-xl uppercase',
+            isSubmitting && 'opacity-50 cursor-not-allowed',
+          )}
+        >
+          {isSubmitting
+            ? initialData
+              ? '更新中...'
+              : '記録中...'
+            : initialData
+              ? '更新する'
+              : '記録する'}
+        </button>
+      </div>
     </form>
   );
 }

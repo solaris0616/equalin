@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { deletePayment } from '@/app/actions/payments';
 import type { PaymentWithDetails } from '@/core/domain/entities/payment';
@@ -10,6 +10,7 @@ interface PaymentListProps {
   groupId: string;
   currentUserId: string;
   onPaymentDeleted: () => void;
+  onEdit: (paymentId: string) => void;
 }
 
 function formatTimestamp(timestamp: string): string {
@@ -28,6 +29,7 @@ export function PaymentList({
   groupId,
   currentUserId,
   onPaymentDeleted,
+  onEdit,
 }: PaymentListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -95,20 +97,32 @@ export function PaymentList({
                   </p>
                 </div>
                 {payment.payerId === currentUserId && (
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(payment.id)}
-                    disabled={deletingId === payment.id}
-                    aria-label="Delete payment"
-                    className="pixel-button bg-red-500 text-white p-2"
-                    title="Delete payment"
-                  >
-                    {deletingId === payment.id ? (
-                      <div className="w-5 h-5 border-4 border-white border-t-transparent animate-spin" />
-                    ) : (
-                      <Trash2 className="w-5 h-5" />
-                    )}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onEdit(payment.id)}
+                      disabled={deletingId === payment.id}
+                      aria-label="Edit payment"
+                      className="pixel-button bg-blue-500 text-white p-2"
+                      title="Edit payment"
+                    >
+                      <Pencil className="w-5 h-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(payment.id)}
+                      disabled={deletingId === payment.id}
+                      aria-label="Delete payment"
+                      className="pixel-button bg-red-500 text-white p-2"
+                      title="Delete payment"
+                    >
+                      {deletingId === payment.id ? (
+                        <div className="w-5 h-5 border-4 border-white border-t-transparent animate-spin" />
+                      ) : (
+                        <Trash2 className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

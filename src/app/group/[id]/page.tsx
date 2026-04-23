@@ -5,10 +5,12 @@ import { use, useCallback, useEffect, useState } from 'react';
 import {
   getGroupMembers,
   getGroupPayments,
+  getPaymentWithParticipants,
   joinGroup,
 } from '@/app/actions/payments';
 import type {
   PaymentWithDetails,
+  PaymentWithParticipants,
   Profile,
 } from '@/core/domain/entities/payment';
 import { createClient } from '@/lib/supabase/client';
@@ -31,6 +33,9 @@ export default function GroupPage({
   const [members, setMembers] = useState<Profile[]>([]);
   const [payments, setPayments] = useState<PaymentWithDetails[]>([]);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<
+    (PaymentWithParticipants & { description: string | null }) | null
+  >(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [settlementRefreshTrigger, setSettlementRefreshTrigger] = useState(0);
   const [refreshError, setRefreshError] = useState<string | null>(null);
@@ -64,8 +69,7 @@ export default function GroupPage({
 
     try {
       // 1. 匿名サインイン
-      const { error: authError } =
-        await supabase.auth.signInAnonymously();
+      const { error: authError } = await supabase.auth.signInAnonymously();
       if (authError) throw authError;
 
       // 2. グループ参加 (サーバー側でプロフィール作成)
@@ -85,6 +89,27 @@ export default function GroupPage({
 
   const handlePaymentSuccess = async () => {
     await loadGroupData();
+    setShowPaymentForm(false);
+    setEditingPayment(null);
+  };
+
+  const handleEdit = async (paymentId: string) => {
+    const payment = await getPaymentWithParticipants(paymentId);
+    if (payment) {
+      // Find the description from the payments list
+      const fullPayment = payments.find((p) => p.id === paymentId);
+      setEditingPayment({
+        ...payment,
+        description: fullPayment?.description || null,
+      });
+      setShowPaymentForm(true);
+      // Scroll to form
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPayment(null);
     setShowPaymentForm(false);
   };
 
@@ -194,13 +219,19 @@ export default function GroupPage({
         <div>
           <button
             type="button"
-            onClick={() => setShowPaymentForm(!showPaymentForm)}
+            onClick={() => {
+              if (showPaymentForm && editingPayment) {
+                handleCancelEdit();
+              } else {
+                setShowPaymentForm(!showPaymentForm);
+              }
+            }}
             className="w-full md:w-auto pixel-button-primary flex items-center justify-center gap-2 text-lg"
           >
             {showPaymentForm ? (
               <>
                 <ChevronUp className="w-5 h-5" />
-                入力を閉じる
+                {editingPayment ? '編集をキャンセル' : '入力を閉じる'}
               </>
             ) : (
               <>
@@ -223,7 +254,9 @@ export default function GroupPage({
                   groupId={groupId}
                   currentUserId={profile.id}
                   members={members}
+                  initialData={editingPayment || undefined}
                   onSuccess={handlePaymentSuccess}
+                  onCancel={handleCancelEdit}
                 />
               )}
             </div>
@@ -242,6 +275,7 @@ export default function GroupPage({
             groupId={groupId}
             currentUserId={profile.id}
             onPaymentDeleted={loadGroupData}
+            onEdit={handleEdit}
           />
         )}
 

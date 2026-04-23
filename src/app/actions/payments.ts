@@ -3,6 +3,7 @@
 import type {
   Group,
   PaymentWithDetails,
+  PaymentWithParticipants,
   Profile,
   SettlementTransaction,
 } from '@/core/domain/entities/payment';
@@ -64,6 +65,57 @@ export async function createPayment(
       success: false,
       error: message,
     };
+  }
+}
+
+/**
+ * 支払いの更新
+ */
+export async function updatePayment(
+  paymentId: string,
+  payerId: string,
+  amount: number,
+  description: string,
+  participantIds: string[],
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (participantIds.length === 0) {
+      return { success: false, error: '参加者を1人以上選択してください' };
+    }
+
+    if (!Number.isInteger(amount) || amount < 1 || amount > 999999999) {
+      return { success: false, error: '有効な金額を入力してください' };
+    }
+
+    await paymentRepository.update(
+      paymentId,
+      { payerId, amount, description: description || null },
+      participantIds,
+    );
+
+    return { success: true };
+  } catch (error: unknown) {
+    console.error('Error in updatePayment:', error);
+    const message =
+      error instanceof Error ? error.message : '支払いの更新に失敗しました';
+    return {
+      success: false,
+      error: message,
+    };
+  }
+}
+
+/**
+ * 支払いの詳細取得（参加者ID含む）
+ */
+export async function getPaymentWithParticipants(
+  paymentId: string,
+): Promise<PaymentWithParticipants | null> {
+  try {
+    return await paymentRepository.getByIdWithParticipants(paymentId);
+  } catch (error: unknown) {
+    console.error('Error in getPaymentWithParticipants:', error);
+    return null;
   }
 }
 

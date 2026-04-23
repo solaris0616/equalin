@@ -103,18 +103,13 @@ CREATE POLICY "Payers can delete their own payments" ON payments
   FOR DELETE USING (auth.uid() = payer_id);
 
 -- Payment Participants:
--- 支払いデータに紐づく参加者情報を閲覧可能（再帰を避けるため payment_id 経由でチェック）
-CREATE POLICY "Members can see participants" ON payment_participants
-  FOR SELECT USING (
+-- 自分が所属しているグループの支払いに関連する参加者情報のみ操作可能
+CREATE POLICY "Group members can manage participants" ON payment_participants
+  FOR ALL USING (
     EXISTS (
       SELECT 1 FROM payments
-      WHERE payments.id = payment_participants.payment_id
-    )
-  );
-CREATE POLICY "Members can add participants" ON payment_participants
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM payments
-      WHERE payments.id = payment_participants.payment_id
+      JOIN group_members ON payments.group_id = group_members.group_id
+      WHERE payments.id = payment_participants.payment_id 
+      AND group_members.profile_id = auth.uid()
     )
   );
