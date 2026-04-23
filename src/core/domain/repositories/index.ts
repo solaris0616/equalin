@@ -23,6 +23,14 @@ export interface IPaymentRepository {
     payment: Omit<Payment, 'id' | 'createdAt'>,
     participantIds: string[],
   ): Promise<void>;
+  update(
+    paymentId: string,
+    payment: Partial<Omit<Payment, 'id' | 'groupId' | 'createdAt'>>,
+    participantIds: string[],
+  ): Promise<void>;
+  getByIdWithParticipants(
+    paymentId: string,
+  ): Promise<PaymentWithParticipants | null>;
   getByGroupId(groupId: string): Promise<PaymentWithDetails[]>;
   getWithParticipantsByGroupId(
     groupId: string,

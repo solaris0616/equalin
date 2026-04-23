@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { deletePayment } from '@/app/actions/payments';
 import type { PaymentWithDetails } from '@/core/domain/entities/payment';
@@ -8,7 +8,9 @@ import type { PaymentWithDetails } from '@/core/domain/entities/payment';
 interface PaymentListProps {
   payments: PaymentWithDetails[];
   groupId: string;
+  currentUserId: string;
   onPaymentDeleted: () => void;
+  onEdit: (paymentId: string) => void;
 }
 
 function formatTimestamp(timestamp: string): string {
@@ -25,7 +27,9 @@ function formatTimestamp(timestamp: string): string {
 export function PaymentList({
   payments,
   groupId,
+  currentUserId,
   onPaymentDeleted,
+  onEdit,
 }: PaymentListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -68,7 +72,9 @@ export function PaymentList({
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-black uppercase tracking-normal">履歴</h2>
+      <h2 className="text-2xl font-bold text-black uppercase tracking-normal">
+        履歴
+      </h2>
       <div className="space-y-4">
         {payments.map((payment) => (
           <div
@@ -77,7 +83,9 @@ export function PaymentList({
           >
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
-                <p className="text-xs font-bold text-gray-500 uppercase">支払った人</p>
+                <p className="text-xs font-bold text-gray-500 uppercase">
+                  支払った人
+                </p>
                 <p className="text-xl font-bold text-black uppercase">
                   {payment.payerName}
                 </p>
@@ -88,20 +96,34 @@ export function PaymentList({
                     ¥{payment.amount.toLocaleString()}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(payment.id)}
-                  disabled={deletingId === payment.id}
-                  aria-label="Delete payment"
-                  className="pixel-button bg-red-500 text-white p-2"
-                  title="Delete payment"
-                >
-                  {deletingId === payment.id ? (
-                    <div className="w-5 h-5 border-4 border-white border-t-transparent animate-spin" />
-                  ) : (
-                    <Trash2 className="w-5 h-5" />
-                  )}
-                </button>
+                {payment.payerId === currentUserId && (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onEdit(payment.id)}
+                      disabled={deletingId === payment.id}
+                      aria-label="Edit payment"
+                      className="pixel-button bg-blue-500 text-white p-2"
+                      title="Edit payment"
+                    >
+                      <Pencil className="w-5 h-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(payment.id)}
+                      disabled={deletingId === payment.id}
+                      aria-label="Delete payment"
+                      className="pixel-button bg-red-500 text-white p-2"
+                      title="Delete payment"
+                    >
+                      {deletingId === payment.id ? (
+                        <div className="w-5 h-5 border-4 border-white border-t-transparent animate-spin" />
+                      ) : (
+                        <Trash2 className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -112,7 +134,9 @@ export function PaymentList({
             )}
 
             <div className="mb-4">
-              <p className="text-xs font-bold text-gray-500 mb-2 uppercase">一緒にいた人</p>
+              <p className="text-xs font-bold text-gray-500 mb-2 uppercase">
+                一緒にいた人
+              </p>
               <div className="flex flex-wrap gap-2">
                 {payment.participantNames.map((name, index) => (
                   <span

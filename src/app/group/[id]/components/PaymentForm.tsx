@@ -1,30 +1,48 @@
 'use client';
 
-import { useState } from 'react';
-import { createPayment } from '@/app/actions/payments';
+import { useEffect, useState } from 'react';
+import { createPayment, updatePayment } from '@/app/actions/payments';
+import type {
+  PaymentWithParticipants,
+  Profile,
+} from '@/core/domain/entities/payment';
 import { cn } from '@/lib/utils';
-import type { Profile } from '@/core/domain/entities/payment';
 
 interface PaymentFormProps {
   groupId: string;
   currentUserId: string;
   members: Profile[];
+  initialData?: PaymentWithParticipants & { description: string | null };
   onSuccess: () => void;
+  onCancel?: () => void;
 }
 
 export function PaymentForm({
   groupId,
   currentUserId,
   members,
+  initialData,
   onSuccess,
+  onCancel,
 }: PaymentFormProps) {
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState(
+    initialData?.description || '',
+  );
+  const [amount, setAmount] = useState(initialData?.amount.toString() || '');
   const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(
-    new Set(members.map((m) => m.id)),
+    new Set(initialData?.participantIds || members.map((m) => m.id)),
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Update form if initialData changes (e.g. when switching between edits)
+  useEffect(() => {
+    if (initialData) {
+      setDescription(initialData.description || '');
+      setAmount(initialData.amount.toString());
+      setSelectedParticipants(new Set(initialData.participantIds));
+    }
+  }, [initialData]);
 
   const handleParticipantToggle = (profileId: string) => {
     setSelectedParticipants((prev) => {
@@ -56,22 +74,38 @@ export function PaymentForm({
     setIsSubmitting(true);
 
     try {
-      const result = await createPayment(
-        groupId,
-        currentUserId,
-        amountValue,
-        description,
-        Array.from(selectedParticipants),
-      );
+      let result: { success: boolean; error?: string };
+      if (initialData) {
+        result = await updatePayment(
+          initialData.id,
+          initialData.payerId, // Keep original payer for now
+          amountValue,
+          description,
+          Array.from(selectedParticipants),
+        );
+      } else {
+        result = await createPayment(
+          groupId,
+          currentUserId,
+          amountValue,
+          description,
+          Array.from(selectedParticipants),
+        );
+      }
 
       if (result.success) {
-        setDescription('');
-        setAmount('');
-        setSelectedParticipants(new Set(members.map((m) => m.id)));
+        if (!initialData) {
+          setDescription('');
+          setAmount('');
+          setSelectedParticipants(new Set(members.map((m) => m.id)));
+        }
         setError(null);
         onSuccess();
       } else {
-        setError(result.error || '支払いの作成に失敗しました');
+        setError(
+          result.error ||
+            (initialData ? '更新に失敗しました' : '支払いの作成に失敗しました'),
+        );
       }
     } catch (err) {
       console.error('Error submitting payment:', err);
@@ -82,11 +116,10 @@ export function PaymentForm({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-6 pixel-card"
-    >
-      <h2 className="text-2xl font-bold text-black uppercase tracking-normal">支出の入力</h2>
+    <form onSubmit={handleSubmit} className="space-y-6 pixel-card">
+      <h2 className="text-2xl font-bold text-black uppercase tracking-normal">
+        {initialData ? '支出の編集' : '支出の入力'}
+      </h2>
       <div className="h-1 bg-black w-full" />
 
       <div className="space-y-2">
@@ -108,10 +141,7 @@ export function PaymentForm({
       </div>
 
       <div className="space-y-2">
-        <label
-          htmlFor="amount"
-          className="block text-sm font-bold text-black"
-        >
+        <label htmlFor="amount" className="block text-sm font-bold text-black">
           いくら使いましたか？ *
         </label>
         <input
@@ -133,13 +163,19 @@ export function PaymentForm({
         <span className="block text-sm font-bold text-black">
           誰の分ですか？ *
         </span>
-        <div className="space-y-2 max-h-48 overflow-y-auto border-4 border-black p-3 bg-white" role="group" aria-label="参加者選択">
+        <div
+          className="space-y-2 max-h-48 overflow-y-auto border-4 border-black p-3 bg-white"
+          role="group"
+          aria-label="参加者選択"
+        >
           {members.map((member) => (
             <label
               key={member.id}
               className={cn(
                 'flex items-center space-x-3 p-2 cursor-pointer transition-all border-2 border-transparent',
-                selectedParticipants.has(member.id) ? 'bg-blue-100 border-black' : 'hover:bg-gray-100',
+                selectedParticipants.has(member.id)
+                  ? 'bg-blue-100 border-black'
+                  : 'hover:bg-gray-100',
               )}
             >
               <input
@@ -149,7 +185,9 @@ export function PaymentForm({
                 className="w-6 h-6 border-4 border-black text-blue-500 focus:ring-0 rounded-none appearance-none checked:bg-blue-500 relative checked:after:content-['✓'] checked:after:absolute checked:after:text-white checked:after:font-bold checked:after:left-1 checked:after:top-[-4px]"
                 disabled={isSubmitting}
               />
-              <span className="text-sm font-bold text-black">{member.name}</span>
+              <span className="text-sm font-bold text-black">
+                {member.name}
+              </span>
             </label>
           ))}
         </div>
@@ -164,16 +202,34 @@ export function PaymentForm({
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className={cn(
-          'w-full pixel-button-primary text-xl uppercase',
-          isSubmitting && 'opacity-50 cursor-not-allowed',
+      <div className="flex flex-col md:flex-row gap-4">
+        {initialData && onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isSubmitting}
+            className="w-full md:w-1/3 pixel-button bg-gray-200 text-black text-xl uppercase"
+          >
+            キャンセル
+          </button>
         )}
-      >
-        {isSubmitting ? '記録中...' : '記録する'}
-      </button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className={cn(
+            'flex-1 pixel-button-primary text-xl uppercase',
+            isSubmitting && 'opacity-50 cursor-not-allowed',
+          )}
+        >
+          {isSubmitting
+            ? initialData
+              ? '更新中...'
+              : '記録中...'
+            : initialData
+              ? '更新する'
+              : '記録する'}
+        </button>
+      </div>
     </form>
   );
 }

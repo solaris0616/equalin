@@ -1,21 +1,23 @@
-"use client";
+'use client';
 
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { use, useEffect, useState } from "react";
-import { nanoid } from "nanoid";
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { use, useCallback, useEffect, useState } from 'react';
 import {
   getGroupMembers,
   getGroupPayments,
+  getPaymentWithParticipants,
   joinGroup,
-} from "@/app/actions/payments";
+} from '@/app/actions/payments';
 import type {
   PaymentWithDetails,
+  PaymentWithParticipants,
   Profile,
-} from "@/core/domain/entities/payment";
-import { InviteLinkButton } from "./components/InviteLinkButton";
-import { PaymentForm } from "./components/PaymentForm";
-import { PaymentList } from "./components/PaymentList";
-import { SettlementDisplay } from "./components/SettlementDisplay";
+} from '@/core/domain/entities/payment';
+import { createClient } from '@/lib/supabase/client';
+import { InviteLinkButton } from './components/InviteLinkButton';
+import { PaymentForm } from './components/PaymentForm';
+import { PaymentList } from './components/PaymentList';
+import { SettlementDisplay } from './components/SettlementDisplay';
 
 export default function GroupPage({
   params,
@@ -23,19 +25,22 @@ export default function GroupPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: groupId } = use(params);
-  const storageKey = `equalin_profile_${groupId}`;
+  const supabase = createClient();
 
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [nameInput, setNameInput] = useState("");
+  const [nameInput, setNameInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [members, setMembers] = useState<Profile[]>([]);
   const [payments, setPayments] = useState<PaymentWithDetails[]>([]);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<
+    (PaymentWithParticipants & { description: string | null }) | null
+  >(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [settlementRefreshTrigger, setSettlementRefreshTrigger] = useState(0);
   const [refreshError, setRefreshError] = useState<string | null>(null);
 
-  const loadGroupData = async () => {
+  const loadGroupData = useCallback(async () => {
     setIsLoadingData(true);
     setRefreshError(null);
     try {
@@ -47,54 +52,94 @@ export default function GroupPage({
       setPayments(fetchedPayments);
       setSettlementRefreshTrigger((prev) => prev + 1);
     } catch (error) {
-      console.error("Error loading group data:", error);
+      console.error('Error loading group data:', error);
       setRefreshError(
-        "データの読み込みに失敗しました。もう一度お試しください。",
+        'データの読み込みに失敗しました。もう一度お試しください。',
       );
     } finally {
       setIsLoadingData(false);
     }
-  };
+  }, [groupId]);
 
   const handleJoinGroup = async () => {
     if (!nameInput.trim()) {
-      alert("名前を入力してください。");
+      alert('名前を入力してください。');
       return;
     }
 
-    const newProfile: Profile = { id: nanoid(), name: nameInput.trim() };
-    const result = await joinGroup(groupId, newProfile);
+    try {
+      // 1. 匿名サインイン
+      const { error: authError } = await supabase.auth.signInAnonymously();
+      if (authError) throw authError;
 
-    if (!result.success) {
-      alert(result.error || "グループへの参加に失敗しました。");
-      return;
+      // 2. グループ参加 (サーバー側でプロフィール作成)
+      const result = await joinGroup(groupId, nameInput.trim());
+
+      if (!result.success || !result.data) {
+        alert(result.error || 'グループへの参加に失敗しました。');
+        return;
+      }
+
+      setProfile(result.data);
+    } catch (error) {
+      console.error('Error joining group:', error);
+      alert('エラーが発生しました。');
     }
-
-    localStorage.setItem(storageKey, JSON.stringify(newProfile));
-    setProfile(newProfile);
   };
 
   const handlePaymentSuccess = async () => {
     await loadGroupData();
     setShowPaymentForm(false);
+    setEditingPayment(null);
+  };
+
+  const handleEdit = async (paymentId: string) => {
+    const payment = await getPaymentWithParticipants(paymentId);
+    if (payment) {
+      // Find the description from the payments list
+      const fullPayment = payments.find((p) => p.id === paymentId);
+      setEditingPayment({
+        ...payment,
+        description: fullPayment?.description || null,
+      });
+      setShowPaymentForm(true);
+      // Scroll to form
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPayment(null);
+    setShowPaymentForm(false);
   };
 
   useEffect(() => {
-    const loadProfileForGroup = () => {
-      const localProfile = localStorage.getItem(storageKey);
-      if (localProfile) {
-        setProfile(JSON.parse(localProfile));
+    const checkAuth = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        // 既にログインしている場合、プロフィールを取得
+        try {
+          const fetchedMembers = await getGroupMembers(groupId);
+          const currentProfile = fetchedMembers.find((m) => m.id === user.id);
+          if (currentProfile) {
+            setProfile(currentProfile);
+          }
+        } catch (error) {
+          console.error('Error fetching current profile:', error);
+        }
       }
       setIsLoading(false);
     };
-    loadProfileForGroup();
-  }, [storageKey]);
+    checkAuth();
+  }, [groupId, supabase.auth]);
 
   useEffect(() => {
     if (profile) {
       loadGroupData();
     }
-  }, [profile]);
+  }, [profile, loadGroupData]);
 
   if (isLoading) {
     return (
@@ -174,13 +219,19 @@ export default function GroupPage({
         <div>
           <button
             type="button"
-            onClick={() => setShowPaymentForm(!showPaymentForm)}
+            onClick={() => {
+              if (showPaymentForm && editingPayment) {
+                handleCancelEdit();
+              } else {
+                setShowPaymentForm(!showPaymentForm);
+              }
+            }}
             className="w-full md:w-auto pixel-button-primary flex items-center justify-center gap-2 text-lg"
           >
             {showPaymentForm ? (
               <>
                 <ChevronUp className="w-5 h-5" />
-                入力を閉じる
+                {editingPayment ? '編集をキャンセル' : '入力を閉じる'}
               </>
             ) : (
               <>
@@ -194,14 +245,18 @@ export default function GroupPage({
             <div className="mt-6">
               {isLoadingData ? (
                 <div className="pixel-card text-center py-8">
-                  <p className="text-black font-bold animate-pulse">メンバーを読み込み中...</p>
+                  <p className="text-black font-bold animate-pulse">
+                    メンバーを読み込み中...
+                  </p>
                 </div>
               ) : (
                 <PaymentForm
                   groupId={groupId}
                   currentUserId={profile.id}
                   members={members}
+                  initialData={editingPayment || undefined}
                   onSuccess={handlePaymentSuccess}
+                  onCancel={handleCancelEdit}
                 />
               )}
             </div>
@@ -210,13 +265,17 @@ export default function GroupPage({
 
         {isLoadingData ? (
           <div className="pixel-card text-center py-12">
-            <p className="text-black font-bold animate-pulse">ログを読み込み中...</p>
+            <p className="text-black font-bold animate-pulse">
+              ログを読み込み中...
+            </p>
           </div>
         ) : (
           <PaymentList
             payments={payments}
             groupId={groupId}
+            currentUserId={profile.id}
             onPaymentDeleted={loadGroupData}
+            onEdit={handleEdit}
           />
         )}
 

@@ -3,6 +3,7 @@
 import type {
   Group,
   PaymentWithDetails,
+  PaymentWithParticipants,
   Profile,
   SettlementTransaction,
 } from '@/core/domain/entities/payment';
@@ -12,6 +13,7 @@ import {
   profileRepository,
   settlementUseCase,
 } from '@/core/registry';
+import { createClient } from '@/lib/supabase/server';
 
 /**
  * グループ作成
@@ -67,6 +69,57 @@ export async function createPayment(
 }
 
 /**
+ * 支払いの更新
+ */
+export async function updatePayment(
+  paymentId: string,
+  payerId: string,
+  amount: number,
+  description: string,
+  participantIds: string[],
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (participantIds.length === 0) {
+      return { success: false, error: '参加者を1人以上選択してください' };
+    }
+
+    if (!Number.isInteger(amount) || amount < 1 || amount > 999999999) {
+      return { success: false, error: '有効な金額を入力してください' };
+    }
+
+    await paymentRepository.update(
+      paymentId,
+      { payerId, amount, description: description || null },
+      participantIds,
+    );
+
+    return { success: true };
+  } catch (error: unknown) {
+    console.error('Error in updatePayment:', error);
+    const message =
+      error instanceof Error ? error.message : '支払いの更新に失敗しました';
+    return {
+      success: false,
+      error: message,
+    };
+  }
+}
+
+/**
+ * 支払いの詳細取得（参加者ID含む）
+ */
+export async function getPaymentWithParticipants(
+  paymentId: string,
+): Promise<PaymentWithParticipants | null> {
+  try {
+    return await paymentRepository.getByIdWithParticipants(paymentId);
+  } catch (error: unknown) {
+    console.error('Error in getPaymentWithParticipants:', error);
+    return null;
+  }
+}
+
+/**
  * グループの支払い履歴取得
  */
 export async function getGroupPayments(
@@ -97,14 +150,26 @@ export async function getGroupMembers(groupId: string): Promise<Profile[]> {
  */
 export async function joinGroup(
   groupId: string,
-  profile: Profile,
-): Promise<{ success: boolean; error?: string }> {
+  name: string,
+): Promise<{ success: boolean; data?: Profile; error?: string }> {
   try {
-    // 1. プロフィール作成
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { success: false, error: '認証に失敗しました' };
+    }
+
+    const profile: Profile = { id: user.id, name };
+
+    // 1. プロフィール作成 (既に存在する場合は無視するか更新する設計に)
     await profileRepository.create(profile);
     // 2. グループメンバー追加
     await groupRepository.addMember(groupId, profile.id);
-    return { success: true };
+
+    return { success: true, data: profile };
   } catch (error: unknown) {
     console.error('Error in joinGroup:', error);
     const message =
@@ -128,7 +193,8 @@ export async function deletePayment(
     return { success: true };
   } catch (error: unknown) {
     console.error('Error in deletePayment:', error);
-    const message = error instanceof Error ? error.message : '削除に失敗しました';
+    const message =
+      error instanceof Error ? error.message : '削除に失敗しました';
     return { success: false, error: message };
   }
 }

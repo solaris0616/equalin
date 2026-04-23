@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertCircle, CheckCircle, Info, X } from 'lucide-react';
+import { AlertCircle, CheckCircle, Info } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
 interface ToastProps {
@@ -64,7 +64,9 @@ export function Toast({ message, type, duration = 3000, onClose }: ToastProps) {
     >
       <Icon className="w-6 h-6 flex-shrink-0" aria-hidden="true" />
 
-      <p className="flex-1 text-base font-bold uppercase tracking-widest">{message}</p>
+      <p className="flex-1 text-base font-bold uppercase tracking-widest">
+        {message}
+      </p>
 
       <button
         type="button"
