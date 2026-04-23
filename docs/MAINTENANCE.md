@@ -1,24 +1,26 @@
-# Maintenance Guide for Gemini CLI
+# Maintenance Guide
 
-このガイドは、今後の機能追加や修正を効率的に行うためのAIエージェント向け指示書です。
+This guide provides instructions for AI agents and developers to maintain the project efficiently.
 
-## 機能追加のステップ
-1. **Domain**: `src/domain/entities/` に必要な型を定義し、`src/domain/repositories/` にインターフェースを追加する。
-2. **Infrastructure**: `src/infrastructure/repositories/` に具体的な実装（Supabase等）を追加する。
-3. **Application**: 必要に応じて `src/application/use-cases/` にビジネスフローをカプセル化したクラスを作成する。
-4. **Registry**: `src/registry.ts` でインスタンス化し、外部に公開する。
-5. **Presentation**: `app/actions/` または UIコンポーネントから公開されたインスタンスを使用する。
+## Feature Implementation Steps
+1. **Domain**: Define types in `src/core/domain/entities/` and add interfaces to `src/core/domain/repositories/`.
+2. **Infrastructure**: Implement the repository (e.g., Supabase) in `src/core/infrastructure/repositories/`.
+3. **Application**: Create use-cases in `src/core/application/use-cases/` if business flows involve multiple repositories.
+4. **Registry**: Instantiate and export the new implementation in `src/core/registry.ts`.
+5. **Presentation**: Consume the instance from Server Actions or UI components.
 
-## データ更新のフロー
-- UIの更新が必要な場合は、`router.refresh()` を呼ぶか、Server Actions の `revalidatePath` を活用する。
-- 現在の `GroupPage` は `useEffect` でデータを取得しているが、将来的には Server Components への移行を推奨。
+## Data Update Flow
+- **UI Refresh**: Use `router.refresh()` or Server Action's `revalidatePath` for data updates.
+- **Data Fetching**: Currently, `GroupPage` uses `useEffect`. Future migration to Server Components is recommended for performance.
 
-## 重要な注意点
-- **キャメルケース**: DBはスネークケースだが、アプリケーション内（Domain Layer以上）では常にキャメルケースを徹底する。Infrastructure Layer のリポジトリが変換責任を持つ。
-- **金額計算**: 浮動小数点誤差を避けるため、計算は整数で行い、必要に応じて `Math.round` を適用する。
+## Critical Notes
+- **Case Conversion**: Database uses snake_case, but the Application layer and above MUST use camelCase. Infrastructure repositories are responsible for this conversion.
+- **Rounding**: Perform calculations in integers to avoid floating-point errors. Use `Math.round` only when necessary during display.
 
-## テストの実行
+## Verification
 ```bash
-bun test
+npm run type-check
+npm run test
+npm run check:apply
 ```
-ビジネスロジックに変更を加えた場合は、必ずこのコマンドでデグレがないか確認すること。
+Always verify these three commands pass before concluding a task.

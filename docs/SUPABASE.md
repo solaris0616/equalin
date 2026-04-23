@@ -280,195 +280,44 @@ supabase db push
 ## Row Level Security (RLS)
 
 ### Current Status
-- RLS is not currently enabled for Equalin (anonymous access model)
-- All tables are publicly accessible via the anon key
+- **Strictly Enforced**: All tables have RLS enabled.
+- **Anonymous Auth**: Using Supabase's Anonymous Auth. Anonymous users have the `authenticated` role but are restricted by group-level policies.
 
-### Future Considerations
-If authentication is added later, enable RLS:
+### Core Policy Patterns
 
+#### Group-based Access
+Most data is protected by checking if the user is a member of the group:
 ```sql
--- Enable RLS on a table
-ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
-
--- Create policy for authenticated users
-CREATE POLICY "Users can view payments in their groups"
-  ON payments
-  FOR SELECT
-  USING (
-    group_id IN (
-      SELECT group_id FROM group_members
-      WHERE profile_id = auth.uid()
+CREATE POLICY "Members can see group payments" ON payments
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM group_members
+      WHERE group_id = payments.group_id AND profile_id = auth.uid()
     )
   );
 ```
 
-## Performance Optimization
+#### Avoiding Recursion
+In `group_members`, avoid recursive SELECT policies. Instead, use a simpler policy for membership listing while protecting individual's names in the `profiles` table.
 
-### Query Optimization
-
-1. **Select Only Needed Columns**
-   ```typescript
-   // Good
-   .select('id, name, created_at')
-
-   // Avoid (unless you need all columns)
-   .select('*')
-   ```
-
-2. **Use Indexes**
-   - Add indexes on frequently queried columns
-   - Especially for foreign keys and timestamp columns
-
-3. **Limit Results**
-   ```typescript
-   .select('*')
-   .limit(50)
-   .range(0, 49) // For pagination
-   ```
-
-4. **Use Filters Efficiently**
-   ```typescript
-   // Apply filters before joins when possible
-   .select('*')
-   .eq('group_id', groupId)
-   .order('created_at', { ascending: false })
-   ```
-
-### Connection Pooling
-
-- Supabase handles connection pooling automatically
-- Use the provided connection string from Supabase dashboard
-- For serverless environments, use the pooler connection string
-
-## Real-time Subscriptions (Future)
-
-If real-time updates are needed:
-
-```typescript
-// Subscribe to payment changes
-const subscription = supabase
-  .channel('payments')
-  .on(
-    'postgres_changes',
-    {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'payments',
-      filter: `group_id=eq.${groupId}`,
-    },
-    (payload) => {
-      console.log('New payment:', payload.new);
-      // Update UI
-    }
-  )
-  .subscribe();
-
-// Cleanup
-subscription.unsubscribe();
+#### Management Access
+Only the creator/payer of a record should be allowed to DELETE or UPDATE it:
+```sql
+CREATE POLICY "Payers can delete their own payments" ON payments
+  FOR DELETE USING (auth.uid() = payer_id);
 ```
 
-## Environment Variables
+### Common Issues & Solutions
 
-### Required Variables
+1. **"infinite recursion detected"**
+   - Occurs when an RLS policy for Table A queries Table A.
+   - Solution: Simplify the `USING` clause or use a different table to verify permissions.
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-anon-key
-```
+2. **"duplicate key value violates unique constraint"**
+   - Often occurs during fast delete-then-insert operations.
+   - Solution: Use `.upsert()` for relational junction tables like `payment_participants`.
 
-### Security Notes
+3. **"new row violates row-level security policy"**
+   - Ensure the policy allows all necessary actions for a command (e.g., `upsert` needs both `INSERT` and `UPDATE` permissions).
+   - Check `auth.uid()` matches the ID being inserted.
 
-- The `NEXT_PUBLIC_` prefix makes these variables available in the browser
-- The anon key is safe to expose (protected by RLS policies)
-- Never expose the service role key in client-side code
-- Store sensitive keys in `.env.local` (not committed to git)
-
-## Common Patterns
-
-### Transaction-like Operations
-
-Supabase doesn't support transactions in the client, but you can:
-
-1. **Use Database Functions**
-   ```sql
-   CREATE OR REPLACE FUNCTION create_payment_with_participants(
-     p_group_id TEXT,
-     p_payer_id TEXT,
-     p_amount BIGINT,
-     p_description TEXT,
-     p_participant_ids TEXT[]
-   ) RETURNS TEXT AS $$
-   DECLARE
-     v_payment_id TEXT;
-   BEGIN
-     -- Insert payment
-     INSERT INTO payments (group_id, payer_id, amount, description)
-     VALUES (p_group_id, p_payer_id, p_amount, p_description)
-     RETURNING id INTO v_payment_id;
-
-     -- Insert participants
-     INSERT INTO payment_participants (payment_id, profile_id)
-     SELECT v_payment_id, unnest(p_participant_ids);
-
-     RETURN v_payment_id;
-   END;
-   $$ LANGUAGE plpgsql;
-   ```
-
-2. **Handle Rollback in Application**
-   ```typescript
-   const { data: payment, error: paymentError } = await supabase
-     .from('payments')
-     .insert(paymentData)
-     .select()
-     .single();
-
-   if (paymentError) {
-     return { success: false, error: 'Failed to create payment' };
-   }
-
-   const { error: participantsError } = await supabase
-     .from('payment_participants')
-     .insert(participantData);
-
-   if (participantsError) {
-     // Rollback: delete the payment
-     await supabase.from('payments').delete().eq('id', payment.id);
-     return { success: false, error: 'Failed to add participants' };
-   }
-   ```
-
-## Debugging
-
-### Enable Logging
-
-```typescript
-// In development, log all queries
-const supabase = createClient();
-
-if (process.env.NODE_ENV === 'development') {
-  supabase.auth.onAuthStateChange((event, session) => {
-    console.log('Auth event:', event, session);
-  });
-}
-```
-
-### Common Issues
-
-1. **"relation does not exist"**
-   - Migration not applied
-   - Wrong schema/table name
-   - Solution: Run `supabase db reset`
-
-2. **"null value in column violates not-null constraint"**
-   - Missing required field in insert
-   - Solution: Check table schema and provide all required fields
-
-3. **"duplicate key value violates unique constraint"**
-   - Trying to insert duplicate primary key
-   - Solution: Use `.upsert()` or check for existing records first
-
-4. **Empty results when data exists**
-   - RLS policy blocking access (if enabled)
-   - Wrong filter conditions
-   - Solution: Check RLS policies and query filters
