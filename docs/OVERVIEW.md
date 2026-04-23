@@ -1,34 +1,34 @@
 # Equalin Project Overview
 
-Equalinは、シンプルで公平な割り勘を実現するためのオープンソースWebアプリケーションです。グループでの支出を記録し、誰が誰にいくら支払うべきかを自動的に計算します。
+Equalin is an open-source web application designed for simple and fair split-billing. It records group expenses and automatically calculates who owes whom and how much.
 
-## コア機能
-- **グループ管理**: グループ作成と招待リンクによる共有
-- **支出記録**: 支払者、金額、参加者を選択して記録
-- **精算計算**: 最小の取引回数で精算できるアルゴリズム
-- **匿名利用**: ログイン不要。localStorageによる簡易的なプロフィール管理
+## Core Features
+- **Group Management**: Create groups and share via invitation links.
+- **Expense Logging**: Select payer, amount, and participants. Supports editing after entry.
+- **Settlement Calculation**: Algorithm to settle debts with the minimum number of transactions.
+- **Anonymous Usage**: No sign-up required. Secure profile management via Supabase Anonymous Auth.
 
-## 技術スタック
+## Tech Stack
 - **Frontend**: Next.js 15 (App Router), React 19
 - **Backend**: Supabase (PostgreSQL, SSR Client)
 - **Architecture**: Clean Architecture (Domain, Application, Infrastructure, Presentation)
-- **Tooling**: Bun, Biome, TypeScript
+- **Tooling**: Bun, Biome, TypeScript, Tailwind CSS
 
-## システムアーキテクチャ
-クリーンアーキテクチャを採用し、依存関係を以下のように制御しています：
+## System Architecture
+Strict adherence to Clean Architecture:
 
-1. **Domain Layer (`src/domain/`)**:
-   - `entities/`: ビジネスエンティティ（Payment, Profile等）の定義。外部依存ゼロ。
-   - `services/`: 純粋なビジネスロジック（SettlementService）。
-   - `repositories/`: データ永続化のインターフェース。
-2. **Application Layer (`src/application/`)**:
-   - `use-cases/`: 特定の業務フロー（精算計算など）を実現。リポジトリインターフェースに依存。
-3. **Infrastructure Layer (`src/infrastructure/`)**:
-   - `repositories/`: Supabase等を使用したリポジトリの実装。
-4. **Presentation Layer (`app/actions/`, `app/group/`)**:
-   - Server ActionsとReactコンポーネント。ユースケースまたはリポジトリを呼び出す。
+1. **Domain Layer (`src/core/domain/`)**:
+   - `entities/`: Business entity definitions (Payment, Profile). No external dependencies.
+   - `services/`: Pure business logic (SettlementService).
+   - `repositories/`: Persistence interfaces.
+2. **Application Layer (`src/core/application/`)**:
+   - `use-cases/`: Specific business flows (e.g., Settlement calculation).
+3. **Infrastructure Layer (`src/core/infrastructure/`)**:
+   - `repositories/`: Implementations using Supabase SDK.
+4. **Presentation Layer (`src/app/actions/`, `src/app/group/`)**:
+   - Server Actions and React components.
 
-## 開発の原則
-1. **ビジネスロジックの隔離**: 精算計算などの核となるロジックは常に `domain/services` に記述し、外部ライブラリやDBに依存させない。
-2. **依存性の逆転**: 高位レイヤーは低位レイヤーのインターフェースに依存し、具象（Supabase等）には依存しない。
-3. **UIの簡素化**: 過剰な装飾を避け、直感的で高速なUIを維持する。
+## Development Principles
+1. **Logic Isolation**: Core logic resides in `domain/services`, detached from DB or external libs.
+2. **Dependency Inversion**: High-level layers depend on interfaces, not concrete implementations.
+3. **Lean UI**: Maintain a fast, intuitive UI without excessive decoration.
