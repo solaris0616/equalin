@@ -1,20 +1,34 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { createGroup } from '@/app/actions/payments';
+import { Button } from '@/components/ui/Button';
 
 export default function Page() {
   const router = useRouter();
+  const [isCreating, setIsCreating] = useState(false);
 
   const handleCreateGroup = async () => {
-    const result = await createGroup();
+    if (isCreating) return;
 
-    if (!result.success || !result.data) {
-      alert('グループの作成に失敗しました。もう一度お試しください。');
-      return;
+    setIsCreating(true);
+    try {
+      const result = await createGroup();
+
+      if (!result.success || !result.data) {
+        alert('グループの作成に失敗しました。もう一度お試しください。');
+        setIsCreating(false);
+        return;
+      }
+
+      router.push(`/group/${result.data.id}`);
+      // NOTE: We don't setIsCreating(false) here because the router is navigating
+    } catch (error) {
+      console.error('Error creating group:', error);
+      alert('エラーが発生しました。');
+      setIsCreating(false);
     }
-
-    router.push(`/group/${result.data.id}`);
   };
 
   return (
@@ -29,13 +43,14 @@ export default function Page() {
           <span className="inline-block">次の冒険へ。</span>
         </p>
         <div className="max-w-xs mx-auto">
-          <button
-            type="button"
+          <Button
             onClick={handleCreateGroup}
-            className="w-full bg-blue-500 text-white font-bold py-5 px-8 border-4 border-black shadow-pixel hover:bg-blue-600 active:shadow-pixel-active active:translate-x-1 active:translate-y-1 transition-all text-3xl uppercase tracking-widest"
+            isLoading={isCreating}
+            loadingText="STARTING..."
+            className="w-full py-5 text-3xl tracking-widest"
           >
             START
-          </button>
+          </Button>
         </div>
       </div>
       <p className="mt-16 text-black font-bold animate-pulse tracking-widest text-lg">

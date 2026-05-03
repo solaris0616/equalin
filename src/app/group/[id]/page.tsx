@@ -8,6 +8,7 @@ import {
   getPaymentWithParticipants,
   joinGroup,
 } from '@/app/actions/payments';
+import { Button } from '@/components/ui/Button';
 import type {
   PaymentWithDetails,
   PaymentWithParticipants,
@@ -40,6 +41,8 @@ export default function GroupPage({
   const [settlementRefreshTrigger, setSettlementRefreshTrigger] = useState(0);
   const [refreshError, setRefreshError] = useState<string | null>(null);
 
+  const [isJoining, setIsJoining] = useState(false);
+
   const loadGroupData = useCallback(async () => {
     setIsLoadingData(true);
     setRefreshError(null);
@@ -67,23 +70,33 @@ export default function GroupPage({
       return;
     }
 
+    if (isJoining) return;
+
+    setIsJoining(true);
     try {
       // 1. 匿名サインイン
       const { error: authError } = await supabase.auth.signInAnonymously();
-      if (authError) throw authError;
+      if (authError) {
+        setIsJoining(false);
+        throw authError;
+      }
 
       // 2. グループ参加 (サーバー側でプロフィール作成)
       const result = await joinGroup(groupId, nameInput.trim());
 
       if (!result.success || !result.data) {
         alert(result.error || 'グループへの参加に失敗しました。');
+        setIsJoining(false);
         return;
       }
 
       setProfile(result.data);
+      // NOTE: We don't setIsJoining(false) here because the component will re-render
+      // and show the group dashboard since profile is now set.
     } catch (error) {
       console.error('Error joining group:', error);
       alert('エラーが発生しました。');
+      setIsJoining(false);
     }
   };
 
@@ -170,13 +183,14 @@ export default function GroupPage({
               placeholder="あなたの名前"
               className="w-full pixel-input"
             />
-            <button
-              type="button"
+            <Button
               onClick={handleJoinGroup}
-              className="w-full pixel-button-primary text-xl"
+              isLoading={isJoining}
+              loadingText="参加中..."
+              className="w-full text-xl"
             >
               決定
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -217,8 +231,7 @@ export default function GroupPage({
         )}
 
         <div>
-          <button
-            type="button"
+          <Button
             onClick={() => {
               if (showPaymentForm && editingPayment) {
                 handleCancelEdit();
@@ -226,7 +239,7 @@ export default function GroupPage({
                 setShowPaymentForm(!showPaymentForm);
               }
             }}
-            className="w-full md:w-auto pixel-button-primary flex items-center justify-center gap-2 text-lg"
+            className="w-full md:w-auto flex items-center justify-center gap-2 text-lg"
           >
             {showPaymentForm ? (
               <>
@@ -239,7 +252,7 @@ export default function GroupPage({
                 支出を追加
               </>
             )}
-          </button>
+          </Button>
 
           {showPaymentForm && (
             <div className="mt-6">

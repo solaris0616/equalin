@@ -3,6 +3,7 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { deletePayment } from '@/app/actions/payments';
+import { Button } from '@/components/ui/Button';
 import type { PaymentWithDetails } from '@/core/domain/entities/payment';
 
 interface PaymentListProps {
@@ -98,30 +99,29 @@ export function PaymentList({
                 </div>
                 {payment.payerId === currentUserId && (
                   <div className="flex gap-2">
-                    <button
-                      type="button"
+                    <Button
+                      variant="primary"
                       onClick={() => onEdit(payment.id)}
-                      disabled={deletingId === payment.id}
+                      disabled={deletingId !== null}
                       aria-label="Edit payment"
-                      className="pixel-button bg-blue-500 text-white p-2"
+                      className="p-2"
                       title="Edit payment"
                     >
                       <Pencil className="w-5 h-5" />
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="destructive"
                       onClick={() => handleDelete(payment.id)}
-                      disabled={deletingId === payment.id}
+                      isLoading={deletingId === payment.id}
+                      disabled={
+                        deletingId !== null && deletingId !== payment.id
+                      }
                       aria-label="Delete payment"
-                      className="pixel-button bg-red-500 text-white p-2"
+                      className="p-2"
                       title="Delete payment"
                     >
-                      {deletingId === payment.id ? (
-                        <div className="w-5 h-5 border-4 border-white border-t-transparent animate-spin" />
-                      ) : (
-                        <Trash2 className="w-5 h-5" />
-                      )}
-                    </button>
+                      <Trash2 className="w-5 h-5" />
+                    </Button>
                   </div>
                 )}
               </div>
