@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { Check, Copy } from 'lucide-react';
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { Check, Copy } from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface InviteLinkButtonProps {
   groupId: string;
@@ -13,9 +13,9 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
   const [error, setError] = useState<string | null>(null);
 
   const groupUrl =
-    typeof window !== 'undefined'
+    typeof window !== "undefined"
       ? `${window.location.origin}/group/${groupId}`
-      : '';
+      : "";
 
   const handleCopy = async () => {
     try {
@@ -26,8 +26,8 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
         setCopied(false);
       }, 2000);
     } catch (err) {
-      console.error('Failed to copy to clipboard:', err);
-      setError('リンクのコピーに失敗しました。もう一度お試しください。');
+      console.error("Failed to copy to clipboard:", err);
+      setError("リンクのコピーに失敗しました。もう一度お試しください。");
       setTimeout(() => {
         setError(null);
       }, 3000);
@@ -35,43 +35,38 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
   };
 
   return (
-    <div className="space-y-4 w-full md:w-auto">
-      <label
-        htmlFor="invite-url"
+    <div className="w-full md:w-auto">
+      <button
+        type="button"
+        onClick={handleCopy}
+        aria-label="Copy group invitation link"
         className={cn(
-          'text-xs font-bold uppercase tracking-widest',
-          copied && !error ? 'text-green-500' : 'text-gray-500',
+          "pixel-button w-full flex items-center justify-center gap-2 px-6 py-3 transition-colors",
+          copied && !error
+            ? "bg-green-600 hover:bg-green-700"
+            : "pixel-button-primary",
         )}
       >
-        {copied && !error ? 'コピーしました！' : '招待リンクをシェア'}
-      </label>
-
-      <div className="flex gap-4">
-        <input
-          id="invite-url"
-          type="text"
-          value={groupUrl}
-          readOnly
-          className="flex-1 pixel-input text-sm"
-          aria-label="Group invitation URL"
-        />
-
-        <button
-          type="button"
-          onClick={handleCopy}
-          aria-label="Copy group invitation link"
-          className="pixel-button-primary flex items-center justify-center p-3"
-        >
-          {copied ? (
-            <Check className="w-5 h-5 text-green-300" />
-          ) : (
+        {copied && !error ? (
+          <>
+            <Check className="w-5 h-5 text-white" />
+            <span className="font-bold">コピーしました！</span>
+          </>
+        ) : (
+          <>
             <Copy className="w-5 h-5 text-white" />
-          )}
-        </button>
-      </div>
+            <span className="font-bold whitespace-nowrap">
+              招待リンクをコピー
+            </span>
+          </>
+        )}
+      </button>
 
       {error && (
-        <p className="text-sm font-bold text-red-600 uppercase" role="alert">
+        <p
+          className="mt-2 text-sm font-bold text-red-600 uppercase text-center"
+          role="alert"
+        >
           {error}
         </p>
       )}
