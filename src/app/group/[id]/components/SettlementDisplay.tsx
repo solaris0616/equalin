@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { calculateSettlement } from '@/app/actions/payments';
+import { Button } from '@/components/ui/Button';
 import type { SettlementTransaction } from '@/core/domain/entities/payment';
-import { cn } from '@/lib/utils';
 
 interface SettlementDisplayProps {
   groupId: string;
@@ -47,17 +47,15 @@ export function SettlementDisplay({
         <h2 className="text-3xl font-bold text-black uppercase tracking-normal">
           精算
         </h2>
-        <button
-          type="button"
+        <Button
+          variant="yellow"
           onClick={handleCalculateSettlement}
-          disabled={isCalculating}
-          className={cn(
-            'pixel-button-yellow text-xl uppercase tracking-widest',
-            isCalculating && 'opacity-50 cursor-not-allowed',
-          )}
+          isLoading={isCalculating}
+          loadingText="計算中..."
+          className="text-xl tracking-widest"
         >
-          {isCalculating ? '計算中...' : '計算する'}
-        </button>
+          計算する
+        </Button>
       </div>
 
       {error && (

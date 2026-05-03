@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createPayment, updatePayment } from '@/app/actions/payments';
+import { Button } from '@/components/ui/Button';
 import type {
   PaymentWithParticipants,
   Profile,
@@ -101,16 +102,18 @@ export function PaymentForm({
         }
         setError(null);
         onSuccess();
+        // NOTE: We don't setIsSubmitting(false) here because onSuccess()
+        // usually triggers a parent re-render or form closing.
       } else {
         setError(
           result.error ||
             (initialData ? '更新に失敗しました' : '支払いの作成に失敗しました'),
         );
+        setIsSubmitting(false);
       }
     } catch (err) {
       console.error('Error submitting payment:', err);
       setError('予期しないエラーが発生しました');
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -204,31 +207,23 @@ export function PaymentForm({
 
       <div className="flex flex-col md:flex-row gap-4">
         {initialData && onCancel && (
-          <button
-            type="button"
+          <Button
+            variant="outline"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="w-full md:w-1/3 pixel-button bg-gray-200 text-black text-xl uppercase"
+            className="w-full md:w-1/3 text-xl"
           >
             キャンセル
-          </button>
+          </Button>
         )}
-        <button
+        <Button
           type="submit"
-          disabled={isSubmitting}
-          className={cn(
-            'flex-1 pixel-button-primary text-xl uppercase',
-            isSubmitting && 'opacity-50 cursor-not-allowed',
-          )}
+          isLoading={isSubmitting}
+          loadingText={initialData ? '更新中...' : '記録中...'}
+          className="flex-1 text-xl"
         >
-          {isSubmitting
-            ? initialData
-              ? '更新中...'
-              : '記録中...'
-            : initialData
-              ? '更新する'
-              : '記録する'}
-        </button>
+          {initialData ? '更新する' : '記録する'}
+        </Button>
       </div>
     </form>
   );
