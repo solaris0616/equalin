@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { AlertCircle, CheckCircle, Info } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { AlertCircle, CheckCircle, Info } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 interface ToastProps {
   message: string;
-  type: 'success' | 'error' | 'info';
+  type: "success" | "error" | "info";
   duration?: number; // milliseconds, default 3000
   onClose: () => void;
 }
@@ -37,14 +37,13 @@ export function Toast({ message, type, duration = 3000, onClose }: ToastProps) {
   }, [duration, handleClose]);
 
   // Icon based on type
-  const Icon =
-    type === 'success' ? CheckCircle : type === 'error' ? AlertCircle : Info;
+  const Icon = type === "success" ? CheckCircle : type === "error" ? AlertCircle : Info;
 
   // Colors based on type
   const colorClasses = {
-    success: 'bg-green-500 text-white',
-    error: 'bg-red-500 text-white',
-    info: 'bg-blue-500 text-white',
+    success: "bg-green-500 text-white",
+    error: "bg-red-500 text-white",
+    info: "bg-blue-500 text-white",
   };
 
   return (
@@ -57,16 +56,14 @@ export function Toast({ message, type, duration = 3000, onClose }: ToastProps) {
         px-6 py-4
         flex items-center gap-4
         transition-all duration-300
-        ${isVisible && !isExiting ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}
+        ${isVisible && !isExiting ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}
       `}
       role="alert"
       aria-live="polite"
     >
       <Icon className="w-6 h-6 flex-shrink-0" aria-hidden="true" />
 
-      <p className="flex-1 text-base font-bold uppercase tracking-widest">
-        {message}
-      </p>
+      <p className="flex-1 text-base font-bold uppercase tracking-widest">{message}</p>
 
       <button
         type="button"

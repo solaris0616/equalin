@@ -1,102 +1,128 @@
-'use client';
+"use client";
 
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { use, useCallback, useEffect, useState } from 'react';
+import { ChevronDown, ChevronUp, Plus, Users } from "lucide-react";
+import { use, useCallback, useEffect, useState } from "react";
 import {
+  addMember,
+  deleteMember,
   getGroupMembers,
   getGroupPayments,
-  getPaymentWithParticipants,
+  isGroupCollaborator,
+  isGroupOwner,
   joinGroup,
-} from '@/app/actions/payments';
-import { Button } from '@/components/ui/Button';
-import type {
-  PaymentWithDetails,
-  PaymentWithParticipants,
-  Profile,
-} from '@/core/domain/entities/payment';
-import { createClient } from '@/lib/supabase/client';
-import { InviteLinkButton } from './components/InviteLinkButton';
-import { PaymentForm } from './components/PaymentForm';
-import { PaymentList } from './components/PaymentList';
-import { SettlementDisplay } from './components/SettlementDisplay';
+} from "@/app/actions/payments";
+import { Button } from "@/components/ui/Button";
+import type { Member, PaymentWithDetails } from "@/core/domain/entities/payment";
+import { createClient } from "@/lib/supabase/client";
+import { InviteLinkButton } from "./components/InviteLinkButton";
+import { PaymentForm } from "./components/PaymentForm";
+import { PaymentList } from "./components/PaymentList";
+import { SettlementDisplay } from "./components/SettlementDisplay";
+import { cn } from "@/lib/utils";
 
-export default function GroupPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function GroupPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: groupId } = use(params);
   const supabase = createClient();
 
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [nameInput, setNameInput] = useState('');
+  const [isCollaborator, setIsCollaborator] = useState<boolean | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [members, setMembers] = useState<Profile[]>([]);
+  const [group, setGroup] = useState<{ id: string; name: string } | null>(null);
+  const [members, setMembers] = useState<Member[]>([]);
   const [payments, setPayments] = useState<PaymentWithDetails[]>([]);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<
-    (PaymentWithParticipants & { description: string | null }) | null
-  >(null);
-  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [showPayments, setShowPayments] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<PaymentWithDetails | null>(null);
   const [settlementRefreshTrigger, setSettlementRefreshTrigger] = useState(0);
-  const [refreshError, setRefreshError] = useState<string | null>(null);
 
-  const [isJoining, setIsJoining] = useState(false);
+  const [newMemberName, setNewMemberName] = useState("");
+  const [isAddingMember, setIsAddingMember] = useState(false);
+  const [showMemberManager, setShowMemberManager] = useState(false);
 
   const loadGroupData = useCallback(async () => {
-    setIsLoadingData(true);
-    setRefreshError(null);
     try {
+      const supabase = createClient();
+      const { data: groupData } = await supabase
+        .from("groups")
+        .select("id, name")
+        .eq("id", groupId)
+        .single();
+
       const [fetchedMembers, fetchedPayments] = await Promise.all([
         getGroupMembers(groupId),
         getGroupPayments(groupId),
       ]);
+
+      if (groupData) setGroup(groupData);
       setMembers(fetchedMembers);
       setPayments(fetchedPayments);
       setSettlementRefreshTrigger((prev) => prev + 1);
     } catch (error) {
-      console.error('Error loading group data:', error);
-      setRefreshError(
-        'データの読み込みに失敗しました。もう一度お試しください。',
-      );
-    } finally {
-      setIsLoadingData(false);
+      console.error("Error loading group data:", error);
     }
   }, [groupId]);
 
   const handleJoinGroup = async () => {
-    if (!nameInput.trim()) {
-      alert('名前を入力してください。');
-      return;
-    }
-
-    if (isJoining) return;
-
-    setIsJoining(true);
     try {
       // 1. 匿名サインイン
-      const { error: authError } = await supabase.auth.signInAnonymously();
-      if (authError) {
-        setIsJoining(false);
-        throw authError;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        const { error: authError } = await supabase.auth.signInAnonymously();
+        if (authError) throw authError;
       }
 
-      // 2. グループ参加 (サーバー側でプロフィール作成)
-      const result = await joinGroup(groupId, nameInput.trim());
+      // 2. コラボレーターとして参加
+      const result = await joinGroup(groupId);
 
-      if (!result.success || !result.data) {
-        alert(result.error || 'グループへの参加に失敗しました。');
-        setIsJoining(false);
+      if (!result.success) {
+        alert(result.error || "グループへの参加に失敗しました。");
         return;
       }
 
-      setProfile(result.data);
-      // NOTE: We don't setIsJoining(false) here because the component will re-render
-      // and show the group dashboard since profile is now set.
+      setIsCollaborator(true);
+      const ownerStatus = await isGroupOwner(groupId);
+      setIsOwner(ownerStatus);
+      await loadGroupData();
     } catch (error) {
-      console.error('Error joining group:', error);
-      alert('エラーが発生しました。');
-      setIsJoining(false);
+      console.error("Error joining group:", error);
+      alert("エラーが発生しました。");
+    }
+  };
+
+  const handleAddMember = async () => {
+    if (!newMemberName.trim() || isAddingMember) return;
+
+    setIsAddingMember(true);
+    try {
+      const result = await addMember(groupId, newMemberName.trim());
+      if (result.success) {
+        setNewMemberName("");
+        await loadGroupData();
+      } else {
+        alert(result.error);
+      }
+    } catch (error) {
+      console.error("Error adding member:", error);
+    } finally {
+      setIsAddingMember(false);
+    }
+  };
+
+  const handleDeleteMember = async (memberId: string) => {
+    if (!confirm("このメンバーを削除しますか？関連する支払いも削除される可能性があります。"))
+      return;
+
+    try {
+      const result = await deleteMember(groupId, memberId);
+      if (result.success) {
+        await loadGroupData();
+      } else {
+        alert(result.error);
+      }
+    } catch (error) {
+      console.error("Error deleting member:", error);
     }
   };
 
@@ -106,196 +132,240 @@ export default function GroupPage({
     setEditingPayment(null);
   };
 
-  const handleEdit = async (paymentId: string) => {
-    const payment = await getPaymentWithParticipants(paymentId);
-    if (payment) {
-      // Find the description from the payments list
-      const fullPayment = payments.find((p) => p.id === paymentId);
-      setEditingPayment({
-        ...payment,
-        description: fullPayment?.description || null,
-      });
-      setShowPaymentForm(true);
-      // Scroll to form
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingPayment(null);
-    setShowPaymentForm(false);
+  const handleEditPayment = (payment: PaymentWithDetails) => {
+    setEditingPayment(payment);
+    setShowPaymentForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const initializePage = async () => {
+      const supabase = createClient();
+
+      // グループ名を先に取得
+      const { data: groupData } = await supabase
+        .from("groups")
+        .select("id, name")
+        .eq("id", groupId)
+        .single();
+      if (groupData) setGroup(groupData);
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
       if (user) {
-        // 既にログインしている場合、プロフィールを取得
-        try {
-          const fetchedMembers = await getGroupMembers(groupId);
-          const currentProfile = fetchedMembers.find((m) => m.id === user.id);
-          if (currentProfile) {
-            setProfile(currentProfile);
-          }
-        } catch (error) {
-          console.error('Error fetching current profile:', error);
+        const collab = await isGroupCollaborator(groupId);
+        setIsCollaborator(collab);
+        if (collab) {
+          const owner = await isGroupOwner(groupId);
+          setIsOwner(owner);
+          await loadGroupData();
         }
+      } else {
+        setIsCollaborator(false);
       }
       setIsLoading(false);
     };
-    checkAuth();
-  }, [groupId, supabase.auth]);
-
-  useEffect(() => {
-    if (profile) {
-      loadGroupData();
-    }
-  }, [profile, loadGroupData]);
+    initializePage();
+  }, [groupId, supabase.auth, loadGroupData]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#f0f0f0]">
-        <div className="pixel-card animate-pulse text-2xl font-bold">
-          ロード中...
-        </div>
+        <div className="pixel-card animate-pulse text-2xl font-bold">読み込み中...</div>
       </div>
     );
   }
 
-  if (!profile) {
+  if (!isCollaborator) {
     return (
-      <div className="min-h-screen bg-[#f0f0f0] flex justify-center items-center p-4">
-        <div className="w-full max-w-sm p-8 space-y-6 pixel-card">
-          <h2 className="text-3xl font-bold text-center text-black tracking-normal">
-            パーティに参加する
-          </h2>
-          <div className="h-1 bg-black w-full" />
-          <p className="text-center text-black font-bold">
-            名前を入力してください
+      <div
+        className="min-h-screen flex flex-col justify-center items-center p-4 bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: "url('/landing-bg.png')" }}
+      >
+        <div className="absolute inset-0 bg-[#f0f0f0]/60" />
+        <div className="relative max-w-md w-full text-center mb-12">
+          <h1 className="text-7xl font-bold text-black mb-2 tracking-normal [text-shadow:_2px_2px_0_white,_-2px_2px_0_white,_2px_-2px_0_white,_-2px_-2px_0_white]">
+            パリカン
+          </h1>
+          <p className="text-xl font-bold text-black [text-shadow:_1px_1px_0_white,_-1px_1px_0_white,_1px_-1px_0_white,_-1px_-1px_0_white]">
+            パッと割り勘しよう
           </p>
-          <div className="space-y-6">
-            <input
-              type="text"
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-              placeholder="あなたの名前"
-              className="w-full pixel-input"
-            />
-            <Button
-              onClick={handleJoinGroup}
-              isLoading={isJoining}
-              loadingText="参加中..."
-              className="w-full text-xl"
-            >
-              決定
-            </Button>
-          </div>
+        </div>
+
+        <div className="w-full max-w-md p-10 space-y-4 pixel-card text-center relative z-10 bg-white">
+          <h2 className="text-4xl font-bold text-black tracking-tighter mb-6">
+            {group?.name || "グループ"}に参加
+          </h2>
+          <p className="text-xl text-black font-bold mb-8">
+            グループに参加して支出を記録しましょう
+          </p>
+          <Button
+            onClick={handleJoinGroup}
+            className="w-full text-2xl py-6 h-14 tracking-widest mt-8"
+          >
+            参加する
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f0f0] p-4 md:p-8 font-sans">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="pixel-card">
+    <div
+      className="min-h-screen bg-cover bg-bottom bg-fixed p-4 md:p-8 font-sans"
+      style={{ backgroundImage: "url('/form-bg.png')" }}
+    >
+      <div className="fixed inset-0 bg-[#f0f0f0]/60 pointer-events-none" />
+      <div className="max-w-4xl mx-auto space-y-8 relative z-10">
+        <div className="pixel-card bg-white">
           <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-6">
             <div className="flex-1">
               <h1 className="text-3xl md:text-4xl font-bold text-black tracking-normal uppercase">
-                支出ログ
+                {group?.name || "支出ログ"}
               </h1>
             </div>
             <InviteLinkButton groupId={groupId} />
           </div>
         </div>
 
-        {refreshError && (
-          <div
-            className="bg-red-500 border-4 border-black text-white px-4 py-3 shadow-pixel flex items-start gap-3"
-            role="alert"
-          >
-            <div className="flex-1 font-bold">
-              <p>{refreshError}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setRefreshError(null)}
-              className="text-white hover:text-black font-bold"
-              aria-label="閉じる"
+        <div className="grid grid-cols-2 gap-4">
+          {isOwner && (
+            <Button
+              onClick={() => setShowMemberManager(!showMemberManager)}
+              variant="green"
+              disabled={showPaymentForm}
+              className="flex items-center justify-center gap-2 h-14 text-lg w-full"
             >
-              [X]
-            </button>
-          </div>
-        )}
-
-        <div>
+              {showMemberManager ? (
+                <>
+                  <ChevronUp className="w-5 h-5" />
+                  閉じる
+                </>
+              ) : (
+                <>
+                  <Users className="w-5 h-5" />
+                  メンバー
+                </>
+              )}
+            </Button>
+          )}
           <Button
-            onClick={() => {
-              if (showPaymentForm && editingPayment) {
-                handleCancelEdit();
-              } else {
-                setShowPaymentForm(!showPaymentForm);
-              }
-            }}
-            className="w-full md:w-auto flex items-center justify-center gap-2 text-lg"
+            onClick={() => setShowPaymentForm(!showPaymentForm)}
+            disabled={showMemberManager}
+            className={cn(
+              "flex items-center justify-center gap-2 h-14 text-lg w-full",
+              !isOwner && "col-span-2",
+            )}
           >
             {showPaymentForm ? (
               <>
                 <ChevronUp className="w-5 h-5" />
-                {editingPayment ? '編集をキャンセル' : '入力を閉じる'}
+                閉じる
               </>
             ) : (
               <>
-                <ChevronDown className="w-5 h-5" />
+                <Plus className="w-5 h-5" />
                 支出を追加
               </>
             )}
           </Button>
-
-          {showPaymentForm && (
-            <div className="mt-6">
-              {isLoadingData ? (
-                <div className="pixel-card text-center py-8">
-                  <p className="text-black font-bold animate-pulse">
-                    メンバーを読み込み中...
-                  </p>
-                </div>
-              ) : (
-                <PaymentForm
-                  groupId={groupId}
-                  currentUserId={profile.id}
-                  members={members}
-                  initialData={editingPayment || undefined}
-                  onSuccess={handlePaymentSuccess}
-                  onCancel={handleCancelEdit}
-                />
-              )}
-            </div>
-          )}
         </div>
 
-        {isLoadingData ? (
-          <div className="pixel-card text-center py-12">
-            <p className="text-black font-bold animate-pulse">
-              ログを読み込み中...
-            </p>
+        {showMemberManager && (
+          <div className="pixel-card bg-yellow-50">
+            <h2 className="text-2xl font-bold mb-4">メンバー編集</h2>
+            <div className="space-y-4">
+              {isOwner && (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newMemberName}
+                    onChange={(e) => setNewMemberName(e.target.value)}
+                    placeholder="メンバー名を入力"
+                    className="flex-1 border-4 border-black p-3 text-lg font-bold focus:outline-none bg-white focus:bg-yellow-50 h-[60px]"
+                  />
+                  <Button
+                    onClick={handleAddMember}
+                    isLoading={isAddingMember}
+                    variant="green"
+                    className="w-14 h-[54px]"
+                  >
+                    <Plus className="w-6 h-6" />
+                  </Button>
+                </div>
+              )}
+              <div className="flex flex-wrap gap-2">
+                {members.map((m) => (
+                  <div
+                    key={m.id}
+                    className="flex items-center gap-3 bg-white border-4 border-black px-4 py-2 text-lg font-bold"
+                  >
+                    <span>{m.name}</span>
+                    {isOwner && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteMember(m.id)}
+                        className="text-red-500 font-bold hover:text-red-700 text-xl"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        ) : (
-          <PaymentList
-            payments={payments}
-            groupId={groupId}
-            currentUserId={profile.id}
-            onPaymentDeleted={loadGroupData}
-            onEdit={handleEdit}
-          />
         )}
 
-        <SettlementDisplay
-          groupId={groupId}
-          refreshTrigger={settlementRefreshTrigger}
-        />
+        {showPaymentForm && (
+          <div className="mt-6">
+            <PaymentForm
+              groupId={groupId}
+              groupName={group?.name || ""}
+              members={members}
+              initialData={editingPayment || undefined}
+              onSuccess={handlePaymentSuccess}
+              onCancel={() => {
+                setShowPaymentForm(false);
+                setEditingPayment(null);
+              }}
+            />
+          </div>
+        )}
+
+        <SettlementDisplay groupId={groupId} refreshTrigger={settlementRefreshTrigger} />
+
+        <div className="space-y-4">
+          <Button
+            variant="outline"
+            onClick={() => setShowPayments(!showPayments)}
+            className="w-full flex items-center justify-center gap-2 h-14 text-lg"
+          >
+            {showPayments ? (
+              <>
+                <ChevronUp className="w-5 h-5" />
+                閉じる
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-5 h-5" />
+                履歴を表示
+              </>
+            )}
+          </Button>
+
+          {showPayments && (
+            <PaymentList
+              payments={payments}
+              groupId={groupId}
+              isOwner={isOwner}
+              onPaymentDeleted={loadGroupData}
+              onEdit={handleEditPayment}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

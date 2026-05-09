@@ -1,22 +1,17 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useState } from 'react';
-import { calculateSettlement } from '@/app/actions/payments';
-import { Button } from '@/components/ui/Button';
-import type { SettlementTransaction } from '@/core/domain/entities/payment';
+import { useCallback, useEffect, useState } from "react";
+import { calculateSettlement } from "@/app/actions/payments";
+import type { SettlementTransaction } from "@/core/domain/entities/payment";
 
 interface SettlementDisplayProps {
   groupId: string;
   refreshTrigger?: number;
 }
 
-export function SettlementDisplay({
-  groupId,
-  refreshTrigger,
-}: SettlementDisplayProps) {
+export function SettlementDisplay({ groupId, refreshTrigger }: SettlementDisplayProps) {
   const [transactions, setTransactions] = useState<SettlementTransaction[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [hasCalculated, setHasCalculated] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleCalculateSettlement = useCallback(async () => {
@@ -26,94 +21,63 @@ export function SettlementDisplay({
     try {
       const result = await calculateSettlement(groupId);
       setTransactions(result);
-      setHasCalculated(true);
     } catch (err) {
-      console.error('Error calculating settlement:', err);
-      setError('計算に失敗しました。もう一度お試しください。');
+      console.error("Error calculating settlement:", err);
+      setError("計算に失敗しました。");
     } finally {
       setIsCalculating(false);
     }
   }, [groupId]);
 
   useEffect(() => {
-    if (hasCalculated && refreshTrigger !== undefined) {
-      handleCalculateSettlement();
-    }
-  }, [hasCalculated, refreshTrigger, handleCalculateSettlement]);
+    handleCalculateSettlement();
+  }, [refreshTrigger, handleCalculateSettlement]);
 
   return (
     <div className="space-y-6">
-      <div className="pixel-card flex flex-col md:flex-row justify-between items-stretch md:items-center gap-6 bg-yellow-50 border-yellow-500">
-        <h2 className="text-3xl font-bold text-black uppercase tracking-normal">
-          精算
-        </h2>
-        <Button
-          variant="yellow"
-          onClick={handleCalculateSettlement}
-          isLoading={isCalculating}
-          loadingText="計算中..."
-          className="text-xl tracking-widest"
-        >
-          計算する
-        </Button>
-      </div>
+      <div className="pixel-card bg-yellow-50 border-yellow-500 p-6">
+        <h2 className="text-3xl font-bold text-black uppercase tracking-normal mb-6">精算結果</h2>
 
-      {error && (
-        <div className="p-4 bg-red-500 border-4 border-black text-white font-bold shadow-pixel">
-          <p>{error}</p>
-        </div>
-      )}
+        {error && (
+          <div className="p-4 bg-red-500 border-4 border-black text-white font-bold shadow-pixel mb-6">
+            <p>{error}</p>
+          </div>
+        )}
 
-      {isCalculating && (
-        <div className="pixel-card text-center py-12">
-          <div className="inline-block animate-spin w-10 h-10 border-4 border-yellow-500 border-t-transparent" />
-          <p className="mt-6 text-black font-bold animate-pulse">
-            計算しています...
-          </p>
-        </div>
-      )}
-
-      {!isCalculating && hasCalculated && (
-        <div className="pixel-card bg-white">
-          {transactions.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-3xl font-bold text-green-500 uppercase tracking-widest animate-bounce mb-4">
-                クエスト達成！
-              </p>
-              <p className="text-black font-bold italic">
-                精算の必要はありません。
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="text-center mb-6">
-                <p className="text-xl font-bold text-black uppercase underline decoration-4 underline-offset-8">
-                  精算の方法
+        {isCalculating ? (
+          <div className="text-center py-12">
+            <p className="text-black font-bold animate-pulse">計算中...</p>
+          </div>
+        ) : (
+          <div>
+            {transactions.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-3xl font-bold text-green-500 uppercase tracking-widest animate-bounce mb-4">
+                  貸し借りゼロ！
                 </p>
               </div>
-              {transactions.map((transaction, index) => (
-                <div
-                  key={`${transaction.from}-${transaction.to}-${transaction.amount}-${index}`}
-                  className="flex flex-col md:flex-row items-center justify-between p-6 bg-gray-50 border-4 border-black shadow-pixel-sm gap-4"
-                >
-                  <div className="flex items-center gap-4 text-lg font-bold">
-                    <span className="text-red-600 bg-red-50 px-2 border-2 border-red-600 uppercase">
-                      {transaction.from}
-                    </span>
-                    <span className="text-2xl">→</span>
-                    <span className="text-blue-600 bg-blue-50 px-2 border-2 border-blue-600 uppercase">
-                      {transaction.to}
+            ) : (
+              <div className="space-y-2">
+                {transactions.map((transaction, index) => (
+                  <div
+                    key={`${transaction.fromId}-${transaction.toId}-${transaction.amount}-${index}`}
+                    className="flex items-center justify-between p-4 bg-white border-4 border-black text-lg font-bold"
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <span className="text-red-600 truncate">{transaction.fromName}</span>
+                      <span className="text-black">→</span>
+                      <span className="text-blue-600 truncate">{transaction.toName}</span>
+                    </div>
+                    <span className="text-xl text-black ml-4 whitespace-nowrap">
+                      ¥{transaction.amount.toLocaleString()}
                     </span>
                   </div>
-                  <div className="text-3xl font-bold text-black bg-white px-4 py-2 border-4 border-black">
-                    ¥{transaction.amount.toLocaleString()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

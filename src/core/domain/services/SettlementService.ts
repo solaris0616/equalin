@@ -1,9 +1,9 @@
 import type {
+  Member,
   MemberBalance,
   PaymentWithParticipants,
-  Profile,
   SettlementTransaction,
-} from '../entities/payment';
+} from "../entities/payment";
 
 export class SettlementService {
   /**
@@ -11,15 +11,15 @@ export class SettlementService {
    */
   private static calculateTotalPaid(
     payments: PaymentWithParticipants[],
-    members: Profile[],
+    members: Member[],
   ): Map<string, number> {
     const totalPaid = new Map<string, number>();
     for (const member of members) {
       totalPaid.set(member.id, 0);
     }
     for (const payment of payments) {
-      const current = totalPaid.get(payment.payerId) || 0;
-      totalPaid.set(payment.payerId, current + payment.amount);
+      const current = totalPaid.get(payment.payerMemberId) || 0;
+      totalPaid.set(payment.payerMemberId, current + payment.amount);
     }
     return totalPaid;
   }
@@ -29,17 +29,17 @@ export class SettlementService {
    */
   private static calculateTotalOwed(
     payments: PaymentWithParticipants[],
-    members: Profile[],
+    members: Member[],
   ): Map<string, number> {
     const totalOwed = new Map<string, number>();
     for (const member of members) {
       totalOwed.set(member.id, 0);
     }
     for (const payment of payments) {
-      const count = payment.participantIds.length;
+      const count = payment.participantMemberIds.length;
       if (count === 0) continue;
       const share = payment.amount / count;
-      for (const participantId of payment.participantIds) {
+      for (const participantId of payment.participantMemberIds) {
         const current = totalOwed.get(participantId) || 0;
         totalOwed.set(participantId, current + share);
       }
@@ -52,7 +52,7 @@ export class SettlementService {
    */
   public static calculateBalances(
     payments: PaymentWithParticipants[],
-    members: Profile[],
+    members: Member[],
   ): MemberBalance[] {
     const paidMap = SettlementService.calculateTotalPaid(payments, members);
     const owedMap = SettlementService.calculateTotalOwed(payments, members);
@@ -61,7 +61,7 @@ export class SettlementService {
       const paid = paidMap.get(member.id) || 0;
       const owed = owedMap.get(member.id) || 0;
       return {
-        profileId: member.id,
+        memberId: member.id,
         name: member.name,
         paid,
         owed,
@@ -73,9 +73,7 @@ export class SettlementService {
   /**
    * 最小の取引で精算を行うトランザクションを生成
    */
-  public static generateTransactions(
-    balances: MemberBalance[],
-  ): SettlementTransaction[] {
+  public static generateTransactions(balances: MemberBalance[]): SettlementTransaction[] {
     const creditors = balances
       .filter((b) => b.balance > 0.01)
       .map((b) => ({ ...b }))
@@ -98,8 +96,10 @@ export class SettlementService {
 
       if (roundedAmount > 0) {
         transactions.push({
-          from: debtor.name,
-          to: creditor.name,
+          fromId: debtor.memberId,
+          fromName: debtor.name,
+          toId: creditor.memberId,
+          toName: creditor.name,
           amount: roundedAmount,
         });
       }

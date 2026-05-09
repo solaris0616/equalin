@@ -1,6 +1,7 @@
 # Equalin
 
 **Equalin** is an open-source web application that helps you split bills **fairly and effortlessly**.
+
 Share expenses with friends, colleagues, or teams — everyone pays their equal share, no stress attached.
 
 ## ✨ Features

@@ -1,34 +1,62 @@
-'use server';
+"use server";
 
 import type {
   Group,
+  Member,
   PaymentWithDetails,
   PaymentWithParticipants,
-  Profile,
   SettlementTransaction,
-} from '@/core/domain/entities/payment';
-import {
-  groupRepository,
-  paymentRepository,
-  profileRepository,
-  settlementUseCase,
-} from '@/core/registry';
-import { createClient } from '@/lib/supabase/server';
+} from "@/core/domain/entities/payment";
+import { groupRepository, paymentRepository, settlementUseCase } from "@/core/registry";
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 /**
  * グループ作成
  */
-export async function createGroup(): Promise<{
+export async function createGroup(
+  name: string,
+  memberNames: string[],
+): Promise<{
   success: boolean;
   data?: Group;
   error?: string;
 }> {
   try {
-    const group = await groupRepository.create();
+    const supabase = await createClient();
+
+    // Get current user or sign in anonymously if not found
+    let {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      const { data: signInData, error: signInError } = await supabase.auth.signInAnonymously();
+      if (signInError) throw signInError;
+      user = signInData.user;
+    }
+
+    if (!user) {
+      return { success: false, error: "ユーザーの特定に失敗しました" };
+    }
+
+    if (!name || name.trim() === "") {
+      return { success: false, error: "グループ名を入力してください" };
+    }
+
+    const group = await groupRepository.create(name, user.id);
+
+    // Add initial members
+    for (const memberName of memberNames) {
+      if (memberName.trim() !== "") {
+        await groupRepository.addMember(group.id, memberName.trim());
+      }
+    }
+
     return { success: true, data: group };
   } catch (error: unknown) {
-    console.error('Error in createGroup:', error);
-    return { success: false, error: 'グループの作成に失敗しました' };
+    console.error("Error in createGroup:", error);
+    return { success: false, error: "グループの作成に失敗しました" };
   }
 }
 
@@ -37,30 +65,30 @@ export async function createGroup(): Promise<{
  */
 export async function createPayment(
   groupId: string,
-  payerId: string,
+  payerMemberId: string,
   amount: number,
   description: string,
-  participantIds: string[],
+  participantMemberIds: string[],
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    if (participantIds.length === 0) {
-      return { success: false, error: '参加者を1人以上選択してください' };
+    if (participantMemberIds.length === 0) {
+      return { success: false, error: "参加者を1人以上選択してください" };
     }
 
     if (!Number.isInteger(amount) || amount < 1 || amount > 999999999) {
-      return { success: false, error: '有効な金額を入力してください' };
+      return { success: false, error: "有効な金額を入力してください" };
     }
 
     await paymentRepository.create(
-      { groupId, payerId, amount, description: description || null },
-      participantIds,
+      { groupId, payerMemberId, amount, description: description || null },
+      participantMemberIds,
     );
 
+    revalidatePath(`/group/${groupId}`);
     return { success: true };
   } catch (error: unknown) {
-    console.error('Error in createPayment:', error);
-    const message =
-      error instanceof Error ? error.message : '支払いの作成に失敗しました';
+    console.error("Error in createPayment:", error);
+    const message = error instanceof Error ? error.message : "支払いの作成に失敗しました";
     return {
       success: false,
       error: message,
@@ -72,32 +100,33 @@ export async function createPayment(
  * 支払いの更新
  */
 export async function updatePayment(
+  groupId: string,
   paymentId: string,
-  payerId: string,
+  payerMemberId: string,
   amount: number,
   description: string,
-  participantIds: string[],
+  participantMemberIds: string[],
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    if (participantIds.length === 0) {
-      return { success: false, error: '参加者を1人以上選択してください' };
+    if (participantMemberIds.length === 0) {
+      return { success: false, error: "参加者を1人以上選択してください" };
     }
 
     if (!Number.isInteger(amount) || amount < 1 || amount > 999999999) {
-      return { success: false, error: '有効な金額を入力してください' };
+      return { success: false, error: "有効な金額を入力してください" };
     }
 
     await paymentRepository.update(
       paymentId,
-      { payerId, amount, description: description || null },
-      participantIds,
+      { payerMemberId, amount, description: description || null },
+      participantMemberIds,
     );
 
+    revalidatePath(`/group/${groupId}`);
     return { success: true };
   } catch (error: unknown) {
-    console.error('Error in updatePayment:', error);
-    const message =
-      error instanceof Error ? error.message : '支払いの更新に失敗しました';
+    console.error("Error in updatePayment:", error);
+    const message = error instanceof Error ? error.message : "支払いの更新に失敗しました";
     return {
       success: false,
       error: message,
@@ -114,7 +143,7 @@ export async function getPaymentWithParticipants(
   try {
     return await paymentRepository.getByIdWithParticipants(paymentId);
   } catch (error: unknown) {
-    console.error('Error in getPaymentWithParticipants:', error);
+    console.error("Error in getPaymentWithParticipants:", error);
     return null;
   }
 }
@@ -122,13 +151,11 @@ export async function getPaymentWithParticipants(
 /**
  * グループの支払い履歴取得
  */
-export async function getGroupPayments(
-  groupId: string,
-): Promise<PaymentWithDetails[]> {
+export async function getGroupPayments(groupId: string): Promise<PaymentWithDetails[]> {
   try {
     return await paymentRepository.getByGroupId(groupId);
   } catch (error: unknown) {
-    console.error('Error in getGroupPayments:', error);
+    console.error("Error in getGroupPayments:", error);
     return [];
   }
 }
@@ -136,22 +163,53 @@ export async function getGroupPayments(
 /**
  * グループメンバー取得
  */
-export async function getGroupMembers(groupId: string): Promise<Profile[]> {
+export async function getGroupMembers(groupId: string): Promise<Member[]> {
   try {
     return await groupRepository.getMembers(groupId);
   } catch (error: unknown) {
-    console.error('Error in getGroupMembers:', error);
+    console.error("Error in getGroupMembers:", error);
     return [];
   }
 }
 
 /**
- * グループに参加
+ * メンバーの追加
  */
-export async function joinGroup(
+export async function addMember(
   groupId: string,
   name: string,
-): Promise<{ success: boolean; data?: Profile; error?: string }> {
+): Promise<{ success: boolean; data?: Member; error?: string }> {
+  try {
+    const member = await groupRepository.addMember(groupId, name);
+    revalidatePath(`/group/${groupId}`);
+    return { success: true, data: member };
+  } catch (error: unknown) {
+    console.error("Error in addMember:", error);
+    return { success: false, error: "メンバーの追加に失敗しました" };
+  }
+}
+
+/**
+ * メンバーの削除
+ */
+export async function deleteMember(
+  groupId: string,
+  memberId: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await groupRepository.deleteMember(memberId);
+    revalidatePath(`/group/${groupId}`);
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("Error in deleteMember:", error);
+    return { success: false, error: "メンバーの削除に失敗しました" };
+  }
+}
+
+/**
+ * グループに参加 (コラボレーターとして登録)
+ */
+export async function joinGroup(groupId: string): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = await createClient();
     const {
@@ -159,21 +217,16 @@ export async function joinGroup(
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return { success: false, error: '認証に失敗しました' };
+      return { success: false, error: "認証に失敗しました" };
     }
 
-    const profile: Profile = { id: user.id, name };
+    await groupRepository.addCollaborator(groupId, user.id);
 
-    // 1. プロフィール作成 (既に存在する場合は無視するか更新する設計に)
-    await profileRepository.create(profile);
-    // 2. グループメンバー追加
-    await groupRepository.addMember(groupId, profile.id);
-
-    return { success: true, data: profile };
+    revalidatePath(`/group/${groupId}`);
+    return { success: true };
   } catch (error: unknown) {
-    console.error('Error in joinGroup:', error);
-    const message =
-      error instanceof Error ? error.message : 'グループへの参加に失敗しました';
+    console.error("Error in joinGroup:", error);
+    const message = error instanceof Error ? error.message : "グループへの参加に失敗しました";
     return {
       success: false,
       error: message,
@@ -185,16 +238,16 @@ export async function joinGroup(
  * 支払いの削除
  */
 export async function deletePayment(
-  paymentId: string,
   groupId: string,
+  paymentId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await paymentRepository.delete(paymentId, groupId);
+    await paymentRepository.delete(paymentId);
+    revalidatePath(`/group/${groupId}`);
     return { success: true };
   } catch (error: unknown) {
-    console.error('Error in deletePayment:', error);
-    const message =
-      error instanceof Error ? error.message : '削除に失敗しました';
+    console.error("Error in deletePayment:", error);
+    const message = error instanceof Error ? error.message : "削除に失敗しました";
     return { success: false, error: message };
   }
 }
@@ -202,13 +255,48 @@ export async function deletePayment(
 /**
  * 精算の計算
  */
-export async function calculateSettlement(
-  groupId: string,
-): Promise<SettlementTransaction[]> {
+export async function calculateSettlement(groupId: string): Promise<SettlementTransaction[]> {
   try {
     return await settlementUseCase.execute(groupId);
   } catch (error: unknown) {
-    console.error('Error in calculateSettlement:', error);
+    console.error("Error in calculateSettlement:", error);
     return [];
+  }
+}
+
+/**
+ * ユーザーがグループのオーナーかどうか確認
+ */
+export async function isGroupOwner(groupId: string): Promise<boolean> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    const group = await groupRepository.getById(groupId);
+    return group?.ownerId === user.id;
+  } catch (error: unknown) {
+    console.error("Error in isGroupOwner:", error);
+    return false;
+  }
+}
+
+/**
+ * ユーザーがグループのコラボレーターかどうか確認
+ */
+export async function isGroupCollaborator(groupId: string): Promise<boolean> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    return await groupRepository.isCollaborator(groupId, user.id);
+  } catch (error: unknown) {
+    console.error("Error in isGroupCollaborator:", error);
+    return false;
   }
 }
