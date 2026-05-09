@@ -25,8 +25,8 @@ We use two types of Supabase clients:
 
 ```typescript
 // In Client Component
-'use client';
-import { createClient } from '@/lib/supabase/client';
+"use client";
+import { createClient } from "@/lib/supabase/client";
 
 export function MyComponent() {
   const supabase = createClient();
@@ -34,8 +34,8 @@ export function MyComponent() {
 }
 
 // In Server Component or Server Action
-'use server';
-import { createClient } from '@/lib/supabase/server';
+("use server");
+import { createClient } from "@/lib/supabase/server";
 
 export async function myAction() {
   const supabase = await createClient();
@@ -48,36 +48,41 @@ export async function myAction() {
 ### Querying Data
 
 #### Select with Joins
+
 ```typescript
 // Fetch payments with payer information
 const { data, error } = await supabase
-  .from('payments')
-  .select(`
+  .from("payments")
+  .select(
+    `
     *,
     payer:profiles!payer_id(id, name),
     participants:payment_participants(
       profile:profiles(id, name)
     )
-  `)
-  .eq('group_id', groupId)
-  .order('created_at', { ascending: false });
+  `,
+  )
+  .eq("group_id", groupId)
+  .order("created_at", { ascending: false });
 ```
 
 #### Filtering
+
 ```typescript
 // Get members of a specific group
 const { data, error } = await supabase
-  .from('group_members')
-  .select('profile:profiles(id, name)')
-  .eq('group_id', groupId);
+  .from("group_members")
+  .select("profile:profiles(id, name)")
+  .eq("group_id", groupId);
 ```
 
 ### Inserting Data
 
 #### Single Insert
+
 ```typescript
 const { data, error } = await supabase
-  .from('payments')
+  .from("payments")
   .insert({
     group_id: groupId,
     payer_id: payerId,
@@ -89,50 +94,45 @@ const { data, error } = await supabase
 ```
 
 #### Multiple Inserts
+
 ```typescript
 // Insert multiple participants
-const participants = participantIds.map(profileId => ({
+const participants = participantIds.map((profileId) => ({
   payment_id: paymentId,
   profile_id: profileId,
 }));
 
-const { error } = await supabase
-  .from('payment_participants')
-  .insert(participants);
+const { error } = await supabase.from("payment_participants").insert(participants);
 ```
 
 ### Updating Data
 
 ```typescript
 const { error } = await supabase
-  .from('payments')
+  .from("payments")
   .update({ description: newDescription })
-  .eq('id', paymentId);
+  .eq("id", paymentId);
 ```
 
 ### Deleting Data
 
 ```typescript
 // Delete will cascade to payment_participants due to ON DELETE CASCADE
-const { error } = await supabase
-  .from('payments')
-  .delete()
-  .eq('id', paymentId);
+const { error } = await supabase.from("payments").delete().eq("id", paymentId);
 ```
 
 ## Error Handling
 
 ### Check for Errors
+
 Always check the `error` object returned by Supabase operations:
 
 ```typescript
-const { data, error } = await supabase
-  .from('payments')
-  .select('*');
+const { data, error } = await supabase.from("payments").select("*");
 
 if (error) {
-  console.error('Database error:', error);
-  return { success: false, error: 'Failed to fetch payments' };
+  console.error("Database error:", error);
+  return { success: false, error: "Failed to fetch payments" };
 }
 
 // Use data safely here
@@ -157,25 +157,25 @@ if (error) {
 
 ```typescript
 try {
-  const { data, error } = await supabase.from('table').insert(data);
+  const { data, error } = await supabase.from("table").insert(data);
 
   if (error) {
     // Log technical details
-    console.error('Supabase error:', error.message, error.details);
+    console.error("Supabase error:", error.message, error.details);
 
     // Return user-friendly message
     return {
       success: false,
-      error: 'Failed to save data. Please try again.'
+      error: "Failed to save data. Please try again.",
     };
   }
 
   return { success: true, data };
 } catch (error) {
-  console.error('Unexpected error:', error);
+  console.error("Unexpected error:", error);
   return {
     success: false,
-    error: 'An unexpected error occurred'
+    error: "An unexpected error occurred",
   };
 }
 ```
@@ -192,11 +192,11 @@ supabase gen types typescript --local > types/supabase.ts
 ### Use Generated Types
 
 ```typescript
-import { Database } from '@/types/supabase';
+import { Database } from "@/types/supabase";
 
-type Payment = Database['public']['Tables']['payments']['Row'];
-type PaymentInsert = Database['public']['Tables']['payments']['Insert'];
-type PaymentUpdate = Database['public']['Tables']['payments']['Update'];
+type Payment = Database["public"]["Tables"]["payments"]["Row"];
+type PaymentInsert = Database["public"]["Tables"]["payments"]["Insert"];
+type PaymentUpdate = Database["public"]["Tables"]["payments"]["Update"];
 ```
 
 ### Custom Types
@@ -232,6 +232,7 @@ supabase migration new add_payment_participants_table
    - Easier to review and rollback if needed
 
 2. **Include Comments**
+
    ```sql
    -- Add payment_participants table for tracking expense sharing
    CREATE TABLE payment_participants (
@@ -248,6 +249,7 @@ supabase migration new add_payment_participants_table
    - NOT NULL where appropriate
 
 4. **Add Indexes**
+
    ```sql
    -- Add index for faster queries
    CREATE INDEX idx_payments_group_id ON payments(group_id);
@@ -280,13 +282,16 @@ supabase db push
 ## Row Level Security (RLS)
 
 ### Current Status
+
 - **Strictly Enforced**: All tables have RLS enabled.
 - **Anonymous Auth**: Using Supabase's Anonymous Auth. Anonymous users have the `authenticated` role but are restricted by group-level policies.
 
 ### Core Policy Patterns
 
 #### Group-based Access
+
 Most data is protected by checking if the user is a member of the group:
+
 ```sql
 CREATE POLICY "Members can see group payments" ON payments
   FOR SELECT USING (
@@ -298,10 +303,13 @@ CREATE POLICY "Members can see group payments" ON payments
 ```
 
 #### Avoiding Recursion
+
 In `group_members`, avoid recursive SELECT policies. Instead, use a simpler policy for membership listing while protecting individual's names in the `profiles` table.
 
 #### Management Access
+
 Only the creator/payer of a record should be allowed to DELETE or UPDATE it:
+
 ```sql
 CREATE POLICY "Payers can delete their own payments" ON payments
   FOR DELETE USING (auth.uid() = payer_id);
@@ -320,4 +328,3 @@ CREATE POLICY "Payers can delete their own payments" ON payments
 3. **"new row violates row-level security policy"**
    - Ensure the policy allows all necessary actions for a command (e.g., `upsert` needs both `INSERT` and `UPDATE` permissions).
    - Check `auth.uid()` matches the ID being inserted.
-

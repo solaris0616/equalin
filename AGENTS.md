@@ -1,6 +1,7 @@
 # Agent Guide for Equalin
 
 ## 1. Documentation Map
+
 Refer to the following documents in `docs/` for specific details. **Do not reinvent architectural patterns; follow existing ones.**
 
 - **[docs/OVERVIEW.md](docs/OVERVIEW.md)**: High-level project purpose and tech stack.
@@ -9,6 +10,7 @@ Refer to the following documents in `docs/` for specific details. **Do not reinv
 - **[docs/MAINTENANCE.md](docs/MAINTENANCE.md)**: Deployment and environment setup info.
 
 ## 2. Mandatory Workflow
+
 Every feature or bug fix must satisfy the following before completion:
 
 1. **Linting & Formatting**: Run `npm run check:apply` to fix issues automatically.
@@ -17,6 +19,7 @@ Every feature or bug fix must satisfy the following before completion:
 4. **Documentation**: If you change the database schema, RLS, or architectural patterns, **update the corresponding file in `docs/` immediately.**
 
 ## 3. Key Constraints
+
 - **Communication**: Always respond to the user in **Japanese**, while keeping internal documentation in English for token efficiency.
 - **Authentication**: Using **Supabase Anonymous Auth**. Do not use manual localStorage for user identity.
 - **RLS**: Strictly enforced at the DB level. Every new table must have RLS enabled with group-member-level checks.

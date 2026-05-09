@@ -1,60 +1,158 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { createGroup } from '@/app/actions/payments';
-import { Button } from '@/components/ui/Button';
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Plus } from "lucide-react";
+import { createGroup } from "@/app/actions/payments";
+import { Button } from "@/components/ui/Button";
+
+import { createClient } from "@/lib/supabase/client";
 
 export default function Page() {
   const router = useRouter();
+  const supabase = createClient();
   const [isCreating, setIsCreating] = useState(false);
+  const [groupName, setGroupName] = useState("");
+  const [newMemberName, setNewMemberName] = useState("");
+  const [memberNames, setMemberNames] = useState<string[]>([]);
 
-  const handleCreateGroup = async () => {
+  const handleAddMember = () => {
+    if (!newMemberName.trim()) return;
+    setMemberNames([...memberNames, newMemberName.trim()]);
+    setNewMemberName("");
+  };
+
+  const removeMember = (index: number) => {
+    setMemberNames(memberNames.filter((_, i) => i !== index));
+  };
+
+  const handleCreateGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (isCreating) return;
+
+    if (!groupName.trim()) {
+      alert("グループ名を入力してください");
+      return;
+    }
+
+    if (memberNames.length < 2) {
+      alert("メンバーを2名以上追加してください");
+      return;
+    }
 
     setIsCreating(true);
     try {
-      const result = await createGroup();
+      // Ensure user is signed in (anonymously) before creating a group
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        const { error: authError } = await supabase.auth.signInAnonymously();
+        if (authError) throw authError;
+      }
+
+      const result = await createGroup(groupName, memberNames);
 
       if (!result.success || !result.data) {
-        alert('グループの作成に失敗しました。もう一度お試しください。');
+        alert(result.error || "グループの作成に失敗しました。");
         setIsCreating(false);
         return;
       }
 
       router.push(`/group/${result.data.id}`);
-      // NOTE: We don't setIsCreating(false) here because the router is navigating
     } catch (error) {
-      console.error('Error creating group:', error);
-      alert('エラーが発生しました。');
+      console.error("Error creating group:", error);
+      alert("エラーが発生しました。");
       setIsCreating(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen bg-[#f0f0f0] flex flex-col justify-center items-center font-sans p-8 text-center">
-      <div className="max-w-md w-full">
-        <h1 className="text-8xl font-bold text-black mb-6 tracking-normal">
-          Equalin
+    <div
+      className="relative min-h-screen flex flex-col justify-center items-center font-sans p-8 text-center bg-cover bg-bottom bg-fixed"
+      style={{ backgroundImage: "url('/landing-bg.png')" }}
+    >
+      <div className="absolute inset-0 bg-[#f0f0f0]/60" />
+      <div className="relative max-w-md w-full">
+        <h1 className="text-7xl font-bold text-black mb-2 tracking-normal [text-shadow:_2px_2px_0_white,_-2px_2px_0_white,_2px_-2px_0_white,_-2px_-2px_0_white]">
+          パリカン
         </h1>
-        <div className="h-2 bg-black w-full mb-8" />
-        <p className="text-xl md:text-2xl text-black mb-16 font-bold tracking-widest leading-relaxed">
-          <span className="inline-block">貸し借りゼロで、</span>
-          <span className="inline-block">次の冒険へ。</span>
+        <p className="text-xl font-bold text-black mb-8 [text-shadow:_1px_1px_0_white,_-1px_1px_0_white,_1px_-1px_0_white,_-1px_-1px_0_white]">
+          パッと割り勘しよう
         </p>
-        <div className="max-w-xs mx-auto">
+
+        <form
+          onSubmit={handleCreateGroup}
+          className="space-y-6 bg-white p-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
+        >
+          <div className="text-left">
+            <label className="block text-xl font-bold mb-2">グループ名</label>
+            <input
+              type="text"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              placeholder="例：週末キャンプ"
+              className="w-full border-4 border-black p-3 text-xl font-bold focus:outline-none bg-white focus:bg-yellow-50 h-[60px]"
+              required
+            />
+          </div>
+
+          <div className="text-left">
+            <label className="block text-xl font-bold mb-2">メンバー</label>
+            <div className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={newMemberName}
+                onChange={(e) => setNewMemberName(e.target.value)}
+                placeholder="メンバー名を入力"
+                className="flex-1 border-4 border-black p-3 text-lg font-bold focus:outline-none bg-white focus:bg-yellow-50 h-[60px] w-full"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddMember();
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                onClick={handleAddMember}
+                variant="green"
+                className="h-[60px] w-14 shrink-0"
+              >
+                <Plus className="w-6 h-6" />
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {memberNames.map((name, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 bg-gray-200 border-4 border-black px-4 py-2 text-lg font-bold"
+                >
+                  <span>{name}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeMember(index)}
+                    className="text-red-500 font-bold hover:text-red-700 text-xl"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <Button
-            onClick={handleCreateGroup}
+            type="submit"
             isLoading={isCreating}
-            loadingText="STARTING..."
-            className="w-full py-5 text-3xl tracking-widest"
+            loadingText="作成中..."
+            className="w-full py-4 text-3xl tracking-widest mt-4"
           >
             START
           </Button>
-        </div>
+        </form>
       </div>
-      <p className="mt-16 text-black font-bold animate-pulse tracking-widest text-lg">
-        PUSH START BUTTON
+      <p className="mt-12 text-black font-bold animate-pulse tracking-widest text-lg [text-shadow:_1px_1px_0_white,_-1px_1px_0_white,_1px_-1px_0_white,_-1px_-1px_0_white]">
+        スタートボタンを押してください
       </p>
     </div>
   );

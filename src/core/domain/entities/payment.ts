@@ -2,21 +2,23 @@
  * Domain entities for Equalin.
  */
 
-export interface Profile {
-  id: string;
-  name: string;
-}
-
 export interface Group {
   id: string;
-  name?: string;
+  name: string;
+  ownerId: string;
   createdAt: string;
+}
+
+export interface Member {
+  id: string;
+  groupId: string;
+  name: string;
 }
 
 export interface Payment {
   id: string;
   groupId: string;
-  payerId: string;
+  payerMemberId: string;
   amount: number; // in cents
   description: string | null;
   createdAt: string;
@@ -24,7 +26,7 @@ export interface Payment {
 
 export interface PaymentParticipant {
   paymentId: string;
-  profileId: string;
+  memberId: string;
 }
 
 /**
@@ -39,7 +41,7 @@ export interface PaymentWithDetails extends Payment {
  * Member with payment/debt info
  */
 export interface MemberBalance {
-  profileId: string;
+  memberId: string;
   name: string;
   paid: number; // total paid (in cents)
   owed: number; // total share (in cents)
@@ -47,8 +49,10 @@ export interface MemberBalance {
 }
 
 export interface SettlementTransaction {
-  from: string;
-  to: string;
+  fromId: string;
+  fromName: string;
+  toId: string;
+  toName: string;
   amount: number; // in cents
 }
 
@@ -57,7 +61,7 @@ export interface SettlementTransaction {
  */
 export interface PaymentWithParticipants {
   id: string;
-  payerId: string;
+  payerMemberId: string;
   amount: number;
-  participantIds: string[];
+  participantMemberIds: string[];
 }
