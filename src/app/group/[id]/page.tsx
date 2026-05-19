@@ -19,6 +19,7 @@ import { PaymentForm } from "./components/PaymentForm";
 import { PaymentList } from "./components/PaymentList";
 import { SettlementDisplay } from "./components/SettlementDisplay";
 import { cn } from "@/lib/utils";
+import { BackgroundImage } from "@/components/ui/BackgroundImage";
 
 export default function GroupPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: groupId } = use(params);
@@ -38,6 +39,17 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
   const [newMemberName, setNewMemberName] = useState("");
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [showMemberManager, setShowMemberManager] = useState(false);
+
+  useEffect(() => {
+    if (isCollaborator === null) return;
+
+    const themeClass = isCollaborator ? "bg-form-theme" : "bg-landing-theme";
+    document.body.classList.add(themeClass);
+
+    return () => {
+      document.body.classList.remove("bg-form-theme", "bg-landing-theme");
+    };
+  }, [isCollaborator]);
 
   const loadGroupData = useCallback(async () => {
     try {
@@ -172,7 +184,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f0f0f0]">
+      <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="pixel-card animate-pulse text-2xl font-bold">読み込み中...</div>
       </div>
     );
@@ -180,11 +192,8 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
 
   if (!isCollaborator) {
     return (
-      <div
-        className="min-h-screen flex flex-col justify-center items-center p-4 bg-cover bg-center bg-fixed"
-        style={{ backgroundImage: "url('/landing-bg.png')" }}
-      >
-        <div className="absolute inset-0 bg-[#f0f0f0]/60" />
+      <div className="min-h-screen flex flex-col justify-center items-center p-4">
+        <BackgroundImage src="/landing-bg.webp" priority />
         <div className="relative max-w-md w-full text-center mb-12">
           <h1 className="text-7xl font-bold text-black mb-2 tracking-normal [text-shadow:_2px_2px_0_white,_-2px_2px_0_white,_2px_-2px_0_white,_-2px_-2px_0_white]">
             パリカン
@@ -213,11 +222,8 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
   }
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-bottom bg-fixed p-4 md:p-8 font-sans"
-      style={{ backgroundImage: "url('/form-bg.png')" }}
-    >
-      <div className="fixed inset-0 bg-[#f0f0f0]/60 pointer-events-none" />
+    <div className="min-h-screen p-4 md:p-8 font-sans">
+      <BackgroundImage src="/form-bg.webp" />
       <div className="max-w-4xl mx-auto space-y-8 relative z-10">
         <div className="pixel-card bg-white">
           <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-6">
@@ -284,7 +290,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
                     value={newMemberName}
                     onChange={(e) => setNewMemberName(e.target.value)}
                     placeholder="メンバー名を入力"
-                    className="flex-1 border-4 border-black p-3 text-lg font-bold focus:outline-none bg-white focus:bg-yellow-50 h-[60px]"
+                    className="flex-1 min-w-0 border-4 border-black p-3 text-lg font-bold focus:outline-none bg-white focus:bg-yellow-50 h-[60px]"
                   />
                   <Button
                     onClick={handleAddMember}

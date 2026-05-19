@@ -33,11 +33,26 @@
 }
 
 @layer base {
-  * {
-    @apply border-black;
+  html {
+    height: -webkit-fill-available;
   }
   body {
-    @apply bg-[#f0f0f0] text-black font-sans;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    @apply text-black font-sans transition-colors duration-500;
+    --theme-bg-color: rgb(252, 228, 186); /* デフォルトを form 色に設定 */
+    background-color: var(--theme-bg-color);
+  }
+  
+  /* 背景画像に応じた body カラー */
+  body.bg-landing-theme {
+    --theme-bg-color: rgb(255, 255, 255);
+    background-color: var(--theme-bg-color);
+  }
+
+
+  * {
+    @apply border-black;
   }
   /* Hide number input spinners */
   input[type="number"]::-webkit-inner-spin-button,
