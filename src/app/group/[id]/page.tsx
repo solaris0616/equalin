@@ -40,6 +40,17 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [showMemberManager, setShowMemberManager] = useState(false);
 
+  useEffect(() => {
+    if (isCollaborator === null) return;
+
+    const themeClass = isCollaborator ? "bg-form-theme" : "bg-landing-theme";
+    document.body.classList.add(themeClass);
+
+    return () => {
+      document.body.classList.remove("bg-form-theme", "bg-landing-theme");
+    };
+  }, [isCollaborator]);
+
   const loadGroupData = useCallback(async () => {
     try {
       const supabase = createClient();

@@ -16,7 +16,6 @@ export function BackgroundImage({ src, priority = false }: BackgroundImageProps)
         className="object-cover"
         quality={85}
       />
-      <div className="absolute inset-0 bg-[#f0f0f0]/60" />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 
 import { BackgroundImage } from "@/components/ui/BackgroundImage";
+import { useEffect } from "react";
 
 export default function Page() {
   const router = useRouter();
@@ -17,6 +18,11 @@ export default function Page() {
   const [groupName, setGroupName] = useState("");
   const [newMemberName, setNewMemberName] = useState("");
   const [memberNames, setMemberNames] = useState<string[]>([]);
+
+  useEffect(() => {
+    document.body.classList.add("bg-landing-theme");
+    return () => document.body.classList.remove("bg-landing-theme");
+  }, []);
 
   const handleAddMember = () => {
     if (!newMemberName.trim()) return;
