@@ -290,7 +290,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
                     value={newMemberName}
                     onChange={(e) => setNewMemberName(e.target.value)}
                     placeholder="メンバー名を入力"
-                    className="flex-1 border-4 border-black p-3 text-lg font-bold focus:outline-none bg-white focus:bg-yellow-50 h-[60px]"
+                    className="flex-1 min-w-0 border-4 border-black p-3 text-lg font-bold focus:outline-none bg-white focus:bg-yellow-50 h-[60px]"
                   />
                   <Button
                     onClick={handleAddMember}
