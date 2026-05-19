@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/Button";
 
 import { createClient } from "@/lib/supabase/client";
 
+import { BackgroundImage } from "@/components/ui/BackgroundImage";
+
 export default function Page() {
   const router = useRouter();
   const supabase = createClient();
@@ -68,11 +70,8 @@ export default function Page() {
   };
 
   return (
-    <div
-      className="relative min-h-screen flex flex-col justify-center items-center font-sans p-8 text-center bg-cover bg-bottom bg-fixed"
-      style={{ backgroundImage: "url('/landing-bg.png')" }}
-    >
-      <div className="absolute inset-0 bg-[#f0f0f0]/60" />
+    <div className="relative min-h-screen flex flex-col justify-center items-center font-sans p-8 text-center">
+      <BackgroundImage src="/landing-bg.webp" priority />
       <div className="relative max-w-md w-full">
         <h1 className="text-7xl font-bold text-black mb-2 tracking-normal [text-shadow:_2px_2px_0_white,_-2px_2px_0_white,_2px_-2px_0_white,_-2px_-2px_0_white]">
           パリカン

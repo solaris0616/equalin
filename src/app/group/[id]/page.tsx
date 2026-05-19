@@ -19,6 +19,7 @@ import { PaymentForm } from "./components/PaymentForm";
 import { PaymentList } from "./components/PaymentList";
 import { SettlementDisplay } from "./components/SettlementDisplay";
 import { cn } from "@/lib/utils";
+import { BackgroundImage } from "@/components/ui/BackgroundImage";
 
 export default function GroupPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: groupId } = use(params);
@@ -180,11 +181,8 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
 
   if (!isCollaborator) {
     return (
-      <div
-        className="min-h-screen flex flex-col justify-center items-center p-4 bg-cover bg-center bg-fixed"
-        style={{ backgroundImage: "url('/landing-bg.png')" }}
-      >
-        <div className="absolute inset-0 bg-[#f0f0f0]/60" />
+      <div className="min-h-screen flex flex-col justify-center items-center p-4">
+        <BackgroundImage src="/landing-bg.webp" priority />
         <div className="relative max-w-md w-full text-center mb-12">
           <h1 className="text-7xl font-bold text-black mb-2 tracking-normal [text-shadow:_2px_2px_0_white,_-2px_2px_0_white,_2px_-2px_0_white,_-2px_-2px_0_white]">
             パリカン
@@ -213,11 +211,8 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
   }
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-bottom bg-fixed p-4 md:p-8 font-sans"
-      style={{ backgroundImage: "url('/form-bg.png')" }}
-    >
-      <div className="fixed inset-0 bg-[#f0f0f0]/60 pointer-events-none" />
+    <div className="min-h-screen p-4 md:p-8 font-sans">
+      <BackgroundImage src="/form-bg.webp" />
       <div className="max-w-4xl mx-auto space-y-8 relative z-10">
         <div className="pixel-card bg-white">
           <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-6">
