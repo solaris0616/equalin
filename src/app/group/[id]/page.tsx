@@ -184,7 +184,7 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f0f0f0]">
+      <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="pixel-card animate-pulse text-2xl font-bold">読み込み中...</div>
       </div>
     );

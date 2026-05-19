@@ -40,15 +40,13 @@
     min-height: 100vh;
     min-height: -webkit-fill-available;
     @apply text-black font-sans transition-colors duration-500;
+    --theme-bg-color: rgb(252, 228, 186); /* デフォルトを form 色に設定 */
+    background-color: var(--theme-bg-color);
   }
   
   /* 背景画像に応じた body カラー */
   body.bg-landing-theme {
     --theme-bg-color: rgb(255, 255, 255);
-    background-color: var(--theme-bg-color);
-  }
-  body.bg-form-theme {
-    --theme-bg-color: rgb(252, 228, 186);
     background-color: var(--theme-bg-color);
   }
 
