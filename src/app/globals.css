@@ -44,11 +44,14 @@
   
   /* 背景画像に応じた body カラー */
   body.bg-landing-theme {
-    background-color: rgb(255, 255, 255);
+    --theme-bg-color: rgb(255, 255, 255);
+    background-color: var(--theme-bg-color);
   }
   body.bg-form-theme {
-    background-color: rgb(252, 228, 186);
+    --theme-bg-color: rgb(252, 228, 186);
+    background-color: var(--theme-bg-color);
   }
+
 
   * {
     @apply border-black;

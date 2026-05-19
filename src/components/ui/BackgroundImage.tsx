@@ -16,6 +16,20 @@ export function BackgroundImage({ src, priority = false }: BackgroundImageProps)
         className="object-cover"
         quality={85}
       />
+      {/* 上部のフェード */}
+      <div
+        className="absolute top-0 left-0 right-0 h-32 z-10"
+        style={{
+          background: "linear-gradient(to bottom, var(--theme-bg-color) 0%, transparent 100%)",
+        }}
+      />
+      {/* 下部のフェード */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-32 z-10"
+        style={{
+          background: "linear-gradient(to top, var(--theme-bg-color) 0%, transparent 100%)",
+        }}
+      />
     </div>
   );
 }
