@@ -110,7 +110,7 @@ export function PaymentList({
               {payment.participantNames.map((name, index) => (
                 <span
                   key={`${payment.id}-participant-${index}`}
-                  className="inline-block px-4 py-2 text-lg font-bold bg-gray-200 border-4 border-black"
+                  className="inline-block px-2 py-0.5 text-sm font-bold bg-gray-200 border-2 border-black"
                 >
                   {name}
                 </span>
