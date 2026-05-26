@@ -1,15 +1,14 @@
 "use client";
 
+import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Plus } from "lucide-react";
-import { createGroup } from "@/app/actions/payments";
-import { Button } from "@/components/ui/Button";
-
-import { createClient } from "@/lib/supabase/client";
-
-import { BackgroundImage } from "@/components/ui/BackgroundImage";
 import { useEffect } from "react";
+
+import { createGroup } from "@/app/actions/payments";
+import { BackgroundImage } from "@/components/ui/BackgroundImage";
+import { Button } from "@/components/ui/Button";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Page() {
   const router = useRouter();

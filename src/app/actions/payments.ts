@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import type {
   Group,
   GroupDashboardData,
@@ -8,17 +10,21 @@ import type {
   PaymentWithParticipants,
   SettlementTransaction,
 } from "@/core/domain/entities/payment";
-import { groupRepository, paymentRepository, settlementUseCase } from "@/core/registry";
+
 import { SettlementService } from "@/core/domain/services/SettlementService";
+import {
+  groupRepository,
+  paymentRepository,
+  settlementUseCase,
+} from "@/core/registry";
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
 
 /**
  * グループ作成
  */
 export async function createGroup(
   name: string,
-  memberNames: string[],
+  memberNames: string[]
 ): Promise<{
   success: boolean;
   data?: Group;
@@ -33,7 +39,8 @@ export async function createGroup(
     } = await supabase.auth.getUser();
 
     if (!user) {
-      const { data: signInData, error: signInError } = await supabase.auth.signInAnonymously();
+      const { data: signInData, error: signInError } =
+        await supabase.auth.signInAnonymously();
       if (signInError) throw signInError;
       user = signInData.user;
     }
@@ -74,7 +81,7 @@ export async function createPayment(
   payerMemberId: string,
   amount: number,
   description: string,
-  participantMemberIds: string[],
+  participantMemberIds: string[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
     if (participantMemberIds.length === 0) {
@@ -87,14 +94,15 @@ export async function createPayment(
 
     await paymentRepository.create(
       { groupId, payerMemberId, amount, description: description || null },
-      participantMemberIds,
+      participantMemberIds
     );
 
     revalidatePath(`/group/${groupId}`);
     return { success: true };
   } catch (error: unknown) {
     console.error("Error in createPayment:", error);
-    const message = error instanceof Error ? error.message : "支払いの作成に失敗しました";
+    const message =
+      error instanceof Error ? error.message : "支払いの作成に失敗しました";
     return {
       success: false,
       error: message,
@@ -111,7 +119,7 @@ export async function updatePayment(
   payerMemberId: string,
   amount: number,
   description: string,
-  participantMemberIds: string[],
+  participantMemberIds: string[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
     if (participantMemberIds.length === 0) {
@@ -125,14 +133,15 @@ export async function updatePayment(
     await paymentRepository.update(
       paymentId,
       { payerMemberId, amount, description: description || null },
-      participantMemberIds,
+      participantMemberIds
     );
 
     revalidatePath(`/group/${groupId}`);
     return { success: true };
   } catch (error: unknown) {
     console.error("Error in updatePayment:", error);
-    const message = error instanceof Error ? error.message : "支払いの更新に失敗しました";
+    const message =
+      error instanceof Error ? error.message : "支払いの更新に失敗しました";
     return {
       success: false,
       error: message,
@@ -144,7 +153,7 @@ export async function updatePayment(
  * 支払いの詳細取得（参加者ID含む）
  */
 export async function getPaymentWithParticipants(
-  paymentId: string,
+  paymentId: string
 ): Promise<PaymentWithParticipants | null> {
   try {
     return await paymentRepository.getByIdWithParticipants(paymentId);
@@ -157,7 +166,9 @@ export async function getPaymentWithParticipants(
 /**
  * グループの支払い履歴取得
  */
-export async function getGroupPayments(groupId: string): Promise<PaymentWithDetails[]> {
+export async function getGroupPayments(
+  groupId: string
+): Promise<PaymentWithDetails[]> {
   try {
     return await paymentRepository.getByGroupId(groupId);
   } catch (error: unknown) {
@@ -183,7 +194,7 @@ export async function getGroupMembers(groupId: string): Promise<Member[]> {
  */
 export async function addMember(
   groupId: string,
-  name: string,
+  name: string
 ): Promise<{ success: boolean; data?: Member; error?: string }> {
   try {
     const member = await groupRepository.addMember(groupId, name);
@@ -200,12 +211,15 @@ export async function addMember(
  */
 export async function deleteMember(
   groupId: string,
-  memberId: string,
+  memberId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const members = await groupRepository.getMembers(groupId);
     if (members.length <= 2) {
-      return { success: false, error: "グループには最低2名のメンバーが必要です。" };
+      return {
+        success: false,
+        error: "グループには最低2名のメンバーが必要です。",
+      };
     }
 
     await groupRepository.deleteMember(memberId);
@@ -220,7 +234,9 @@ export async function deleteMember(
 /**
  * グループに参加 (コラボレーターとして登録)
  */
-export async function joinGroup(groupId: string): Promise<{ success: boolean; error?: string }> {
+export async function joinGroup(
+  groupId: string
+): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = await createClient();
     const {
@@ -237,7 +253,8 @@ export async function joinGroup(groupId: string): Promise<{ success: boolean; er
     return { success: true };
   } catch (error: unknown) {
     console.error("Error in joinGroup:", error);
-    const message = error instanceof Error ? error.message : "グループへの参加に失敗しました";
+    const message =
+      error instanceof Error ? error.message : "グループへの参加に失敗しました";
     return {
       success: false,
       error: message,
@@ -250,7 +267,7 @@ export async function joinGroup(groupId: string): Promise<{ success: boolean; er
  */
 export async function deletePayment(
   groupId: string,
-  paymentId: string,
+  paymentId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await paymentRepository.delete(paymentId);
@@ -258,7 +275,8 @@ export async function deletePayment(
     return { success: true };
   } catch (error: unknown) {
     console.error("Error in deletePayment:", error);
-    const message = error instanceof Error ? error.message : "削除に失敗しました";
+    const message =
+      error instanceof Error ? error.message : "削除に失敗しました";
     return { success: false, error: message };
   }
 }
@@ -266,7 +284,9 @@ export async function deletePayment(
 /**
  * 精算の計算
  */
-export async function calculateSettlement(groupId: string): Promise<SettlementTransaction[]> {
+export async function calculateSettlement(
+  groupId: string
+): Promise<SettlementTransaction[]> {
   try {
     return await settlementUseCase.execute(groupId);
   } catch (error: unknown) {
@@ -278,7 +298,9 @@ export async function calculateSettlement(groupId: string): Promise<SettlementTr
 /**
  * グループダッシュボードに必要な全てのデータを一括取得
  */
-export async function getGroupDashboardData(groupId: string): Promise<GroupDashboardData> {
+export async function getGroupDashboardData(
+  groupId: string
+): Promise<GroupDashboardData> {
   try {
     const supabase = await createClient();
     const {
@@ -321,7 +343,9 @@ export async function getGroupDashboardData(groupId: string): Promise<GroupDashb
     // 精算計算 (追加のDBクエリを避け、取得済みのデータを使用)
     const settlement =
       payments.length > 0
-        ? SettlementService.generateTransactions(SettlementService.calculateBalances(payments, members))
+        ? SettlementService.generateTransactions(
+            SettlementService.calculateBalances(payments, members)
+          )
         : [];
 
     return {

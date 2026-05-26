@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { calculateSettlement } from "@/app/actions/payments";
+
 import type { SettlementTransaction } from "@/core/domain/entities/payment";
+
+import { calculateSettlement } from "@/app/actions/payments";
 
 interface SettlementDisplayProps {
   groupId: string;
@@ -16,7 +18,7 @@ export function SettlementDisplay({
   initialTransactions,
 }: SettlementDisplayProps) {
   const [transactions, setTransactions] = useState<SettlementTransaction[]>(
-    initialTransactions || [],
+    initialTransactions || []
   );
   const [isCalculating, setIsCalculating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +49,9 @@ export function SettlementDisplay({
   return (
     <div className="space-y-6">
       <div className="pixel-card bg-yellow-50 border-yellow-500 p-6">
-        <h2 className="text-3xl font-bold text-black uppercase tracking-normal mb-6">精算結果</h2>
+        <h2 className="text-3xl font-bold text-black uppercase tracking-normal mb-6">
+          精算結果
+        </h2>
 
         {error && (
           <div className="p-4 bg-red-500 border-4 border-black text-white font-bold shadow-pixel mb-6">
@@ -75,9 +79,13 @@ export function SettlementDisplay({
                     className="flex items-center justify-between p-4 bg-white border-4 border-black text-lg font-bold"
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <span className="text-red-600 truncate">{transaction.fromName}</span>
+                      <span className="text-red-600 truncate">
+                        {transaction.fromName}
+                      </span>
                       <span className="text-black">→</span>
-                      <span className="text-blue-600 truncate">{transaction.toName}</span>
+                      <span className="text-blue-600 truncate">
+                        {transaction.toName}
+                      </span>
                     </div>
                     <span className="text-xl text-black ml-4 whitespace-nowrap">
                       ¥{transaction.amount.toLocaleString()}

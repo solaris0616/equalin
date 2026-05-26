@@ -17,14 +17,21 @@ export interface IGroupRepository {
 }
 
 export interface IPaymentRepository {
-  create(payment: Omit<Payment, "id" | "createdAt">, participantMemberIds: string[]): Promise<void>;
+  create(
+    payment: Omit<Payment, "id" | "createdAt">,
+    participantMemberIds: string[]
+  ): Promise<void>;
   update(
     paymentId: string,
     payment: Partial<Omit<Payment, "id" | "groupId" | "createdAt">>,
-    participantMemberIds: string[],
+    participantMemberIds: string[]
   ): Promise<void>;
-  getByIdWithParticipants(paymentId: string): Promise<PaymentWithParticipants | null>;
+  getByIdWithParticipants(
+    paymentId: string
+  ): Promise<PaymentWithParticipants | null>;
   getByGroupId(groupId: string): Promise<PaymentWithDetails[]>;
-  getWithParticipantsByGroupId(groupId: string): Promise<PaymentWithParticipants[]>;
+  getWithParticipantsByGroupId(
+    groupId: string
+  ): Promise<PaymentWithParticipants[]>;
   delete(paymentId: string): Promise<void>;
 }

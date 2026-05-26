@@ -5,4 +5,7 @@ import { SupabasePaymentRepository } from "@/core/infrastructure/repositories/Su
 export const groupRepository = new SupabaseGroupRepository();
 export const paymentRepository = new SupabasePaymentRepository();
 
-export const settlementUseCase = new SettlementUseCase(groupRepository, paymentRepository);
+export const settlementUseCase = new SettlementUseCase(
+  groupRepository,
+  paymentRepository
+);

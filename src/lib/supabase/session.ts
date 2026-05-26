@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+
 import { hasEnvVars } from "../utils";
 
 export async function updateSession(request: NextRequest) {
@@ -35,7 +36,7 @@ export async function updateSession(request: NextRequest) {
           });
         },
       },
-    },
+    }
   );
 
   // Authentication check is handled by Supabase Anonymous Auth

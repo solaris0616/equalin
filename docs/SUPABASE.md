@@ -60,7 +60,7 @@ const { data, error } = await supabase
     participants:payment_participants(
       profile:profiles(id, name)
     )
-  `,
+  `
   )
   .eq("group_id", groupId)
   .order("created_at", { ascending: false });
@@ -102,7 +102,9 @@ const participants = participantIds.map((profileId) => ({
   profile_id: profileId,
 }));
 
-const { error } = await supabase.from("payment_participants").insert(participants);
+const { error } = await supabase
+  .from("payment_participants")
+  .insert(participants);
 ```
 
 ### Updating Data

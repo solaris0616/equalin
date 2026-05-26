@@ -1,9 +1,17 @@
-import { Loader2 } from "lucide-react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+
+import { Loader2 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "yellow" | "green" | "destructive" | "outline" | "ghost";
+  variant?:
+    | "primary"
+    | "yellow"
+    | "green"
+    | "destructive"
+    | "outline"
+    | "ghost";
   isLoading?: boolean;
   loadingText?: string;
   children: ReactNode;
@@ -37,7 +45,7 @@ export function Button({
         (disabled || isLoading) &&
           "bg-gray-400 text-gray-200 cursor-not-allowed border-black pointer-events-none",
 
-        className,
+        className
       )}
       {...props}
     >

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
+
 import type { Member, PaymentWithParticipants } from "../entities/payment";
+
 import { SettlementService } from "./SettlementService";
 
 describe("SettlementService", () => {

@@ -5,12 +5,13 @@ import type {
   PaymentWithParticipants,
 } from "@/core/domain/entities/payment";
 import type { IPaymentRepository } from "@/core/domain/repositories";
+
 import { createClient } from "@/lib/supabase/server";
 
 export class SupabasePaymentRepository implements IPaymentRepository {
   async create(
     payment: Omit<Payment, "id" | "createdAt">,
-    participantMemberIds: string[],
+    participantMemberIds: string[]
   ): Promise<void> {
     const supabase = await createClient();
 
@@ -48,7 +49,7 @@ export class SupabasePaymentRepository implements IPaymentRepository {
   async update(
     paymentId: string,
     payment: Partial<Omit<Payment, "id" | "groupId" | "createdAt">>,
-    participantMemberIds: string[],
+    participantMemberIds: string[]
   ): Promise<void> {
     const supabase = await createClient();
 
@@ -84,7 +85,9 @@ export class SupabasePaymentRepository implements IPaymentRepository {
     if (upsertError) throw new Error(upsertError.message);
   }
 
-  async getByIdWithParticipants(paymentId: string): Promise<PaymentWithParticipants | null> {
+  async getByIdWithParticipants(
+    paymentId: string
+  ): Promise<PaymentWithParticipants | null> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("payments")
@@ -94,7 +97,7 @@ export class SupabasePaymentRepository implements IPaymentRepository {
         payer_member_id,
         amount,
         participants:payment_participants(member_id)
-      `,
+      `
       )
       .eq("id", paymentId)
       .single();
@@ -106,7 +109,9 @@ export class SupabasePaymentRepository implements IPaymentRepository {
       payerMemberId: data.payer_member_id,
       amount: data.amount,
       participantMemberIds:
-        (data.participants as unknown as { member_id: string }[])?.map((pr) => pr.member_id) || [],
+        (data.participants as unknown as { member_id: string }[])?.map(
+          (pr) => pr.member_id
+        ) || [],
     };
   }
 
@@ -122,7 +127,7 @@ export class SupabasePaymentRepository implements IPaymentRepository {
           member_id,
           member:members(id, name)
         )
-      `,
+      `
       )
       .eq("group_id", groupId)
       .order("created_at", { ascending: false });
@@ -152,7 +157,9 @@ export class SupabasePaymentRepository implements IPaymentRepository {
     }));
   }
 
-  async getWithParticipantsByGroupId(groupId: string): Promise<PaymentWithParticipants[]> {
+  async getWithParticipantsByGroupId(
+    groupId: string
+  ): Promise<PaymentWithParticipants[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("payments")
@@ -162,7 +169,7 @@ export class SupabasePaymentRepository implements IPaymentRepository {
         payer_member_id,
         amount,
         participants:payment_participants(member_id)
-      `,
+      `
       )
       .eq("group_id", groupId);
 
@@ -173,13 +180,18 @@ export class SupabasePaymentRepository implements IPaymentRepository {
       payerMemberId: p.payer_member_id,
       amount: p.amount,
       participantMemberIds:
-        (p.participants as unknown as { member_id: string }[])?.map((pr) => pr.member_id) || [],
+        (p.participants as unknown as { member_id: string }[])?.map(
+          (pr) => pr.member_id
+        ) || [],
     }));
   }
 
   async delete(paymentId: string): Promise<void> {
     const supabase = await createClient();
-    const { error } = await supabase.from("payments").delete().eq("id", paymentId);
+    const { error } = await supabase
+      .from("payments")
+      .delete()
+      .eq("id", paymentId);
 
     if (error) throw new Error(error.message);
   }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+
 import { createClient } from "@/lib/supabase/server";
 
 interface Props {
@@ -27,6 +28,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function GroupLayout({ children }: { children: React.ReactNode }) {
+export default function GroupLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <>{children}</>;
 }
