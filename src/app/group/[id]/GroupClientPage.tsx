@@ -190,7 +190,7 @@ export default function GroupClientPage({
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-8 pb-32 md:pb-40 font-sans">
+    <div className="min-h-screen p-4 md:p-8 pb-20 md:pb-24 font-sans">
       <BackgroundImage src="/form-bg.webp" />
       <div className="max-w-4xl mx-auto space-y-8 relative z-10">
         <div className="pixel-card bg-white">
