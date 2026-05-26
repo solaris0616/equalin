@@ -7,10 +7,17 @@ import type { SettlementTransaction } from "@/core/domain/entities/payment";
 interface SettlementDisplayProps {
   groupId: string;
   refreshTrigger?: number;
+  initialTransactions?: SettlementTransaction[];
 }
 
-export function SettlementDisplay({ groupId, refreshTrigger }: SettlementDisplayProps) {
-  const [transactions, setTransactions] = useState<SettlementTransaction[]>([]);
+export function SettlementDisplay({
+  groupId,
+  refreshTrigger,
+  initialTransactions,
+}: SettlementDisplayProps) {
+  const [transactions, setTransactions] = useState<SettlementTransaction[]>(
+    initialTransactions || [],
+  );
   const [isCalculating, setIsCalculating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,8 +37,12 @@ export function SettlementDisplay({ groupId, refreshTrigger }: SettlementDisplay
   }, [groupId]);
 
   useEffect(() => {
+    if (initialTransactions) {
+      setTransactions(initialTransactions);
+      return;
+    }
     handleCalculateSettlement();
-  }, [refreshTrigger, handleCalculateSettlement]);
+  }, [refreshTrigger, handleCalculateSettlement, initialTransactions]);
 
   return (
     <div className="space-y-6">

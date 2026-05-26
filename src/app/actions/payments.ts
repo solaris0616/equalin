@@ -2,12 +2,14 @@
 
 import type {
   Group,
+  GroupDashboardData,
   Member,
   PaymentWithDetails,
   PaymentWithParticipants,
   SettlementTransaction,
 } from "@/core/domain/entities/payment";
 import { groupRepository, paymentRepository, settlementUseCase } from "@/core/registry";
+import { SettlementService } from "@/core/domain/services/SettlementService";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
@@ -270,6 +272,76 @@ export async function calculateSettlement(groupId: string): Promise<SettlementTr
   } catch (error: unknown) {
     console.error("Error in calculateSettlement:", error);
     return [];
+  }
+}
+
+/**
+ * グループダッシュボードに必要な全てのデータを一括取得
+ */
+export async function getGroupDashboardData(groupId: string): Promise<GroupDashboardData> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // グループの基本情報は誰でも(IDを知っていれば)取得可能
+    const group = await groupRepository.getById(groupId);
+
+    if (!user) {
+      return {
+        group: group ? { id: group.id, name: group.name } : null,
+        members: [],
+        payments: [],
+        settlement: [],
+        isCollaborator: false,
+        isOwner: false,
+      };
+    }
+
+    const isCollab = await groupRepository.isCollaborator(groupId, user.id);
+
+    if (!isCollab) {
+      return {
+        group: group ? { id: group.id, name: group.name } : null,
+        members: [],
+        payments: [],
+        settlement: [],
+        isCollaborator: false,
+        isOwner: group?.ownerId === user.id,
+      };
+    }
+
+    // コラボレーターの場合は詳細データを取得
+    const [members, payments] = await Promise.all([
+      groupRepository.getMembers(groupId),
+      paymentRepository.getByGroupId(groupId),
+    ]);
+
+    // 精算計算 (追加のDBクエリを避け、取得済みのデータを使用)
+    const settlement =
+      payments.length > 0
+        ? SettlementService.generateTransactions(SettlementService.calculateBalances(payments, members))
+        : [];
+
+    return {
+      group: group ? { id: group.id, name: group.name } : null,
+      members,
+      payments,
+      settlement,
+      isCollaborator: true,
+      isOwner: group?.ownerId === user.id,
+    };
+  } catch (error) {
+    console.error("Error in getGroupDashboardData:", error);
+    return {
+      group: null,
+      members: [],
+      payments: [],
+      settlement: [],
+      isCollaborator: false,
+      isOwner: false,
+    };
   }
 }
 
