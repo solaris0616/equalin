@@ -35,6 +35,7 @@ export interface PaymentParticipant {
 export interface PaymentWithDetails extends Payment {
   payerName: string;
   participantNames: string[];
+  participantMemberIds: string[];
 }
 
 /**
@@ -54,6 +55,18 @@ export interface SettlementTransaction {
   toId: string;
   toName: string;
   amount: number; // in cents
+}
+
+/**
+ * Dashboard data for the group page
+ */
+export interface GroupDashboardData {
+  group: { id: string; name: string } | null;
+  members: Member[];
+  payments: PaymentWithDetails[];
+  settlement: SettlementTransaction[];
+  isCollaborator: boolean;
+  isOwner: boolean;
 }
 
 /**

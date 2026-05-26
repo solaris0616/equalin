@@ -119,6 +119,7 @@ export class SupabasePaymentRepository implements IPaymentRepository {
         *,
         payer:members!payer_member_id(id, name),
         participants:payment_participants(
+          member_id,
           member:members(id, name)
         )
       `,
@@ -142,6 +143,12 @@ export class SupabasePaymentRepository implements IPaymentRepository {
             member: Member | null;
           }[]
         )?.map((pr) => pr.member?.name || "Unknown") || [],
+      participantMemberIds:
+        (
+          p.participants as unknown as {
+            member_id: string;
+          }[]
+        )?.map((pr) => pr.member_id) || [],
     }));
   }
 
