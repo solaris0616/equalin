@@ -123,6 +123,11 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
   };
 
   const handleDeleteMember = async (memberId: string) => {
+    if (members.length <= 2) {
+      alert("グループには最低2名のメンバーが必要です。");
+      return;
+    }
+
     if (!confirm("このメンバーを削除しますか？関連する支払いも削除される可能性があります。"))
       return;
 

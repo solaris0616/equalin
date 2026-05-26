@@ -44,6 +44,10 @@ export async function createGroup(
       return { success: false, error: "グループ名を入力してください" };
     }
 
+    if (memberNames.filter((n) => n.trim() !== "").length < 2) {
+      return { success: false, error: "メンバーを2名以上追加してください" };
+    }
+
     const group = await groupRepository.create(name, user.id);
 
     // Add initial members
@@ -197,6 +201,11 @@ export async function deleteMember(
   memberId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const members = await groupRepository.getMembers(groupId);
+    if (members.length <= 2) {
+      return { success: false, error: "グループには最低2名のメンバーが必要です。" };
+    }
+
     await groupRepository.deleteMember(memberId);
     revalidatePath(`/group/${groupId}`);
     return { success: true };
