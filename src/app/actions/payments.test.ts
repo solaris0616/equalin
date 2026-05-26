@@ -17,12 +17,13 @@ mock.module("@/core/registry", () => ({
 
 // Mock supabase server client
 mock.module("@/lib/supabase/server", () => ({
-  createClient: () => Promise.resolve({
-    auth: {
-      getUser: () => Promise.resolve({ data: { user: { id: "user1" } } }),
-      signInAnonymously: () => Promise.resolve({ data: { user: { id: "user1" } } }),
-    },
-  }),
+  createClient: () =>
+    Promise.resolve({
+      auth: {
+        getUser: () => Promise.resolve({ data: { user: { id: "user1" } } }),
+        signInAnonymously: () => Promise.resolve({ data: { user: { id: "user1" } } }),
+      },
+    }),
 }));
 
 // Mock next/cache

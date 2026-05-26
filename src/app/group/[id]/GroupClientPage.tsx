@@ -2,13 +2,7 @@
 
 import { ChevronDown, ChevronUp, Plus, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import {
-  addMember,
-  deleteMember,
-  getGroupDashboardData,
-  isGroupOwner,
-  joinGroup,
-} from "@/app/actions/payments";
+import { addMember, deleteMember, getGroupDashboardData, joinGroup } from "@/app/actions/payments";
 import { Button } from "@/components/ui/Button";
 import type {
   GroupDashboardData,

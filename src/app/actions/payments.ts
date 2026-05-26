@@ -321,7 +321,9 @@ export async function getGroupDashboardData(groupId: string): Promise<GroupDashb
     // 精算計算 (追加のDBクエリを避け、取得済みのデータを使用)
     const settlement =
       payments.length > 0
-        ? SettlementService.generateTransactions(SettlementService.calculateBalances(payments, members))
+        ? SettlementService.generateTransactions(
+            SettlementService.calculateBalances(payments, members),
+          )
         : [];
 
     return {

@@ -10,11 +10,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: group } = await supabase
-    .from("groups")
-    .select("name")
-    .eq("id", id)
-    .single();
+  const { data: group } = await supabase.from("groups").select("name").eq("id", id).single();
 
   if (!group) {
     return {
