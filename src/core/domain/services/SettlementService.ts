@@ -11,7 +11,7 @@ export class SettlementService {
    */
   private static calculateTotalPaid(
     payments: PaymentWithParticipants[],
-    members: Member[],
+    members: Member[]
   ): Map<string, number> {
     const totalPaid = new Map<string, number>();
     for (const member of members) {
@@ -29,7 +29,7 @@ export class SettlementService {
    */
   private static calculateTotalOwed(
     payments: PaymentWithParticipants[],
-    members: Member[],
+    members: Member[]
   ): Map<string, number> {
     const totalOwed = new Map<string, number>();
     for (const member of members) {
@@ -52,7 +52,7 @@ export class SettlementService {
    */
   public static calculateBalances(
     payments: PaymentWithParticipants[],
-    members: Member[],
+    members: Member[]
   ): MemberBalance[] {
     const paidMap = SettlementService.calculateTotalPaid(payments, members);
     const owedMap = SettlementService.calculateTotalOwed(payments, members);
@@ -73,7 +73,9 @@ export class SettlementService {
   /**
    * 最小の取引で精算を行うトランザクションを生成
    */
-  public static generateTransactions(balances: MemberBalance[]): SettlementTransaction[] {
+  public static generateTransactions(
+    balances: MemberBalance[]
+  ): SettlementTransaction[] {
     const creditors = balances
       .filter((b) => b.balance > 0.01)
       .map((b) => ({ ...b }))

@@ -1,9 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createPayment, updatePayment, getPaymentWithParticipants } from "@/app/actions/payments";
+
+import type {
+  Member,
+  PaymentWithDetails,
+} from "@/core/domain/entities/payment";
+
+import {
+  createPayment,
+  updatePayment,
+  getPaymentWithParticipants,
+} from "@/app/actions/payments";
 import { Button } from "@/components/ui/Button";
-import type { Member, PaymentWithDetails } from "@/core/domain/entities/payment";
 import { cn } from "@/lib/utils";
 
 interface PaymentFormProps {
@@ -23,15 +32,17 @@ export function PaymentForm({
   onSuccess,
   onCancel,
 }: PaymentFormProps) {
-  const [description, setDescription] = useState(initialData?.description || "");
+  const [description, setDescription] = useState(
+    initialData?.description || ""
+  );
   const [amount, setAmount] = useState(
-    initialData?.amount.toLocaleString().replace(/,/g, "") || "",
+    initialData?.amount.toLocaleString().replace(/,/g, "") || ""
   );
   const [payerMemberId, setPayerMemberId] = useState<string>(
-    initialData?.payerMemberId || members[0]?.id || "",
+    initialData?.payerMemberId || members[0]?.id || ""
   );
   const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(
-    new Set(initialData ? [] : members.map((m) => m.id)),
+    new Set(initialData ? [] : members.map((m) => m.id))
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,8 +93,13 @@ export function PaymentForm({
     }
 
     // Prevent redundant split-bill (only payer is in participants)
-    if (selectedParticipants.size === 1 && selectedParticipants.has(payerMemberId)) {
-      setError("自分一人だけの支払いは登録できません（割り勘メンバーを選択してください）");
+    if (
+      selectedParticipants.size === 1 &&
+      selectedParticipants.has(payerMemberId)
+    ) {
+      setError(
+        "自分一人だけの支払いは登録できません（割り勘メンバーを選択してください）"
+      );
       return;
     }
 
@@ -98,7 +114,7 @@ export function PaymentForm({
           payerMemberId,
           amountValue,
           description,
-          Array.from(selectedParticipants),
+          Array.from(selectedParticipants)
         );
       } else {
         result = await createPayment(
@@ -106,7 +122,7 @@ export function PaymentForm({
           payerMemberId,
           amountValue,
           description,
-          Array.from(selectedParticipants),
+          Array.from(selectedParticipants)
         );
       }
 
@@ -134,12 +150,17 @@ export function PaymentForm({
         <h2 className="text-2xl font-bold text-black uppercase tracking-normal">
           {initialData ? "支出の編集" : "支出の入力"}
         </h2>
-        <span className="text-sm font-bold bg-black text-white px-2 py-1">{groupName}</span>
+        <span className="text-sm font-bold bg-black text-white px-2 py-1">
+          {groupName}
+        </span>
       </div>
       <div className="h-1 bg-black w-full" />
 
       <div className="space-y-2">
-        <label htmlFor="description" className="block text-sm font-bold text-black">
+        <label
+          htmlFor="description"
+          className="block text-sm font-bold text-black"
+        >
           何に使いましたか？
         </label>
         <input
@@ -173,7 +194,9 @@ export function PaymentForm({
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-bold text-black">誰が支払いましたか？ *</label>
+        <label className="block text-sm font-bold text-black">
+          誰が支払いましたか？ *
+        </label>
         <select
           value={payerMemberId}
           onChange={(e) => setPayerMemberId(e.target.value)}
@@ -189,7 +212,9 @@ export function PaymentForm({
       </div>
 
       <div className="space-y-2">
-        <span className="block text-sm font-bold text-black">誰と割りますか？ *</span>
+        <span className="block text-sm font-bold text-black">
+          誰と割りますか？ *
+        </span>
         <div
           className="space-y-2 max-h-48 overflow-y-auto border-4 border-black p-3 bg-white"
           role="group"
@@ -202,7 +227,7 @@ export function PaymentForm({
                 "flex items-center space-x-3 p-2 cursor-pointer transition-all border-2 border-transparent",
                 selectedParticipants.has(member.id)
                   ? "bg-blue-100 border-black"
-                  : "hover:bg-gray-100",
+                  : "hover:bg-gray-100"
               )}
             >
               <input
@@ -212,7 +237,9 @@ export function PaymentForm({
                 className="w-6 h-6 border-4 border-black text-blue-500 focus:ring-0 rounded-none appearance-none checked:bg-blue-500 relative checked:after:content-['✓'] checked:after:absolute checked:after:text-white checked:after:font-bold checked:after:left-1 checked:after:top-[-4px]"
                 disabled={isSubmitting}
               />
-              <span className="text-sm font-bold text-black">{member.name}</span>
+              <span className="text-sm font-bold text-black">
+                {member.name}
+              </span>
             </label>
           ))}
         </div>

@@ -2,40 +2,58 @@
 
 import { ChevronDown, ChevronUp, Plus, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { addMember, deleteMember, getGroupDashboardData, joinGroup } from "@/app/actions/payments";
-import { Button } from "@/components/ui/Button";
+
 import type {
   GroupDashboardData,
   Member,
   PaymentWithDetails,
   SettlementTransaction,
 } from "@/core/domain/entities/payment";
+
+import {
+  addMember,
+  deleteMember,
+  getGroupDashboardData,
+  joinGroup,
+} from "@/app/actions/payments";
+import { BackgroundImage } from "@/components/ui/BackgroundImage";
+import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
+
 import { InviteLinkButton } from "./components/InviteLinkButton";
 import { PaymentForm } from "./components/PaymentForm";
 import { PaymentList } from "./components/PaymentList";
 import { SettlementDisplay } from "./components/SettlementDisplay";
-import { cn } from "@/lib/utils";
-import { BackgroundImage } from "@/components/ui/BackgroundImage";
 
 interface GroupClientPageProps {
   groupId: string;
   initialData: GroupDashboardData;
 }
 
-export default function GroupClientPage({ groupId, initialData }: GroupClientPageProps) {
+export default function GroupClientPage({
+  groupId,
+  initialData,
+}: GroupClientPageProps) {
   const supabase = createClient();
 
-  const [isCollaborator, setIsCollaborator] = useState<boolean>(initialData.isCollaborator);
+  const [isCollaborator, setIsCollaborator] = useState<boolean>(
+    initialData.isCollaborator
+  );
   const [isOwner, setIsOwner] = useState(initialData.isOwner);
   const [group, setGroup] = useState(initialData.group);
   const [members, setMembers] = useState<Member[]>(initialData.members);
-  const [payments, setPayments] = useState<PaymentWithDetails[]>(initialData.payments);
-  const [settlement, setSettlement] = useState<SettlementTransaction[]>(initialData.settlement);
+  const [payments, setPayments] = useState<PaymentWithDetails[]>(
+    initialData.payments
+  );
+  const [settlement, setSettlement] = useState<SettlementTransaction[]>(
+    initialData.settlement
+  );
 
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [showPayments, setShowPayments] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<PaymentWithDetails | null>(null);
+  const [editingPayment, setEditingPayment] =
+    useState<PaymentWithDetails | null>(null);
 
   const [newMemberName, setNewMemberName] = useState("");
   const [isAddingMember, setIsAddingMember] = useState(false);
@@ -109,7 +127,11 @@ export default function GroupClientPage({ groupId, initialData }: GroupClientPag
       return;
     }
 
-    if (!confirm("このメンバーを削除しますか？関連する支払いも削除される可能性があります。"))
+    if (
+      !confirm(
+        "このメンバーを削除しますか？関連する支払いも削除される可能性があります。"
+      )
+    )
       return;
 
     try {
@@ -208,7 +230,7 @@ export default function GroupClientPage({ groupId, initialData }: GroupClientPag
             disabled={showMemberManager}
             className={cn(
               "flex items-center justify-center gap-2 h-14 text-lg w-full",
-              !isOwner && "col-span-2",
+              !isOwner && "col-span-2"
             )}
           >
             {showPaymentForm ? (

@@ -2,9 +2,11 @@
 
 import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
+
+import type { PaymentWithDetails } from "@/core/domain/entities/payment";
+
 import { deletePayment } from "@/app/actions/payments";
 import { Button } from "@/components/ui/Button";
-import type { PaymentWithDetails } from "@/core/domain/entities/payment";
 
 interface PaymentListProps {
   payments: PaymentWithDetails[];
@@ -51,7 +53,9 @@ export function PaymentList({
   if (payments.length === 0) {
     return (
       <div className="pixel-card text-center py-12">
-        <p className="text-gray-500 text-xl font-bold italic uppercase">ログがありません</p>
+        <p className="text-gray-500 text-xl font-bold italic uppercase">
+          ログがありません
+        </p>
       </div>
     );
   }
@@ -59,10 +63,15 @@ export function PaymentList({
   return (
     <div className="space-y-4">
       {payments.map((payment) => (
-        <div key={payment.id} className="pixel-card border-l-[12px] border-l-blue-500 p-4">
+        <div
+          key={payment.id}
+          className="pixel-card border-l-[12px] border-l-blue-500 p-4"
+        >
           <div className="flex justify-between items-center mb-4">
             <div className="flex-1">
-              <p className="text-xl font-bold text-black uppercase">{payment.payerName}</p>
+              <p className="text-xl font-bold text-black uppercase">
+                {payment.payerName}
+              </p>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
@@ -105,7 +114,9 @@ export function PaymentList({
           )}
 
           <div className="mb-4">
-            <p className="text-xs font-bold text-gray-500 mb-2 uppercase">割り勘メンバー</p>
+            <p className="text-xs font-bold text-gray-500 mb-2 uppercase">
+              割り勘メンバー
+            </p>
             <div className="flex flex-wrap gap-2">
               {payment.participantNames.map((name, index) => (
                 <span

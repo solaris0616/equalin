@@ -1,6 +1,8 @@
 import { nanoid } from "nanoid";
+
 import type { Group, Member } from "@/core/domain/entities/payment";
 import type { IGroupRepository } from "@/core/domain/repositories";
+
 import { createClient } from "@/lib/supabase/server";
 
 export class SupabaseGroupRepository implements IGroupRepository {
@@ -28,7 +30,11 @@ export class SupabaseGroupRepository implements IGroupRepository {
 
   async getById(id: string): Promise<Group | null> {
     const supabase = await createClient();
-    const { data, error } = await supabase.from("groups").select("*").eq("id", id).single();
+    const { data, error } = await supabase
+      .from("groups")
+      .select("*")
+      .eq("id", id)
+      .single();
 
     if (error) return null;
     return {
@@ -57,7 +63,10 @@ export class SupabaseGroupRepository implements IGroupRepository {
 
   async deleteMember(memberId: string): Promise<void> {
     const supabase = await createClient();
-    const { error } = await supabase.from("members").delete().eq("id", memberId);
+    const { error } = await supabase
+      .from("members")
+      .delete()
+      .eq("id", memberId);
 
     if (error) throw new Error(error.message);
   }

@@ -1,6 +1,8 @@
 import { describe, expect, it, mock, beforeEach } from "bun:test";
-import { deleteMember, createGroup } from "./payments";
+
 import { groupRepository } from "@/core/registry";
+
+import { deleteMember, createGroup } from "./payments";
 
 // Mock groupRepository
 mock.module("@/core/registry", () => ({
@@ -21,7 +23,8 @@ mock.module("@/lib/supabase/server", () => ({
     Promise.resolve({
       auth: {
         getUser: () => Promise.resolve({ data: { user: { id: "user1" } } }),
-        signInAnonymously: () => Promise.resolve({ data: { user: { id: "user1" } } }),
+        signInAnonymously: () =>
+          Promise.resolve({ data: { user: { id: "user1" } } }),
       },
     }),
 }));
@@ -77,7 +80,10 @@ describe("payments actions", () => {
     });
 
     it("should succeed if 2 or more members are provided", async () => {
-      (groupRepository.create as any).mockResolvedValue({ id: "g1", name: "Test Group" });
+      (groupRepository.create as any).mockResolvedValue({
+        id: "g1",
+        name: "Test Group",
+      });
       (groupRepository.addMember as any).mockResolvedValue({});
 
       const result = await createGroup("Test Group", ["Alice", "Bob"]);

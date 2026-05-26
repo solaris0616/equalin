@@ -37,7 +37,8 @@ export function Toast({ message, type, duration = 3000, onClose }: ToastProps) {
   }, [duration, handleClose]);
 
   // Icon based on type
-  const Icon = type === "success" ? CheckCircle : type === "error" ? AlertCircle : Info;
+  const Icon =
+    type === "success" ? CheckCircle : type === "error" ? AlertCircle : Info;
 
   // Colors based on type
   const colorClasses = {
@@ -63,7 +64,9 @@ export function Toast({ message, type, duration = 3000, onClose }: ToastProps) {
     >
       <Icon className="w-6 h-6 flex-shrink-0" aria-hidden="true" />
 
-      <p className="flex-1 text-base font-bold uppercase tracking-widest">{message}</p>
+      <p className="flex-1 text-base font-bold uppercase tracking-widest">
+        {message}
+      </p>
 
       <button
         type="button"
