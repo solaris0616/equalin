@@ -13,9 +13,9 @@ Refer to the following documents in `docs/` for specific details. **Do not reinv
 
 Every feature or bug fix must satisfy the following before completion:
 
-1. **Linting & Formatting**: Run `npm run check:apply` to fix issues automatically.
-2. **Type Safety**: Run `npm run type-check` (`tsc --noEmit`). **Zero errors allowed.**
-3. **Testing**: Run `npm run test` (`bun test`). Business logic must be covered by tests.
+1. **Linting & Formatting**: Run `bun run check` (which applies formatting first, then runs lint checks).
+2. **Type Safety**: Run `bun run typecheck` (`tsc --noEmit`). **Zero errors allowed.**
+3. **Testing**: Run `bun run test` (`bun test`). Business logic must be covered by tests.
 4. **Documentation**: If you change the database schema, RLS, or architectural patterns, **update the corresponding file in `docs/` immediately.**
 
 ## 3. Key Constraints
@@ -25,3 +25,11 @@ Every feature or bug fix must satisfy the following before completion:
 - **RLS**: Strictly enforced at the DB level. Every new table must have RLS enabled with group-member-level checks.
 - **IDs**: Use `UUID` for users/payments and `NanoID` for group share links.
 - **Repository Pattern**: All Supabase calls must be encapsulated in `src/core/infrastructure/repositories`. Interacting layers should only use interfaces.
+
+## 4. Agent Behavior
+
+To ensure high-quality and consistent assistance, you must always adhere to the following behavioral rules:
+
+1. **Thinking & Communication**: Think in English internally for token efficiency, but always respond to the user concisely in Japanese.
+2. **Documentation Sync**: When modifying the code, always ensure that any relevant documentation is updated.
+3. **Verification**: After modifying the code, always run the validation commands specified in [docs/MAINTENANCE.md](docs/MAINTENANCE.md) using the `bun` runtime before concluding.

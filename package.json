@@ -3,14 +3,12 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "typecheck": "tsc --noEmit",
-    "build": "npm run typecheck && next build",
+    "build": "bun run typecheck && next build",
     "start": "next start",
     "test": "bun test",
     "lint": "oxlint",
-    "format": "oxfmt .",
-    "format:apply": "oxfmt . --write",
-    "check": "npm run lint && npm run format",
-    "check:apply": "npm run lint && npm run format:apply"
+    "format": "oxfmt . --write",
+    "check": "bun run format && bun run lint"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.1",
