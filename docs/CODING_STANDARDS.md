@@ -21,7 +21,7 @@ We strictly adhere to Clean Architecture:
 
 - **Strict No-Any**: Avoid `any`. Use `unknown` with type guards or explicit casting if necessary.
 - **Source of Truth**: Use domain entities as the primary types. Minimize type transformations in the Presentation layer.
-- **Validation**: Always run `npm run type-check` (`tsc --noEmit`) before deployment or commit. **Zero type errors allowed.**
+- **Validation**: Always run `bun run typecheck` (`tsc --noEmit`) before deployment or commit. **Zero type errors allowed.**
 
 ## 4. Database
 
@@ -34,7 +34,7 @@ We strictly adhere to Clean Architecture:
 
 ## 5. Testing & Documentation
 
-- **Regression**: Run `npm run test` (`bun test`) after changing business logic.
+- **Regression**: Run `bun run test` (`bun test`) after changing business logic.
 - **New Features**: Must include unit tests for domain services.
 - **Synchronization**: Always update tests and `docs/` when changing code or schema.
 
