@@ -23,9 +23,9 @@ This guide provides instructions for AI agents and developers to maintain the pr
 ## Verification
 
 ```bash
-npm run type-check
-npm run test
-npm run check:apply
+bun run typecheck
+bun run check
+bun run test
 ```
 
 Always verify these three commands pass before concluding a task.

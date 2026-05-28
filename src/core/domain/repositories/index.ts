@@ -35,3 +35,8 @@ export interface IPaymentRepository {
   ): Promise<PaymentWithParticipants[]>;
   delete(paymentId: string): Promise<void>;
 }
+
+export interface IAuthRepository {
+  getCurrentUser(): Promise<{ id: string } | null>;
+  signInAnonymously(): Promise<{ id: string }>;
+}

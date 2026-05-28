@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type {
@@ -197,18 +198,23 @@ export function PaymentForm({
         <label className="block text-sm font-bold text-black">
           誰が支払いましたか？ *
         </label>
-        <select
-          value={payerMemberId}
-          onChange={(e) => setPayerMemberId(e.target.value)}
-          className="w-full pixel-input bg-white h-[60px]"
-          disabled={isSubmitting}
-        >
-          {members.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.name}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            value={payerMemberId}
+            onChange={(e) => setPayerMemberId(e.target.value)}
+            className="w-full pixel-input bg-white h-[60px] appearance-none pr-10 rounded-none"
+            disabled={isSubmitting}
+          >
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
+            <ChevronDown className="h-6 w-6 text-black stroke-[3]" />
+          </div>
+        </div>
       </div>
 
       <div className="space-y-2">
