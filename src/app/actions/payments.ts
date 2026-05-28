@@ -15,9 +15,9 @@ import { SettlementService } from "@/core/domain/services/SettlementService";
 import {
   groupRepository,
   paymentRepository,
+  authRepository,
   settlementUseCase,
 } from "@/core/registry";
-import { createClient } from "@/lib/supabase/server";
 
 /**
  * グループ作成
@@ -31,18 +31,11 @@ export async function createGroup(
   error?: string;
 }> {
   try {
-    const supabase = await createClient();
-
     // Get current user or sign in anonymously if not found
-    let {
-      data: { user },
-    } = await supabase.auth.getUser();
+    let user = await authRepository.getCurrentUser();
 
     if (!user) {
-      const { data: signInData, error: signInError } =
-        await supabase.auth.signInAnonymously();
-      if (signInError) throw signInError;
-      user = signInData.user;
+      user = await authRepository.signInAnonymously();
     }
 
     if (!user) {
@@ -238,10 +231,7 @@ export async function joinGroup(
   groupId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await authRepository.getCurrentUser();
 
     if (!user) {
       return { success: false, error: "認証に失敗しました" };
@@ -302,10 +292,7 @@ export async function getGroupDashboardData(
   groupId: string
 ): Promise<GroupDashboardData> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await authRepository.getCurrentUser();
 
     // グループの基本情報は誰でも(IDを知っていれば)取得可能
     const group = await groupRepository.getById(groupId);
@@ -374,10 +361,7 @@ export async function getGroupDashboardData(
  */
 export async function isGroupOwner(groupId: string): Promise<boolean> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await authRepository.getCurrentUser();
     if (!user) return false;
 
     const group = await groupRepository.getById(groupId);
@@ -393,10 +377,7 @@ export async function isGroupOwner(groupId: string): Promise<boolean> {
  */
 export async function isGroupCollaborator(groupId: string): Promise<boolean> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await authRepository.getCurrentUser();
     if (!user) return false;
 
     return await groupRepository.isCollaborator(groupId, user.id);
