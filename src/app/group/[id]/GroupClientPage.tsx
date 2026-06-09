@@ -296,6 +296,7 @@ export default function GroupClientPage({
         {showPaymentForm && (
           <div className="mt-6">
             <PaymentForm
+              key={editingPayment ? `edit-${editingPayment.id}` : "new"}
               groupId={groupId}
               members={members}
               initialData={editingPayment || undefined}
