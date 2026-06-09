@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils";
 
 interface PaymentFormProps {
   groupId: string;
-  groupName: string;
   members: Member[];
   initialData?: PaymentWithDetails;
   onSuccess: () => void;
@@ -27,7 +26,6 @@ interface PaymentFormProps {
 
 export function PaymentForm({
   groupId,
-  groupName,
   members,
   initialData,
   onSuccess,
@@ -148,14 +146,10 @@ export function PaymentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6 pixel-card bg-white">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-black uppercase tracking-normal">
+        <h2 className="text-xl font-bold text-black uppercase tracking-normal">
           {initialData ? "支出の編集" : "支出の入力"}
         </h2>
-        <span className="text-sm font-bold bg-black text-white px-2 py-1">
-          {groupName}
-        </span>
       </div>
-      <div className="h-1 bg-black w-full" />
 
       <div className="space-y-2">
         <label
@@ -177,7 +171,7 @@ export function PaymentForm({
 
       <div className="space-y-2">
         <label htmlFor="amount" className="block text-sm font-bold text-black">
-          いくら使いましたか？ *
+          いくら使いましたか？ <span className="text-red-500">*</span>
         </label>
         <input
           id="amount"
@@ -196,7 +190,7 @@ export function PaymentForm({
 
       <div className="space-y-2">
         <label className="block text-sm font-bold text-black">
-          誰が支払いましたか？ *
+          誰が支払いましたか？ <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <select
@@ -219,7 +213,7 @@ export function PaymentForm({
 
       <div className="space-y-2">
         <span className="block text-sm font-bold text-black">
-          誰と割りますか？ *
+          誰と割りますか？ <span className="text-red-500">*</span>
         </span>
         <div
           className="space-y-2 max-h-48 overflow-y-auto border-4 border-black p-3 bg-white"
@@ -263,7 +257,7 @@ export function PaymentForm({
             variant="outline"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="flex-1 text-xl"
+            className="flex-1 text-lg"
           >
             キャンセル
           </Button>
@@ -272,7 +266,7 @@ export function PaymentForm({
           type="submit"
           isLoading={isSubmitting}
           loadingText="記録中..."
-          className="flex-1 text-xl"
+          className="flex-1 text-lg"
         >
           {initialData ? "保存する" : "記録する"}
         </Button>

@@ -163,24 +163,24 @@ export default function GroupClientPage({
       <div className="min-h-screen flex flex-col justify-center items-center p-4">
         <BackgroundImage src="/landing-bg.webp" priority />
         <div className="relative max-w-md w-full text-center mb-12">
-          <h1 className="text-7xl font-bold text-black mb-2 tracking-normal [text-shadow:_2px_2px_0_white,_-2px_2px_0_white,_2px_-2px_0_white,_-2px_-2px_0_white]">
+          <h1 className="text-6xl font-bold text-black mb-2 tracking-normal [text-shadow:_2px_2px_0_white,_-2px_2px_0_white,_2px_-2px_0_white,_-2px_-2px_0_white]">
             パリカン
           </h1>
-          <p className="text-xl font-bold text-black [text-shadow:_1px_1px_0_white,_-1px_1px_0_white,_1px_-1px_0_white,_-1px_-1px_0_white]">
+          <p className="text-lg font-bold text-black [text-shadow:_1px_1px_0_white,_-1px_1px_0_white,_1px_-1px_0_white,_-1px_-1px_0_white]">
             パッと割り勘しよう
           </p>
         </div>
 
         <div className="w-full max-w-md p-10 space-y-4 pixel-card text-center relative z-10 bg-white">
-          <h2 className="text-4xl font-bold text-black tracking-tighter mb-6">
+          <h2 className="text-3xl font-bold text-black tracking-tighter mb-6">
             {group?.name || "グループ"}に参加
           </h2>
-          <p className="text-xl text-black font-bold mb-8">
+          <p className="text-lg text-black font-bold mb-8">
             グループに参加して支出を記録しましょう
           </p>
           <Button
             onClick={handleJoinGroup}
-            className="w-full text-2xl py-6 h-14 tracking-widest mt-8"
+            className="w-full text-xl py-6 h-14 tracking-widest mt-8"
           >
             参加する
           </Button>
@@ -192,11 +192,11 @@ export default function GroupClientPage({
   return (
     <div className="min-h-screen p-4 md:p-8 pb-20 md:pb-24 font-sans">
       <BackgroundImage src="/form-bg.webp" />
-      <div className="max-w-4xl mx-auto space-y-8 relative z-10">
+      <div className="max-w-4xl mx-auto space-y-4 relative z-10">
         <div className="pixel-card bg-white">
           <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-6">
             <div className="flex-1">
-              <h1 className="text-3xl md:text-4xl font-bold text-black tracking-normal uppercase">
+              <h1 className="text-2xl md:text-3xl font-bold text-black tracking-normal uppercase">
                 {group?.name || "支出ログ"}
               </h1>
             </div>
@@ -210,7 +210,7 @@ export default function GroupClientPage({
               onClick={() => setShowMemberManager(!showMemberManager)}
               variant="green"
               disabled={showPaymentForm}
-              className="flex items-center justify-center gap-2 h-14 text-lg w-full"
+              className="flex items-center justify-center gap-2 h-14 text-base w-full"
             >
               {showMemberManager ? (
                 <>
@@ -229,7 +229,7 @@ export default function GroupClientPage({
             onClick={() => setShowPaymentForm(!showPaymentForm)}
             disabled={showMemberManager}
             className={cn(
-              "flex items-center justify-center gap-2 h-14 text-lg w-full",
+              "flex items-center justify-center gap-2 h-14 text-base w-full",
               !isOwner && "col-span-2"
             )}
           >
@@ -249,7 +249,7 @@ export default function GroupClientPage({
 
         {showMemberManager && (
           <div className="pixel-card bg-yellow-50">
-            <h2 className="text-2xl font-bold mb-4">メンバー編集</h2>
+            <h2 className="text-xl font-bold mb-4">メンバー編集</h2>
             <div className="space-y-4">
               {isOwner && (
                 <div className="flex gap-2">
@@ -258,7 +258,7 @@ export default function GroupClientPage({
                     value={newMemberName}
                     onChange={(e) => setNewMemberName(e.target.value)}
                     placeholder="メンバー名を入力"
-                    className="flex-1 min-w-0 border-4 border-black p-3 text-lg font-bold focus:outline-none bg-white focus:bg-yellow-50 h-[60px]"
+                    className="flex-1 min-w-0 border-4 border-black p-3 text-base font-bold focus:outline-none bg-white focus:bg-yellow-50 h-[60px]"
                   />
                   <Button
                     onClick={handleAddMember}
@@ -274,14 +274,14 @@ export default function GroupClientPage({
                 {members.map((m) => (
                   <div
                     key={m.id}
-                    className="flex items-center gap-3 bg-white border-4 border-black px-4 py-2 text-lg font-bold"
+                    className="flex items-center gap-3 bg-white border-4 border-black px-4 py-2 text-base font-bold"
                   >
                     <span>{m.name}</span>
                     {isOwner && (
                       <button
                         type="button"
                         onClick={() => handleDeleteMember(m.id)}
-                        className="text-red-500 font-bold hover:text-red-700 text-xl"
+                        className="text-red-500 font-bold hover:text-red-700 text-lg"
                       >
                         ×
                       </button>
@@ -297,7 +297,6 @@ export default function GroupClientPage({
           <div className="mt-6">
             <PaymentForm
               groupId={groupId}
-              groupName={group?.name || ""}
               members={members}
               initialData={editingPayment || undefined}
               onSuccess={handlePaymentSuccess}
@@ -319,7 +318,7 @@ export default function GroupClientPage({
           <Button
             variant="outline"
             onClick={() => setShowPayments(!showPayments)}
-            className="w-full flex items-center justify-center gap-2 h-14 text-lg"
+            className="w-full flex items-center justify-center gap-2 h-14 text-base"
           >
             {showPayments ? (
               <>

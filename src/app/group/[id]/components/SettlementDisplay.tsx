@@ -49,7 +49,7 @@ export function SettlementDisplay({
   return (
     <div className="space-y-6">
       <div className="pixel-card bg-yellow-50 border-yellow-500 p-6">
-        <h2 className="text-3xl font-bold text-black uppercase tracking-normal mb-6">
+        <h2 className="text-2xl font-bold text-black uppercase tracking-normal mb-6">
           精算結果
         </h2>
 
@@ -67,7 +67,7 @@ export function SettlementDisplay({
           <div>
             {transactions.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-3xl font-bold text-green-500 uppercase tracking-widest animate-bounce mb-4">
+                <p className="text-2xl font-bold text-green-500 uppercase tracking-widest animate-bounce mb-4">
                   貸し借りゼロ！
                 </p>
               </div>
@@ -87,7 +87,7 @@ export function SettlementDisplay({
                         {transaction.toName}
                       </span>
                     </div>
-                    <span className="text-xl text-black ml-4 whitespace-nowrap">
+                    <span className="text-lg text-black ml-4 whitespace-nowrap">
                       ¥{transaction.amount.toLocaleString()}
                     </span>
                   </div>

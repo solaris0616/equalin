@@ -53,7 +53,7 @@ export function PaymentList({
   if (payments.length === 0) {
     return (
       <div className="pixel-card text-center py-12">
-        <p className="text-gray-500 text-xl font-bold italic uppercase">
+        <p className="text-gray-500 text-lg font-bold italic uppercase">
           ログがありません
         </p>
       </div>
@@ -75,7 +75,7 @@ export function PaymentList({
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <p className="text-2xl font-bold text-blue-600 tracking-tighter">
+                <p className="text-xl font-bold text-blue-600 tracking-tighter">
                   ¥{payment.amount.toLocaleString()}
                 </p>
               </div>
@@ -107,12 +107,6 @@ export function PaymentList({
             </div>
           </div>
 
-          {payment.description && (
-            <div className="mb-4 p-2 bg-gray-50 border-2 border-dashed border-black">
-              <p className="text-black font-bold">{payment.description}</p>
-            </div>
-          )}
-
           <div className="mb-4">
             <p className="text-xs font-bold text-gray-500 mb-2 uppercase">
               割り勘メンバー
@@ -128,6 +122,12 @@ export function PaymentList({
               ))}
             </div>
           </div>
+
+          {payment.description && (
+            <div className="mb-4 p-2 bg-gray-50 border-2 border-dashed border-black">
+              <p className="text-black font-bold">{payment.description}</p>
+            </div>
+          )}
         </div>
       ))}
     </div>
