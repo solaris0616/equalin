@@ -17,7 +17,7 @@ export function BackgroundImage({
         fill
         priority={priority}
         className="object-cover"
-        quality={85}
+        quality={75}
       />
       {/* 上部のフェード */}
       <div
