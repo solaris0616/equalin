@@ -78,10 +78,10 @@ export default function Page() {
     <div className="relative min-h-screen flex flex-col justify-center items-center font-sans p-8 text-center">
       <BackgroundImage src="/landing-bg.webp" priority />
       <div className="relative max-w-md w-full">
-        <h1 className="text-7xl font-bold text-black mb-2 tracking-normal [text-shadow:_2px_2px_0_white,_-2px_2px_0_white,_2px_-2px_0_white,_-2px_-2px_0_white]">
+        <h1 className="text-6xl font-bold text-black mb-2 tracking-normal [text-shadow:_2px_2px_0_white,_-2px_2px_0_white,_2px_-2px_0_white,_-2px_-2px_0_white]">
           パリカン
         </h1>
-        <p className="text-xl font-bold text-black mb-8 [text-shadow:_1px_1px_0_white,_-1px_1px_0_white,_1px_-1px_0_white,_-1px_-1px_0_white]">
+        <p className="text-lg font-bold text-black mb-8 [text-shadow:_1px_1px_0_white,_-1px_1px_0_white,_1px_-1px_0_white,_-1px_-1px_0_white]">
           パッと割り勘しよう
         </p>
 
@@ -90,26 +90,26 @@ export default function Page() {
           className="space-y-6 bg-white p-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
         >
           <div className="text-left">
-            <label className="block text-xl font-bold mb-2">グループ名</label>
+            <label className="block text-lg font-bold mb-2">グループ名</label>
             <input
               type="text"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
               placeholder="例：週末キャンプ"
-              className="w-full border-4 border-black p-3 text-xl font-bold focus:outline-none bg-white focus:bg-yellow-50 h-[60px]"
+              className="w-full border-4 border-black p-3 text-lg font-bold focus:outline-none bg-white focus:bg-yellow-50 h-[60px]"
               required
             />
           </div>
 
           <div className="text-left">
-            <label className="block text-xl font-bold mb-2">メンバー</label>
+            <label className="block text-lg font-bold mb-2">メンバー</label>
             <div className="flex gap-2 mb-4">
               <input
                 type="text"
                 value={newMemberName}
                 onChange={(e) => setNewMemberName(e.target.value)}
                 placeholder="メンバー名を入力"
-                className="flex-1 border-4 border-black p-3 text-lg font-bold focus:outline-none bg-white focus:bg-yellow-50 h-[60px] w-full"
+                className="flex-1 border-4 border-black p-3 text-base font-bold focus:outline-none bg-white focus:bg-yellow-50 h-[60px] w-full"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -130,13 +130,13 @@ export default function Page() {
               {memberNames.map((name, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-3 bg-gray-200 border-4 border-black px-4 py-2 text-lg font-bold"
+                  className="flex items-center gap-3 bg-gray-200 border-4 border-black px-4 py-2 text-base font-bold"
                 >
                   <span>{name}</span>
                   <button
                     type="button"
                     onClick={() => removeMember(index)}
-                    className="text-red-500 font-bold hover:text-red-700 text-xl"
+                    className="text-red-500 font-bold hover:text-red-700 text-lg"
                   >
                     ×
                   </button>
@@ -149,13 +149,13 @@ export default function Page() {
             type="submit"
             isLoading={isCreating}
             loadingText="作成中..."
-            className="w-full py-4 text-3xl tracking-widest mt-4"
+            className="w-full py-4 text-2xl tracking-widest mt-4"
           >
             START
           </Button>
         </form>
       </div>
-      <p className="mt-12 text-black font-bold animate-pulse tracking-widest text-lg [text-shadow:_1px_1px_0_white,_-1px_1px_0_white,_1px_-1px_0_white,_-1px_-1px_0_white]">
+      <p className="mt-12 text-black font-bold animate-pulse tracking-widest text-base [text-shadow:_1px_1px_0_white,_-1px_1px_0_white,_1px_-1px_0_white,_-1px_-1px_0_white]">
         スタートボタンを押してください
       </p>
     </div>
