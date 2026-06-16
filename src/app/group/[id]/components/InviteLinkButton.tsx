@@ -36,13 +36,13 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
   };
 
   return (
-    <div className="w-full md:w-auto">
+    <div className="w-full md:w-64">
       <button
         type="button"
         onClick={handleCopy}
         aria-label="Copy group invitation link"
         className={cn(
-          "pixel-button w-full flex items-center justify-center gap-2 px-6 h-14 transition-colors",
+          "pixel-button w-full md:w-64 flex items-center justify-center gap-2 px-6 h-14 transition-colors",
           copied && !error
             ? "bg-green-600 hover:bg-green-700"
             : "pixel-button-primary"

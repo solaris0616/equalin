@@ -217,20 +217,20 @@ export default function GroupClientPage({
                 {group?.name || "支出ログ"}
               </h1>
             </div>
-            {/* どんぶり勘定モード設定トグル */}
-            <div className="flex items-center gap-4 flex-wrap">
-              {isOwner ? (
-                <label className="flex items-center gap-2 cursor-pointer select-none border-4 border-black px-4 h-14 bg-yellow-50 font-bold hover:bg-yellow-100 transition-colors text-sm">
+            {/* どんぶり勘定設定と招待リンク */}
+            <div className="flex flex-col items-stretch md:items-end gap-2 w-full md:w-64">
+              <InviteLinkButton groupId={groupId} />
+              {isOwner && (
+                <label className="flex items-center justify-center gap-2 cursor-pointer select-none border-4 border-black px-4 h-14 bg-yellow-50 font-bold hover:bg-yellow-100 transition-colors text-sm w-full md:w-64">
                   <input
                     type="checkbox"
                     checked={group?.isRoughMode || false}
                     onChange={handleToggleRoughMode}
                     className="w-5 h-5 border-4 border-black bg-white checked:bg-black accent-black cursor-pointer"
                   />
-                  <span>どんぶり勘定 (1,000円単位で四捨五入)</span>
+                  <span className="whitespace-nowrap">どんぶり勘定</span>
                 </label>
-              ) : null}
-              <InviteLinkButton groupId={groupId} />
+              )}
             </div>
           </div>
         </div>
