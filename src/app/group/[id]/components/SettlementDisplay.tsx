@@ -10,12 +10,14 @@ interface SettlementDisplayProps {
   groupId: string;
   refreshTrigger?: number;
   initialTransactions?: SettlementTransaction[];
+  isRoughMode?: boolean;
 }
 
 export function SettlementDisplay({
   groupId,
   refreshTrigger,
   initialTransactions,
+  isRoughMode,
 }: SettlementDisplayProps) {
   const [transactions, setTransactions] = useState<SettlementTransaction[]>(
     initialTransactions || []
@@ -49,8 +51,13 @@ export function SettlementDisplay({
   return (
     <div className="space-y-6">
       <div className="pixel-card bg-yellow-50 border-yellow-500 p-6">
-        <h2 className="text-2xl font-bold text-black uppercase tracking-normal mb-6">
-          精算結果
+        <h2 className="text-2xl font-bold text-black uppercase tracking-normal mb-6 flex justify-between items-center gap-2">
+          <span>精算結果</span>
+          {isRoughMode && (
+            <span className="text-xs normal-case bg-yellow-300 border-2 border-black px-2 py-0.5 font-bold">
+              どんぶり勘定中
+            </span>
+          )}
         </h2>
 
         {error && (

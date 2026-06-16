@@ -15,6 +15,7 @@ import {
   getGroupDashboardData,
   isGroupOwner,
   isGroupCollaborator,
+  updateRoughMode,
 } from "./payments";
 
 // ---------------------------------------------------------------------------
@@ -31,6 +32,7 @@ const mockGroupGetMembers = mock();
 const mockGroupGetById = mock();
 const mockGroupAddCollaborator = mock();
 const mockGroupIsCollaborator = mock();
+const mockGroupUpdateRoughMode = mock();
 const mockPaymentCreate = mock();
 const mockPaymentUpdate = mock();
 const mockPaymentDelete = mock();
@@ -53,6 +55,7 @@ mock.module("@/core/registry", () => ({
     getById: mockGroupGetById,
     addCollaborator: mockGroupAddCollaborator,
     isCollaborator: mockGroupIsCollaborator,
+    updateRoughMode: mockGroupUpdateRoughMode,
   },
   paymentRepository: {
     create: mockPaymentCreate,
@@ -80,6 +83,7 @@ const makeGroup = (overrides = {}) => ({
   ownerId: "user1",
   shareId: "share1",
   createdAt: "2024-01-01T00:00:00Z",
+  isRoughMode: false,
   ...overrides,
 });
 const makeMember = (id: string, name: string) => ({ id, name, groupId: "g1" });
@@ -109,6 +113,7 @@ const allMocks = [
   mockGroupGetById,
   mockGroupAddCollaborator,
   mockGroupIsCollaborator,
+  mockGroupUpdateRoughMode,
   mockPaymentCreate,
   mockPaymentUpdate,
   mockPaymentDelete,
@@ -744,7 +749,11 @@ describe("payments actions", () => {
       expect(result.isOwner).toBe(false);
       expect(result.members).toEqual([]);
       expect(result.payments).toEqual([]);
-      expect(result.group).toEqual({ id: "g1", name: "Test Group" });
+      expect(result.group).toEqual({
+        id: "g1",
+        name: "Test Group",
+        isRoughMode: false,
+      });
     });
 
     it("returns minimal data when user is not a collaborator", async () => {
@@ -811,6 +820,41 @@ describe("payments actions", () => {
       expect(result.group).toBeNull();
       expect(result.members).toEqual([]);
       expect(result.isCollaborator).toBe(false);
+    });
+  });
+
+  // =========================================================================
+  // updateRoughMode
+  // =========================================================================
+  describe("updateRoughMode", () => {
+    it("fails if user is unauthenticated", async () => {
+      mockGetCurrentUser.mockResolvedValue(null);
+      const result = await updateRoughMode("g1", true);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("認証に失敗しました");
+    });
+
+    it("fails if group does not exist", async () => {
+      mockGroupGetById.mockResolvedValue(null);
+      const result = await updateRoughMode("g1", true);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("グループが見つかりません");
+    });
+
+    it("fails if user is not the owner", async () => {
+      mockGroupGetById.mockResolvedValue(makeGroup({ ownerId: "user2" }));
+      const result = await updateRoughMode("g1", true);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("オーナーのみが設定を変更できます");
+    });
+
+    it("successfully updates rough mode and revalidates path", async () => {
+      mockGroupGetById.mockResolvedValue(makeGroup({ ownerId: "user1" }));
+      mockGroupUpdateRoughMode.mockResolvedValue(undefined);
+      const result = await updateRoughMode("g1", true);
+      expect(result.success).toBe(true);
+      expect(mockGroupUpdateRoughMode).toHaveBeenCalledWith("g1", true);
+      expect(mockRevalidatePath).toHaveBeenCalledWith("/group/g1");
     });
   });
 });

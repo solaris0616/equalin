@@ -25,6 +25,7 @@ export class SupabaseGroupRepository implements IGroupRepository {
       name: data.name,
       ownerId: data.owner_id,
       createdAt: data.created_at,
+      isRoughMode: data.is_rough_mode,
     };
   }
 
@@ -42,6 +43,7 @@ export class SupabaseGroupRepository implements IGroupRepository {
       name: data.name,
       ownerId: data.owner_id,
       createdAt: data.created_at,
+      isRoughMode: data.is_rough_mode,
     };
   }
 
@@ -107,5 +109,15 @@ export class SupabaseGroupRepository implements IGroupRepository {
 
     if (error) return false;
     return !!data;
+  }
+
+  async updateRoughMode(groupId: string, isRoughMode: boolean): Promise<void> {
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("groups")
+      .update({ is_rough_mode: isRoughMode })
+      .eq("id", groupId);
+
+    if (error) throw new Error(error.message);
   }
 }

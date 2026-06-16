@@ -7,6 +7,7 @@ Equalin is an open-source web application designed for simple and fair split-bil
 - **Group Management**: Create groups and share via invitation links.
 - **Expense Logging**: Select payer, amount, and participants. Supports editing after entry.
 - **Settlement Calculation**: Algorithm to settle debts with the minimum number of transactions.
+- **Rough Mode**: Option to round settlement transactions down to the nearest 1,000 yen, streamlining transfers and avoiding small change exchange.
 - **Anonymous Usage**: No sign-up required. Secure profile management via Supabase Anonymous Auth.
 
 ## Tech Stack

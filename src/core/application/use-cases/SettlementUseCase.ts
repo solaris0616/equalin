@@ -13,7 +13,8 @@ export class SettlementUseCase {
   ) {}
 
   async execute(groupId: string): Promise<SettlementTransaction[]> {
-    const [members, payments] = await Promise.all([
+    const [group, members, payments] = await Promise.all([
+      this.groupRepo.getById(groupId),
       this.groupRepo.getMembers(groupId),
       this.paymentRepo.getWithParticipantsByGroupId(groupId),
     ]);
@@ -21,6 +22,6 @@ export class SettlementUseCase {
     if (payments.length === 0) return [];
 
     const balances = SettlementService.calculateBalances(payments, members);
-    return SettlementService.generateTransactions(balances);
+    return SettlementService.generateTransactions(balances, group?.isRoughMode);
   }
 }

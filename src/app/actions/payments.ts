@@ -299,7 +299,9 @@ export async function getGroupDashboardData(
 
     if (!user) {
       return {
-        group: group ? { id: group.id, name: group.name } : null,
+        group: group
+          ? { id: group.id, name: group.name, isRoughMode: group.isRoughMode }
+          : null,
         members: [],
         payments: [],
         settlement: [],
@@ -312,7 +314,9 @@ export async function getGroupDashboardData(
 
     if (!isCollab) {
       return {
-        group: group ? { id: group.id, name: group.name } : null,
+        group: group
+          ? { id: group.id, name: group.name, isRoughMode: group.isRoughMode }
+          : null,
         members: [],
         payments: [],
         settlement: [],
@@ -331,12 +335,15 @@ export async function getGroupDashboardData(
     const settlement =
       payments.length > 0
         ? SettlementService.generateTransactions(
-            SettlementService.calculateBalances(payments, members)
+            SettlementService.calculateBalances(payments, members),
+            group?.isRoughMode
           )
         : [];
 
     return {
-      group: group ? { id: group.id, name: group.name } : null,
+      group: group
+        ? { id: group.id, name: group.name, isRoughMode: group.isRoughMode }
+        : null,
       members,
       payments,
       settlement,
@@ -384,5 +391,36 @@ export async function isGroupCollaborator(groupId: string): Promise<boolean> {
   } catch (error: unknown) {
     console.error("Error in isGroupCollaborator:", error);
     return false;
+  }
+}
+
+/**
+ * ざっくりモード設定の更新
+ */
+export async function updateRoughMode(
+  groupId: string,
+  isRoughMode: boolean
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const user = await authRepository.getCurrentUser();
+    if (!user) {
+      return { success: false, error: "認証に失敗しました" };
+    }
+
+    const group = await groupRepository.getById(groupId);
+    if (!group) {
+      return { success: false, error: "グループが見つかりません" };
+    }
+
+    if (group.ownerId !== user.id) {
+      return { success: false, error: "オーナーのみが設定を変更できます" };
+    }
+
+    await groupRepository.updateRoughMode(groupId, isRoughMode);
+    revalidatePath(`/group/${groupId}`);
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("Error in updateRoughMode:", error);
+    return { success: false, error: "設定の更新に失敗しました" };
   }
 }

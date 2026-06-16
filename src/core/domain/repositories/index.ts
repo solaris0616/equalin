@@ -14,6 +14,7 @@ export interface IGroupRepository {
   getMembers(groupId: string): Promise<Member[]>;
   addCollaborator(groupId: string, userId: string): Promise<void>;
   isCollaborator(groupId: string, userId: string): Promise<boolean>;
+  updateRoughMode(groupId: string, isRoughMode: boolean): Promise<void>;
 }
 
 export interface IPaymentRepository {
