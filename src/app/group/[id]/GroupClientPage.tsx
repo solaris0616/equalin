@@ -221,7 +221,7 @@ export default function GroupClientPage({
             <div className="flex flex-col items-stretch md:items-end gap-2 w-full md:w-64">
               <InviteLinkButton groupId={groupId} />
               {isOwner && (
-                <label className="flex items-center justify-center gap-2 cursor-pointer select-none border-4 border-black px-4 h-14 bg-yellow-50 font-bold hover:bg-yellow-100 transition-colors text-sm w-full md:w-64">
+                <label className="flex items-center justify-center gap-2 cursor-pointer select-none border-4 border-black px-4 h-14 bg-yellow-50 font-bold hover:bg-yellow-100 transition-colors text-base w-full md:w-64">
                   <input
                     type="checkbox"
                     checked={group?.isRoughMode || false}
