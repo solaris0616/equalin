@@ -74,7 +74,8 @@ export class SettlementService {
    * 最小の取引で精算を行うトランザクションを生成
    */
   public static generateTransactions(
-    balances: MemberBalance[]
+    balances: MemberBalance[],
+    isRoughMode?: boolean
   ): SettlementTransaction[] {
     const creditors = balances
       .filter((b) => b.balance > 0.01)
@@ -94,7 +95,9 @@ export class SettlementService {
       const creditor = creditors[i];
       const debtor = debtors[j];
       const amount = Math.min(creditor.balance, Math.abs(debtor.balance));
-      const roundedAmount = Math.round(amount);
+      const roundedAmount = isRoughMode
+        ? Math.round(amount / 1000) * 1000
+        : Math.round(amount);
 
       if (roundedAmount > 0) {
         transactions.push({

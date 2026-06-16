@@ -15,6 +15,7 @@ import {
   deleteMember,
   getGroupDashboardData,
   joinGroup,
+  updateRoughMode,
 } from "@/app/actions/payments";
 import { BackgroundImage } from "@/components/ui/BackgroundImage";
 import { Button } from "@/components/ui/Button";
@@ -146,6 +147,22 @@ export default function GroupClientPage({
     }
   };
 
+  const handleToggleRoughMode = async () => {
+    if (!group) return;
+    const newMode = !group.isRoughMode;
+    try {
+      const result = await updateRoughMode(groupId, newMode);
+      if (result.success) {
+        await refreshData();
+      } else {
+        alert(result.error || "設定の更新に失敗しました");
+      }
+    } catch (error) {
+      console.error("Error toggling rough mode:", error);
+      alert("エラーが発生しました。");
+    }
+  };
+
   const handlePaymentSuccess = async () => {
     await refreshData();
     setShowPaymentForm(false);
@@ -200,7 +217,21 @@ export default function GroupClientPage({
                 {group?.name || "支出ログ"}
               </h1>
             </div>
-            <InviteLinkButton groupId={groupId} />
+            {/* どんぶり勘定モード設定トグル */}
+            <div className="flex items-center gap-4 flex-wrap">
+              {isOwner ? (
+                <label className="flex items-center gap-2 cursor-pointer select-none border-4 border-black px-4 h-14 bg-yellow-50 font-bold hover:bg-yellow-100 transition-colors text-sm">
+                  <input
+                    type="checkbox"
+                    checked={group?.isRoughMode || false}
+                    onChange={handleToggleRoughMode}
+                    className="w-5 h-5 border-4 border-black bg-white checked:bg-black accent-black cursor-pointer"
+                  />
+                  <span>どんぶり勘定 (1,000円単位で四捨五入)</span>
+                </label>
+              ) : null}
+              <InviteLinkButton groupId={groupId} />
+            </div>
           </div>
         </div>
 
@@ -312,6 +343,7 @@ export default function GroupClientPage({
         <SettlementDisplay
           groupId={groupId}
           initialTransactions={settlement}
+          isRoughMode={group?.isRoughMode}
           // We can remove refreshTrigger as we manage state here or pass it if needed
         />
 

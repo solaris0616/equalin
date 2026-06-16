@@ -7,6 +7,7 @@ export interface Group {
   name: string;
   ownerId: string;
   createdAt: string;
+  isRoughMode: boolean;
 }
 
 export interface Member {
@@ -61,7 +62,7 @@ export interface SettlementTransaction {
  * Dashboard data for the group page
  */
 export interface GroupDashboardData {
-  group: { id: string; name: string } | null;
+  group: { id: string; name: string; isRoughMode: boolean } | null;
   members: Member[];
   payments: PaymentWithDetails[];
   settlement: SettlementTransaction[];

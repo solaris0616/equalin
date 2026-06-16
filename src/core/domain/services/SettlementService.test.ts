@@ -154,6 +154,55 @@ describe("SettlementService", () => {
       expect(transactions[0].amount).toBe(333);
       expect(transactions[1].amount).toBe(333);
     });
+
+    it("should handle rough mode with 1000 yen rounding", () => {
+      const balances = [
+        {
+          memberId: "1",
+          name: "Alice",
+          paid: 16880,
+          owed: 5627,
+          balance: 11253,
+        },
+        { memberId: "2", name: "Bob", paid: 0, owed: 5627, balance: -5627 },
+        { memberId: "3", name: "Charlie", paid: 0, owed: 5627, balance: -5627 },
+      ];
+      const transactions = SettlementService.generateTransactions(
+        balances,
+        true
+      );
+      expect(transactions).toHaveLength(2);
+      expect(transactions[0].amount).toBe(6000);
+      expect(transactions[1].amount).toBe(6000);
+    });
+
+    it("should round up to 1000 yen when transaction is >= 500 yen", () => {
+      const balances = [
+        { memberId: "1", name: "Alice", paid: 1800, owed: 600, balance: 1200 },
+        { memberId: "2", name: "Bob", paid: 0, owed: 600, balance: -600 },
+        { memberId: "3", name: "Charlie", paid: 0, owed: 600, balance: -600 },
+      ];
+      const transactions = SettlementService.generateTransactions(
+        balances,
+        true
+      );
+      expect(transactions).toHaveLength(2);
+      expect(transactions[0].amount).toBe(1000);
+      expect(transactions[1].amount).toBe(1000);
+    });
+
+    it("should skip transactions below 500 yen when rough mode is active", () => {
+      const balances = [
+        { memberId: "1", name: "Alice", paid: 900, owed: 300, balance: 600 },
+        { memberId: "2", name: "Bob", paid: 0, owed: 300, balance: -300 },
+        { memberId: "3", name: "Charlie", paid: 0, owed: 300, balance: -300 },
+      ];
+      const transactions = SettlementService.generateTransactions(
+        balances,
+        true
+      );
+      expect(transactions).toHaveLength(0);
+    });
   });
 
   describe("calculateBalances edge cases", () => {
