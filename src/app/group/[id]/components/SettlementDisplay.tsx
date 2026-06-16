@@ -54,7 +54,7 @@ export function SettlementDisplay({
         <h2 className="text-2xl font-bold text-black uppercase tracking-normal mb-6 flex justify-between items-center gap-2">
           <span>精算結果</span>
           {isRoughMode && (
-            <span className="text-xs normal-case bg-yellow-300 border-2 border-black px-2 py-0.5 font-bold">
+            <span className="text-sm normal-case bg-yellow-300 border-2 border-black px-2 py-0.5 font-bold">
               どんぶり勘定中
             </span>
           )}

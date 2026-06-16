@@ -220,14 +220,14 @@ export default function GroupClientPage({
             {/* どんぶり勘定モード設定トグル */}
             <div className="flex items-center gap-4 flex-wrap">
               {isOwner ? (
-                <label className="flex items-center gap-2 cursor-pointer select-none border-4 border-black p-2 bg-yellow-50 font-bold hover:bg-yellow-100 transition-colors text-sm">
+                <label className="flex items-center gap-2 cursor-pointer select-none border-4 border-black px-4 h-14 bg-yellow-50 font-bold hover:bg-yellow-100 transition-colors text-sm">
                   <input
                     type="checkbox"
                     checked={group?.isRoughMode || false}
                     onChange={handleToggleRoughMode}
                     className="w-5 h-5 border-4 border-black bg-white checked:bg-black accent-black cursor-pointer"
                   />
-                  <span>どんぶり勘定モード (1,000円単位で四捨五入)</span>
+                  <span>どんぶり勘定 (1,000円単位で四捨五入)</span>
                 </label>
               ) : null}
               <InviteLinkButton groupId={groupId} />
