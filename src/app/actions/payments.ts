@@ -396,6 +396,9 @@ export async function isGroupCollaborator(groupId: string): Promise<boolean> {
 
 /**
  * ざっくりモード設定の更新
+ *
+ * オーナー検証はRLSポリシー（auth.uid() = owner_id）に委譲することで、
+ * 不要なgetByIdクエリを省略している。
  */
 export async function updateRoughMode(
   groupId: string,
@@ -405,15 +408,6 @@ export async function updateRoughMode(
     const user = await authRepository.getCurrentUser();
     if (!user) {
       return { success: false, error: "認証に失敗しました" };
-    }
-
-    const group = await groupRepository.getById(groupId);
-    if (!group) {
-      return { success: false, error: "グループが見つかりません" };
-    }
-
-    if (group.ownerId !== user.id) {
-      return { success: false, error: "オーナーのみが設定を変更できます" };
     }
 
     await groupRepository.updateRoughMode(groupId, isRoughMode);

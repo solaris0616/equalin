@@ -834,22 +834,17 @@ describe("payments actions", () => {
       expect(result.error).toBe("認証に失敗しました");
     });
 
-    it("fails if group does not exist", async () => {
-      mockGroupGetById.mockResolvedValue(null);
+    it("fails if RLS rejects the update (group does not exist or user is not the owner)", async () => {
+      // RLSポリシー違反や存在しないグループへの更新はリポジトリエラーとして返る
+      mockGroupUpdateRoughMode.mockRejectedValue(
+        new Error("new row violates row-level security policy")
+      );
       const result = await updateRoughMode("g1", true);
       expect(result.success).toBe(false);
-      expect(result.error).toBe("グループが見つかりません");
-    });
-
-    it("fails if user is not the owner", async () => {
-      mockGroupGetById.mockResolvedValue(makeGroup({ ownerId: "user2" }));
-      const result = await updateRoughMode("g1", true);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("オーナーのみが設定を変更できます");
+      expect(result.error).toBe("設定の更新に失敗しました");
     });
 
     it("successfully updates rough mode and revalidates path", async () => {
-      mockGroupGetById.mockResolvedValue(makeGroup({ ownerId: "user1" }));
       mockGroupUpdateRoughMode.mockResolvedValue(undefined);
       const result = await updateRoughMode("g1", true);
       expect(result.success).toBe(true);

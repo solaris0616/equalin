@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { SettlementTransaction } from "@/core/domain/entities/payment";
 
@@ -40,6 +40,7 @@ export function SettlementDisplay({
     }
   }, [groupId]);
 
+  // 初期データがない場合の通常の再計算トリガー
   useEffect(() => {
     if (initialTransactions) {
       setTransactions(initialTransactions);
@@ -47,6 +48,15 @@ export function SettlementDisplay({
     }
     handleCalculateSettlement();
   }, [refreshTrigger, handleCalculateSettlement, initialTransactions]);
+
+  // isRoughMode が変化したら精算を再計算する
+  const prevRoughModeRef = useRef(isRoughMode);
+  useEffect(() => {
+    // 初回マウント時はスキップ（initialTransactions を使うため）
+    if (prevRoughModeRef.current === isRoughMode) return;
+    prevRoughModeRef.current = isRoughMode;
+    handleCalculateSettlement();
+  }, [isRoughMode, handleCalculateSettlement]);
 
   return (
     <div className="space-y-6">

@@ -150,15 +150,21 @@ export default function GroupClientPage({
   const handleToggleRoughMode = async () => {
     if (!group) return;
     const newMode = !group.isRoughMode;
+
+    // Optimistic update: 即座にUIを更新
+    setGroup((prev) => (prev ? { ...prev, isRoughMode: newMode } : prev));
+
     try {
       const result = await updateRoughMode(groupId, newMode);
-      if (result.success) {
-        await refreshData();
-      } else {
+      if (!result.success) {
+        // 失敗時は元の状態に戻す
+        setGroup((prev) => (prev ? { ...prev, isRoughMode: !newMode } : prev));
         alert(result.error || "設定の更新に失敗しました");
       }
     } catch (error) {
       console.error("Error toggling rough mode:", error);
+      // エラー時も元の状態に戻す
+      setGroup((prev) => (prev ? { ...prev, isRoughMode: !newMode } : prev));
       alert("エラーが発生しました。");
     }
   };
