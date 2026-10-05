@@ -1,18 +1,14 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import type {
   Member,
   PaymentWithDetails,
 } from "@/core/domain/entities/payment";
 
-import {
-  createPayment,
-  updatePayment,
-  getPaymentWithParticipants,
-} from "@/app/actions/payments";
+import { createPayment, updatePayment } from "@/app/actions/payments";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +16,7 @@ interface PaymentFormProps {
   groupId: string;
   members: Member[];
   initialData?: PaymentWithDetails;
-  onSuccess: () => void;
+  onSuccess: () => void | Promise<void>;
   onCancel?: () => void;
 }
 
@@ -34,30 +30,15 @@ export function PaymentForm({
   const [description, setDescription] = useState(
     initialData?.description || ""
   );
-  const [amount, setAmount] = useState(
-    initialData?.amount.toLocaleString().replace(/,/g, "") || ""
-  );
+  const [amount, setAmount] = useState(initialData?.amount.toString() || "");
   const [payerMemberId, setPayerMemberId] = useState<string>(
     initialData?.payerMemberId || members[0]?.id || ""
   );
   const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(
-    new Set(initialData ? [] : members.map((m) => m.id))
+    new Set(initialData?.participantMemberIds ?? members.map((m) => m.id))
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Fetch full participant IDs if editing
-  useEffect(() => {
-    const fetchParticipants = async () => {
-      if (initialData) {
-        const fullPayment = await getPaymentWithParticipants(initialData.id);
-        if (fullPayment) {
-          setSelectedParticipants(new Set(fullPayment.participantMemberIds));
-        }
-      }
-    };
-    fetchParticipants();
-  }, [initialData]);
 
   const handleParticipantToggle = (memberId: string) => {
     setSelectedParticipants((prev) => {
@@ -73,10 +54,15 @@ export function PaymentForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setError(null);
 
-    const amountValue = Number.parseInt(amount, 10);
-    if (Number.isNaN(amountValue) || amountValue < 1) {
+    const amountValue = Number(amount);
+    if (
+      !Number.isInteger(amountValue) ||
+      amountValue < 1 ||
+      amountValue > 999999999
+    ) {
       setError("有効な金額を入力してください");
       return;
     }
@@ -131,7 +117,7 @@ export function PaymentForm({
           setAmount("");
         }
         setError(null);
-        onSuccess();
+        await onSuccess();
       } else {
         setError(result.error || "保存に失敗しました");
         setIsSubmitting(false);
@@ -160,6 +146,7 @@ export function PaymentForm({
         </label>
         <input
           id="description"
+          maxLength={1000}
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -189,11 +176,12 @@ export function PaymentForm({
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-bold text-black">
+        <label htmlFor="payer" className="block text-sm font-bold text-black">
           誰が支払いましたか？ <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <select
+            id="payer"
             value={payerMemberId}
             onChange={(e) => setPayerMemberId(e.target.value)}
             className="w-full pixel-input bg-white h-[60px] appearance-none pr-10 rounded-none"

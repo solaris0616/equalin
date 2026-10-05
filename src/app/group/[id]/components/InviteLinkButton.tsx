@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Copy } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -13,23 +13,32 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    []
+  );
+
   const groupUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/group/${groupId}`
       : "";
 
   const handleCopy = async () => {
+    if (timer.current) clearTimeout(timer.current);
     try {
       await navigator.clipboard.writeText(groupUrl);
       setCopied(true);
       setError(null);
-      setTimeout(() => {
+      timer.current = setTimeout(() => {
         setCopied(false);
       }, 2000);
     } catch (err) {
       console.error("Failed to copy to clipboard:", err);
       setError("リンクのコピーに失敗しました。もう一度お試しください。");
-      setTimeout(() => {
+      timer.current = setTimeout(() => {
         setError(null);
       }, 3000);
     }
@@ -40,7 +49,7 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
       <button
         type="button"
         onClick={handleCopy}
-        aria-label="Copy group invitation link"
+        aria-label="招待リンクをコピー"
         className={cn(
           "pixel-button w-full md:w-64 flex items-center justify-center gap-2 px-6 h-14 transition-colors",
           copied && !error

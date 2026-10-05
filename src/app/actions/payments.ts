@@ -11,12 +11,12 @@ import type {
   SettlementTransaction,
 } from "@/core/domain/entities/payment";
 
-import { SettlementService } from "@/core/domain/services/SettlementService";
 import {
   groupRepository,
   paymentRepository,
   authRepository,
   settlementUseCase,
+  groupDashboardUseCase,
 } from "@/core/registry";
 
 /**
@@ -31,6 +31,25 @@ export async function createGroup(
   error?: string;
 }> {
   try {
+    if (typeof name !== "string" || name.trim() === "" || name.length > 100) {
+      return { success: false, error: "グループ名を入力してください" };
+    }
+
+    if (
+      !Array.isArray(memberNames) ||
+      memberNames.length > 100 ||
+      memberNames.some((n) => typeof n !== "string" || n.length > 100)
+    ) {
+      return {
+        success: false,
+        error: "メンバーは100名以内、名前は100文字以内で入力してください",
+      };
+    }
+
+    if (memberNames.filter((n) => n.trim() !== "").length < 2) {
+      return { success: false, error: "メンバーを2名以上追加してください" };
+    }
+
     // Get current user or sign in anonymously if not found
     let user = await authRepository.getCurrentUser();
 
@@ -42,22 +61,11 @@ export async function createGroup(
       return { success: false, error: "ユーザーの特定に失敗しました" };
     }
 
-    if (!name || name.trim() === "") {
-      return { success: false, error: "グループ名を入力してください" };
-    }
-
-    if (memberNames.filter((n) => n.trim() !== "").length < 2) {
-      return { success: false, error: "メンバーを2名以上追加してください" };
-    }
-
-    const group = await groupRepository.create(name, user.id);
-
-    // Add initial members
-    for (const memberName of memberNames) {
-      if (memberName.trim() !== "") {
-        await groupRepository.addMember(group.id, memberName.trim());
-      }
-    }
+    const group = await groupRepository.create(
+      name.trim(),
+      user.id,
+      memberNames.map((n) => n.trim()).filter(Boolean)
+    );
 
     return { success: true, data: group };
   } catch (error: unknown) {
@@ -77,8 +85,21 @@ export async function createPayment(
   participantMemberIds: string[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    if (participantMemberIds.length === 0) {
+    if (
+      !Array.isArray(participantMemberIds) ||
+      participantMemberIds.length === 0
+    ) {
       return { success: false, error: "参加者を1人以上選択してください" };
+    }
+
+    if (
+      typeof description !== "string" ||
+      description.length > 1000 ||
+      participantMemberIds.length > 100 ||
+      participantMemberIds.some((id) => typeof id !== "string") ||
+      new Set(participantMemberIds).size !== participantMemberIds.length
+    ) {
+      return { success: false, error: "支払い内容または参加者が不正です" };
     }
 
     if (!Number.isInteger(amount) || amount < 1 || amount > 999999999) {
@@ -94,8 +115,7 @@ export async function createPayment(
     return { success: true };
   } catch (error: unknown) {
     console.error("Error in createPayment:", error);
-    const message =
-      error instanceof Error ? error.message : "支払いの作成に失敗しました";
+    const message = "支払いの作成に失敗しました";
     return {
       success: false,
       error: message,
@@ -115,8 +135,21 @@ export async function updatePayment(
   participantMemberIds: string[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    if (participantMemberIds.length === 0) {
+    if (
+      !Array.isArray(participantMemberIds) ||
+      participantMemberIds.length === 0
+    ) {
       return { success: false, error: "参加者を1人以上選択してください" };
+    }
+
+    if (
+      typeof description !== "string" ||
+      description.length > 1000 ||
+      participantMemberIds.length > 100 ||
+      participantMemberIds.some((id) => typeof id !== "string") ||
+      new Set(participantMemberIds).size !== participantMemberIds.length
+    ) {
+      return { success: false, error: "支払い内容または参加者が不正です" };
     }
 
     if (!Number.isInteger(amount) || amount < 1 || amount > 999999999) {
@@ -124,6 +157,7 @@ export async function updatePayment(
     }
 
     await paymentRepository.update(
+      groupId,
       paymentId,
       { payerMemberId, amount, description: description || null },
       participantMemberIds
@@ -133,8 +167,7 @@ export async function updatePayment(
     return { success: true };
   } catch (error: unknown) {
     console.error("Error in updatePayment:", error);
-    const message =
-      error instanceof Error ? error.message : "支払いの更新に失敗しました";
+    const message = "支払いの更新に失敗しました";
     return {
       success: false,
       error: message,
@@ -190,7 +223,13 @@ export async function addMember(
   name: string
 ): Promise<{ success: boolean; data?: Member; error?: string }> {
   try {
-    const member = await groupRepository.addMember(groupId, name);
+    if (typeof name !== "string" || !name.trim() || name.length > 100) {
+      return {
+        success: false,
+        error: "メンバー名は1〜100文字で入力してください",
+      };
+    }
+    const member = await groupRepository.addMember(groupId, name.trim());
     revalidatePath(`/group/${groupId}`);
     return { success: true, data: member };
   } catch (error: unknown) {
@@ -215,7 +254,10 @@ export async function deleteMember(
       };
     }
 
-    await groupRepository.deleteMember(memberId);
+    if (!members.some((member) => member.id === memberId)) {
+      return { success: false, error: "メンバーが見つかりません" };
+    }
+    await groupRepository.deleteMember(groupId, memberId);
     revalidatePath(`/group/${groupId}`);
     return { success: true };
   } catch (error: unknown) {
@@ -243,8 +285,7 @@ export async function joinGroup(
     return { success: true };
   } catch (error: unknown) {
     console.error("Error in joinGroup:", error);
-    const message =
-      error instanceof Error ? error.message : "グループへの参加に失敗しました";
+    const message = "グループへの参加に失敗しました";
     return {
       success: false,
       error: message,
@@ -260,13 +301,12 @@ export async function deletePayment(
   paymentId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await paymentRepository.delete(paymentId);
+    await paymentRepository.delete(groupId, paymentId);
     revalidatePath(`/group/${groupId}`);
     return { success: true };
   } catch (error: unknown) {
     console.error("Error in deletePayment:", error);
-    const message =
-      error instanceof Error ? error.message : "削除に失敗しました";
+    const message = "削除に失敗しました";
     return { success: false, error: message };
   }
 }
@@ -292,67 +332,11 @@ export async function getGroupDashboardData(
   groupId: string
 ): Promise<GroupDashboardData> {
   try {
-    const user = await authRepository.getCurrentUser();
-
-    // グループの基本情報は誰でも(IDを知っていれば)取得可能
-    const group = await groupRepository.getById(groupId);
-
-    if (!user) {
-      return {
-        group: group
-          ? { id: group.id, name: group.name, isRoughMode: group.isRoughMode }
-          : null,
-        members: [],
-        payments: [],
-        settlement: [],
-        isCollaborator: false,
-        isOwner: false,
-      };
-    }
-
-    const isCollab = await groupRepository.isCollaborator(groupId, user.id);
-
-    if (!isCollab) {
-      return {
-        group: group
-          ? { id: group.id, name: group.name, isRoughMode: group.isRoughMode }
-          : null,
-        members: [],
-        payments: [],
-        settlement: [],
-        isCollaborator: false,
-        isOwner: group?.ownerId === user.id,
-      };
-    }
-
-    // コラボレーターの場合は詳細データを取得
-    const [members, payments] = await Promise.all([
-      groupRepository.getMembers(groupId),
-      paymentRepository.getByGroupId(groupId),
-    ]);
-
-    // 精算計算 (追加のDBクエリを避け、取得済みのデータを使用)
-    const settlement =
-      payments.length > 0
-        ? SettlementService.generateTransactions(
-            SettlementService.calculateBalances(payments, members),
-            group?.isRoughMode
-          )
-        : [];
-
-    return {
-      group: group
-        ? { id: group.id, name: group.name, isRoughMode: group.isRoughMode }
-        : null,
-      members,
-      payments,
-      settlement,
-      isCollaborator: true,
-      isOwner: group?.ownerId === user.id,
-    };
+    return await groupDashboardUseCase.execute(groupId);
   } catch (error) {
     console.error("Error in getGroupDashboardData:", error);
     return {
+      error: "データの読み込みに失敗しました。再試行してください。",
       group: null,
       members: [],
       payments: [],
@@ -397,8 +381,7 @@ export async function isGroupCollaborator(groupId: string): Promise<boolean> {
 /**
  * ざっくりモード設定の更新
  *
- * オーナー検証はRLSポリシー（auth.uid() = owner_id）に委譲することで、
- * 不要なgetByIdクエリを省略している。
+ * オーナー検証と更新対象の存在確認はDB関数内で行う。
  */
 export async function updateRoughMode(
   groupId: string,

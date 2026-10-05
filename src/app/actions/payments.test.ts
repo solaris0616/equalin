@@ -1,5 +1,7 @@
 import { describe, expect, it, mock, beforeEach } from "bun:test";
 
+import { GroupDashboardUseCase } from "@/core/application/use-cases/GroupDashboardUseCase";
+
 import {
   createGroup,
   createPayment,
@@ -65,6 +67,15 @@ mock.module("@/core/registry", () => ({
     getByGroupId: mockPaymentGetByGroupId,
     getWithParticipantsByGroupId: mockPaymentGetWithParticipants,
   },
+  groupDashboardUseCase: new GroupDashboardUseCase(
+    { getCurrentUser: mockGetCurrentUser },
+    {
+      getById: mockGroupGetById,
+      isCollaborator: mockGroupIsCollaborator,
+      getMembers: mockGroupGetMembers,
+    },
+    { getByGroupId: mockPaymentGetByGroupId }
+  ),
   settlementUseCase: {
     execute: mockSettlementExecute,
   },
@@ -150,7 +161,10 @@ describe("payments actions", () => {
 
       expect(result.success).toBe(true);
       expect(mockSignInAnonymously).toHaveBeenCalled();
-      expect(mockGroupCreate).toHaveBeenCalledWith("New Group", "anon1");
+      expect(mockGroupCreate).toHaveBeenCalledWith("New Group", "anon1", [
+        "Alice",
+        "Bob",
+      ]);
     });
 
     it("fails with empty group name", async () => {
@@ -185,8 +199,15 @@ describe("payments actions", () => {
       const result = await createGroup("Group", ["Alice", "Bob"]);
 
       expect(result.success).toBe(true);
-      expect(mockGroupCreate).toHaveBeenCalledWith("Group", "user1");
-      expect(mockGroupAddMember).toHaveBeenCalledTimes(2);
+      expect(mockGroupCreate).toHaveBeenCalledWith("Group", "user1", [
+        "Alice",
+        "Bob",
+      ]);
+      expect(mockGroupAddMember).not.toHaveBeenCalled();
+      expect(mockGroupCreate).toHaveBeenCalledWith("Group", "user1", [
+        "Alice",
+        "Bob",
+      ]);
     });
 
     it("skips empty member names but adds valid ones", async () => {
@@ -195,7 +216,11 @@ describe("payments actions", () => {
 
       await createGroup("Group", ["Alice", "", "Bob"]);
 
-      expect(mockGroupAddMember).toHaveBeenCalledTimes(2);
+      expect(mockGroupAddMember).not.toHaveBeenCalled();
+      expect(mockGroupCreate).toHaveBeenCalledWith("Group", "user1", [
+        "Alice",
+        "Bob",
+      ]);
     });
 
     it("returns error when repository throws", async () => {
@@ -297,7 +322,7 @@ describe("payments actions", () => {
       const result = await createPayment("g1", "m1", 1000, "test", ["m1"]);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Unique constraint violation");
+      expect(result.error).toBe("支払いの作成に失敗しました");
     });
 
     it("returns fallback error message when non-Error is thrown", async () => {
@@ -324,6 +349,7 @@ describe("payments actions", () => {
 
       expect(result.success).toBe(true);
       expect(mockPaymentUpdate).toHaveBeenCalledWith(
+        "g1",
         "p1",
         { payerMemberId: "m1", amount: 2000, description: "Dinner" },
         ["m1", "m2"]
@@ -365,7 +391,7 @@ describe("payments actions", () => {
       ]);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Update failed");
+      expect(result.error).toBe("支払いの更新に失敗しました");
     });
   });
 
@@ -379,7 +405,7 @@ describe("payments actions", () => {
       const result = await deletePayment("g1", "p1");
 
       expect(result.success).toBe(true);
-      expect(mockPaymentDelete).toHaveBeenCalledWith("p1");
+      expect(mockPaymentDelete).toHaveBeenCalledWith("g1", "p1");
       expect(mockRevalidatePath).toHaveBeenCalledWith("/group/g1");
     });
 
@@ -389,7 +415,7 @@ describe("payments actions", () => {
       const result = await deletePayment("g1", "p1");
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Delete failed");
+      expect(result.error).toBe("削除に失敗しました");
     });
 
     it("returns fallback error when non-Error is thrown", async () => {
@@ -552,7 +578,7 @@ describe("payments actions", () => {
       const result = await deleteMember("g1", "m1");
 
       expect(result.success).toBe(true);
-      expect(mockGroupDeleteMember).toHaveBeenCalledWith("m1");
+      expect(mockGroupDeleteMember).toHaveBeenCalledWith("g1", "m1");
       expect(mockRevalidatePath).toHaveBeenCalledWith("/group/g1");
     });
 
@@ -598,7 +624,7 @@ describe("payments actions", () => {
       const result = await joinGroup("g1");
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Already a collaborator");
+      expect(result.error).toBe("グループへの参加に失敗しました");
     });
 
     it("returns fallback error when non-Error is thrown", async () => {
@@ -812,11 +838,12 @@ describe("payments actions", () => {
       expect(result.group).toBeNull();
     });
 
-    it("returns fallback data on unexpected error", async () => {
+    it("returns an explicit load error on unexpected error", async () => {
       mockGroupGetById.mockRejectedValue(new Error("DB error"));
 
       const result = await getGroupDashboardData("g1");
 
+      expect(result.error).toBeDefined();
       expect(result.group).toBeNull();
       expect(result.members).toEqual([]);
       expect(result.isCollaborator).toBe(false);

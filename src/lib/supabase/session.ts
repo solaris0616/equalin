@@ -16,7 +16,7 @@ export async function updateSession(request: NextRequest) {
 
   // With Fluid compute, don't put this client in a global environment
   // variable. Always create a new one on each request.
-  createServerClient(
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
@@ -38,6 +38,8 @@ export async function updateSession(request: NextRequest) {
       },
     }
   );
+
+  await supabase.auth.getClaims();
 
   // Authentication check is handled by Supabase Anonymous Auth
   // This middleware ensures the session cookies are refreshed correctly.
