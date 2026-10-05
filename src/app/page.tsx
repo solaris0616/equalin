@@ -2,17 +2,14 @@
 
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 
 import { createGroup } from "@/app/actions/payments";
 import { BackgroundImage } from "@/components/ui/BackgroundImage";
 import { Button } from "@/components/ui/Button";
-import { createClient } from "@/lib/supabase/client";
 
 export default function Page() {
   const router = useRouter();
-  const supabase = createClient();
   const [isCreating, setIsCreating] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [newMemberName, setNewMemberName] = useState("");
@@ -49,15 +46,6 @@ export default function Page() {
 
     setIsCreating(true);
     try {
-      // Ensure user is signed in (anonymously) before creating a group
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        const { error: authError } = await supabase.auth.signInAnonymously();
-        if (authError) throw authError;
-      }
-
       const result = await createGroup(groupName, memberNames);
 
       if (!result.success || !result.data) {
@@ -90,9 +78,16 @@ export default function Page() {
           className="space-y-6 bg-white p-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
         >
           <div className="text-left">
-            <label className="block text-lg font-bold mb-2">グループ名</label>
+            <label
+              htmlFor="group-name"
+              className="block text-lg font-bold mb-2"
+            >
+              グループ名
+            </label>
             <input
               type="text"
+              id="group-name"
+              maxLength={100}
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
               placeholder="例：週末キャンプ"
@@ -102,10 +97,17 @@ export default function Page() {
           </div>
 
           <div className="text-left">
-            <label className="block text-lg font-bold mb-2">メンバー</label>
+            <label
+              htmlFor="member-name"
+              className="block text-lg font-bold mb-2"
+            >
+              メンバー
+            </label>
             <div className="flex gap-2 mb-4">
               <input
                 type="text"
+                id="member-name"
+                maxLength={100}
                 value={newMemberName}
                 onChange={(e) => setNewMemberName(e.target.value)}
                 placeholder="メンバー名を入力"
@@ -119,6 +121,7 @@ export default function Page() {
               />
               <Button
                 type="button"
+                aria-label="メンバーを追加"
                 onClick={handleAddMember}
                 variant="green"
                 className="h-[60px] w-14 shrink-0"
@@ -135,6 +138,7 @@ export default function Page() {
                   <span>{name}</span>
                   <button
                     type="button"
+                    aria-label={`${name}を削除`}
                     onClick={() => removeMember(index)}
                     className="text-red-500 font-bold hover:text-red-700 text-lg"
                   >

@@ -1,0 +1,2 @@
+# CLI project identity; the remote target is selected with `supabase link`.
+project_id = "equalin"

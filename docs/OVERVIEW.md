@@ -6,16 +6,16 @@ Equalin is an open-source web application designed for simple and fair split-bil
 
 - **Group Management**: Create groups and share via invitation links.
 - **Expense Logging**: Select payer, amount, and participants. Supports editing after entry.
-- **Settlement Calculation**: Algorithm to settle debts with the minimum number of transactions.
-- **Rough Mode**: Option to round settlement transactions down to the nearest 1,000 yen, streamlining transfers and avoiding small change exchange.
+- **Settlement Calculation**: Integer-yen balances and a greedy algorithm (at most N−1 transfers; a global minimum is not guaranteed). Remainders are assigned one yen at a time in ascending member-ID order, independent of database row order.
+- **Rough Mode**: Each transfer is rounded to the nearest 1,000 yen, preserving established behavior. This approximation can overpay or underpay relative to exact balances.
 - **Anonymous Usage**: No sign-up required. Secure profile management via Supabase Anonymous Auth.
 
 ## Tech Stack
 
-- **Frontend**: Next.js 15 (App Router), React 19
+- **Frontend**: Next.js 16 (App Router), React 19
 - **Backend**: Supabase (PostgreSQL, SSR Client)
 - **Architecture**: Clean Architecture (Domain, Application, Infrastructure, Presentation)
-- **Tooling**: Bun, Biome, TypeScript, Tailwind CSS
+- **Tooling**: Bun, Oxfmt, Oxlint, TypeScript, Tailwind CSS, PGlite database tests
 
 ## System Architecture
 

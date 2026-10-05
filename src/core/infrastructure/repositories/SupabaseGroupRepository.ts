@@ -5,20 +5,32 @@ import type { IGroupRepository } from "@/core/domain/repositories";
 
 import { createClient } from "@/lib/supabase/server";
 
+type GroupRow = {
+  id: string;
+  name: string;
+  owner_id: string;
+  created_at: string;
+  is_rough_mode: boolean;
+};
+type MemberRow = { id: string; group_id: string; name: string };
+
 export class SupabaseGroupRepository implements IGroupRepository {
-  async create(name: string, ownerId: string): Promise<Group> {
+  async create(
+    name: string,
+    _ownerId: string,
+    memberNames: string[]
+  ): Promise<Group> {
     const id = nanoid();
     const supabase = await createClient();
     const { data, error } = await supabase
-      .from("groups")
-      .insert([{ id, name, owner_id: ownerId }])
-      .select("*")
-      .single();
+      .rpc("create_group", {
+        p_id: id,
+        p_name: name,
+        p_member_names: memberNames,
+      })
+      .single<GroupRow>();
 
     if (error) throw new Error(error.message);
-
-    // Also add owner as a collaborator
-    await this.addCollaborator(id, ownerId);
 
     return {
       id: data.id,
@@ -32,12 +44,11 @@ export class SupabaseGroupRepository implements IGroupRepository {
   async getById(id: string): Promise<Group | null> {
     const supabase = await createClient();
     const { data, error } = await supabase
-      .from("groups")
-      .select("*")
-      .eq("id", id)
-      .single();
+      .rpc("get_group_by_link", { p_group_id: id })
+      .maybeSingle<GroupRow>();
 
-    if (error) return null;
+    if (error) throw new Error(error.message);
+    if (!data) return null;
     return {
       id: data.id,
       name: data.name,
@@ -50,10 +61,8 @@ export class SupabaseGroupRepository implements IGroupRepository {
   async addMember(groupId: string, name: string): Promise<Member> {
     const supabase = await createClient();
     const { data, error } = await supabase
-      .from("members")
-      .insert({ group_id: groupId, name })
-      .select("*")
-      .single();
+      .rpc("add_group_member", { p_group_id: groupId, p_name: name })
+      .single<MemberRow>();
 
     if (error) throw new Error(error.message);
     return {
@@ -63,12 +72,12 @@ export class SupabaseGroupRepository implements IGroupRepository {
     };
   }
 
-  async deleteMember(memberId: string): Promise<void> {
+  async deleteMember(groupId: string, memberId: string): Promise<void> {
     const supabase = await createClient();
-    const { error } = await supabase
-      .from("members")
-      .delete()
-      .eq("id", memberId);
+    const { error } = await supabase.rpc("delete_group_member", {
+      p_group_id: groupId,
+      p_member_id: memberId,
+    });
 
     if (error) throw new Error(error.message);
   }
@@ -89,11 +98,9 @@ export class SupabaseGroupRepository implements IGroupRepository {
     }));
   }
 
-  async addCollaborator(groupId: string, userId: string): Promise<void> {
+  async addCollaborator(groupId: string, _userId: string): Promise<void> {
     const supabase = await createClient();
-    const { error } = await supabase
-      .from("group_collaborators")
-      .upsert({ group_id: groupId, user_id: userId });
+    const { error } = await supabase.rpc("join_group", { p_group_id: groupId });
 
     if (error) throw new Error(error.message);
   }
@@ -107,16 +114,16 @@ export class SupabaseGroupRepository implements IGroupRepository {
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (error) return false;
+    if (error) throw new Error(error.message);
     return !!data;
   }
 
   async updateRoughMode(groupId: string, isRoughMode: boolean): Promise<void> {
     const supabase = await createClient();
-    const { error } = await supabase
-      .from("groups")
-      .update({ is_rough_mode: isRoughMode })
-      .eq("id", groupId);
+    const { error } = await supabase.rpc("set_rough_mode", {
+      p_group_id: groupId,
+      p_enabled: isRoughMode,
+    });
 
     if (error) throw new Error(error.message);
   }

@@ -25,12 +25,12 @@ We strictly adhere to Clean Architecture:
 
 ## 4. Database
 
-- **Currency**: Store amounts as `BIGINT` (minimal units/cents). Keep as `number` in application logic.
+- **Currency**: Store whole Japanese yen as `BIGINT`; use safe integer numbers in application logic. Allocate remainders deterministically; reject invalid or unsafe totals.
 - **Timestamps**: Use `TIMESTAMPTZ`.
 - **ID Design**:
   - Use `UUID` for Users and Payments (compatibility with Supabase Auth).
   - Use `NanoID (TEXT)` for Group IDs (shareable and user-friendly URLs).
-- **Updates**: Use `upsert` for junction tables (e.g., `payment_participants`) to prevent race conditions and duplicate key errors.
+- **Updates**: Use authorized transactional RPCs for aggregate writes. A standalone upsert does not make payment-plus-participant replacement atomic. Client table mutations are revoked.
 
 ## 5. Testing & Documentation
 

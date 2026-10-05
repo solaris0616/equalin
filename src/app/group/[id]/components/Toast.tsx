@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, CheckCircle, Info } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface ToastProps {
   message: string;
@@ -14,10 +14,19 @@ export function Toast({ message, type, duration = 3000, onClose }: ToastProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
+  const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (exitTimer.current) clearTimeout(exitTimer.current);
+    },
+    []
+  );
+
   const handleClose = useCallback(() => {
+    if (exitTimer.current) return;
     setIsExiting(true);
     // Wait for exit animation to complete before calling onClose
-    setTimeout(() => {
+    exitTimer.current = setTimeout(() => {
       onClose();
     }, 300); // Match animation duration
   }, [onClose]);

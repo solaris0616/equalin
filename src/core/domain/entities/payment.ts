@@ -20,7 +20,7 @@ export interface Payment {
   id: string;
   groupId: string;
   payerMemberId: string;
-  amount: number; // in cents
+  amount: number; // in yen
   description: string | null;
   createdAt: string;
 }
@@ -45,9 +45,9 @@ export interface PaymentWithDetails extends Payment {
 export interface MemberBalance {
   memberId: string;
   name: string;
-  paid: number; // total paid (in cents)
-  owed: number; // total share (in cents)
-  balance: number; // paid - owed (in cents)
+  paid: number; // total paid (in yen)
+  owed: number; // total share (in yen)
+  balance: number; // paid - owed (in yen)
 }
 
 export interface SettlementTransaction {
@@ -55,13 +55,14 @@ export interface SettlementTransaction {
   fromName: string;
   toId: string;
   toName: string;
-  amount: number; // in cents
+  amount: number; // in yen
 }
 
 /**
  * Dashboard data for the group page
  */
 export interface GroupDashboardData {
+  error?: string;
   group: { id: string; name: string; isRoughMode: boolean } | null;
   members: Member[];
   payments: PaymentWithDetails[];

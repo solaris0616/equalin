@@ -12,7 +12,7 @@ interface PaymentListProps {
   payments: PaymentWithDetails[];
   groupId: string;
   isOwner: boolean;
-  onPaymentDeleted: () => void;
+  onPaymentDeleted: () => void | Promise<void>;
   onEdit: (payment: PaymentWithDetails) => void;
 }
 
@@ -38,7 +38,7 @@ export function PaymentList({
       const result = await deletePayment(groupId, paymentId);
 
       if (result.success) {
-        onPaymentDeleted();
+        await onPaymentDeleted();
       } else {
         alert(result.error || "支払いの削除に失敗しました");
       }
@@ -85,9 +85,9 @@ export function PaymentList({
                     variant="primary"
                     onClick={() => onEdit(payment)}
                     disabled={deletingId !== null}
-                    aria-label="Edit payment"
+                    aria-label="支払いを編集"
                     className="p-2"
-                    title="Edit payment"
+                    title="支払いを編集"
                   >
                     <Pencil className="w-5 h-5" />
                   </Button>
@@ -96,9 +96,9 @@ export function PaymentList({
                     onClick={() => handleDelete(payment.id)}
                     isLoading={deletingId === payment.id}
                     disabled={deletingId !== null && deletingId !== payment.id}
-                    aria-label="Delete payment"
+                    aria-label="支払いを削除"
                     className="p-2"
-                    title="Delete payment"
+                    title="支払いを削除"
                   >
                     <Trash2 className="w-5 h-5" />
                   </Button>

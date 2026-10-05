@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronUp, Plus, Users } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type {
   GroupDashboardData,
@@ -58,6 +58,8 @@ export default function GroupClientPage({
 
   const [newMemberName, setNewMemberName] = useState("");
   const [isAddingMember, setIsAddingMember] = useState(false);
+  const [isUpdatingMode, setIsUpdatingMode] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
   const [showMemberManager, setShowMemberManager] = useState(false);
 
   useEffect(() => {
@@ -69,8 +71,12 @@ export default function GroupClientPage({
     };
   }, [isCollaborator]);
 
+  const refreshVersion = useRef(0);
   const refreshData = useCallback(async () => {
+    const version = ++refreshVersion.current;
     const data = await getGroupDashboardData(groupId);
+    if (version !== refreshVersion.current) return;
+    if (data.error) throw new Error(data.error);
     setGroup(data.group);
     setMembers(data.members);
     setPayments(data.payments);
@@ -80,6 +86,8 @@ export default function GroupClientPage({
   }, [groupId]);
 
   const handleJoinGroup = async () => {
+    if (isJoining) return;
+    setIsJoining(true);
     try {
       const {
         data: { user },
@@ -100,6 +108,8 @@ export default function GroupClientPage({
     } catch (error) {
       console.error("Error joining group:", error);
       alert("エラーが発生しました。");
+    } finally {
+      setIsJoining(false);
     }
   };
 
@@ -130,7 +140,7 @@ export default function GroupClientPage({
 
     if (
       !confirm(
-        "このメンバーを削除しますか？関連する支払いも削除される可能性があります。"
+        "このメンバーを削除しますか？支払い履歴に含まれるメンバーは削除できません。"
       )
     )
       return;
@@ -148,24 +158,20 @@ export default function GroupClientPage({
   };
 
   const handleToggleRoughMode = async () => {
-    if (!group) return;
-    const newMode = !group.isRoughMode;
-
-    // Optimistic update: 即座にUIを更新
-    setGroup((prev) => (prev ? { ...prev, isRoughMode: newMode } : prev));
-
+    if (!group || isUpdatingMode) return;
+    setIsUpdatingMode(true);
     try {
-      const result = await updateRoughMode(groupId, newMode);
+      const result = await updateRoughMode(groupId, !group.isRoughMode);
       if (!result.success) {
-        // 失敗時は元の状態に戻す
-        setGroup((prev) => (prev ? { ...prev, isRoughMode: !newMode } : prev));
         alert(result.error || "設定の更新に失敗しました");
+        return;
       }
+      await refreshData();
     } catch (error) {
       console.error("Error toggling rough mode:", error);
-      // エラー時も元の状態に戻す
-      setGroup((prev) => (prev ? { ...prev, isRoughMode: !newMode } : prev));
-      alert("エラーが発生しました。");
+      alert("設定の読み込みに失敗しました。再読み込みしてください。");
+    } finally {
+      setIsUpdatingMode(false);
     }
   };
 
@@ -203,6 +209,7 @@ export default function GroupClientPage({
           </p>
           <Button
             onClick={handleJoinGroup}
+            isLoading={isJoining}
             className="w-full text-xl py-6 h-14 tracking-widest mt-8"
           >
             参加する
@@ -230,6 +237,7 @@ export default function GroupClientPage({
                 <label className="flex items-center justify-center gap-2 cursor-pointer select-none border-4 border-black px-4 h-14 bg-yellow-50 font-bold hover:bg-yellow-100 transition-colors text-base w-full md:w-64">
                   <input
                     type="checkbox"
+                    disabled={isUpdatingMode}
                     checked={group?.isRoughMode || false}
                     onChange={handleToggleRoughMode}
                     className="w-5 h-5 border-4 border-black bg-white checked:bg-black accent-black cursor-pointer"
@@ -294,10 +302,13 @@ export default function GroupClientPage({
                     type="text"
                     value={newMemberName}
                     onChange={(e) => setNewMemberName(e.target.value)}
+                    aria-label="追加するメンバー名"
+                    maxLength={100}
                     placeholder="メンバー名を入力"
                     className="flex-1 min-w-0 border-4 border-black p-3 text-base font-bold focus:outline-none bg-white focus:bg-yellow-50 h-[60px]"
                   />
                   <Button
+                    aria-label="メンバーを追加"
                     onClick={handleAddMember}
                     isLoading={isAddingMember}
                     variant="green"
@@ -317,6 +328,7 @@ export default function GroupClientPage({
                     {isOwner && (
                       <button
                         type="button"
+                        aria-label={`${m.name}を削除`}
                         onClick={() => handleDeleteMember(m.id)}
                         className="text-red-500 font-bold hover:text-red-700 text-lg"
                       >
@@ -347,10 +359,8 @@ export default function GroupClientPage({
         )}
 
         <SettlementDisplay
-          groupId={groupId}
-          initialTransactions={settlement}
+          transactions={settlement}
           isRoughMode={group?.isRoughMode}
-          // We can remove refreshTrigger as we manage state here or pass it if needed
         />
 
         <div className="space-y-4">

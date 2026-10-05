@@ -36,13 +36,16 @@ export class SettlementService {
       totalOwed.set(member.id, 0);
     }
     for (const payment of payments) {
-      const count = payment.participantMemberIds.length;
-      if (count === 0) continue;
-      const share = payment.amount / count;
-      for (const participantId of payment.participantMemberIds) {
-        const current = totalOwed.get(participantId) || 0;
-        totalOwed.set(participantId, current + share);
-      }
+      // Assign whole yen; stable IDs make allocation independent of DB row order.
+      const participants = [...payment.participantMemberIds].sort();
+      const share = Math.floor(payment.amount / participants.length);
+      const remainder = payment.amount % participants.length;
+      participants.forEach((id, index) => {
+        totalOwed.set(
+          id,
+          (totalOwed.get(id) || 0) + share + (index < remainder ? 1 : 0)
+        );
+      });
     }
     return totalOwed;
   }
@@ -54,6 +57,27 @@ export class SettlementService {
     payments: PaymentWithParticipants[],
     members: Member[]
   ): MemberBalance[] {
+    const memberIds = new Set(members.map((member) => member.id));
+    if (memberIds.size !== members.length) throw new Error("Duplicate member");
+    let total = 0;
+    for (const payment of payments) {
+      if (
+        !Number.isSafeInteger(payment.amount) ||
+        payment.amount <= 0 ||
+        !memberIds.has(payment.payerMemberId) ||
+        payment.participantMemberIds.length === 0 ||
+        new Set(payment.participantMemberIds).size !==
+          payment.participantMemberIds.length ||
+        payment.participantMemberIds.some((id) => !memberIds.has(id))
+      ) {
+        throw new Error(
+          "Invalid payment data; settlement cannot be calculated"
+        );
+      }
+      total += payment.amount;
+      if (!Number.isSafeInteger(total))
+        throw new Error("Settlement total exceeds safe integer range");
+    }
     const paidMap = SettlementService.calculateTotalPaid(payments, members);
     const owedMap = SettlementService.calculateTotalOwed(payments, members);
 
@@ -71,19 +95,25 @@ export class SettlementService {
   }
 
   /**
-   * 最小の取引で精算を行うトランザクションを生成
+   * 貪欲法で精算を生成（取引数の最適解は保証しない）
    */
   public static generateTransactions(
     balances: MemberBalance[],
     isRoughMode?: boolean
   ): SettlementTransaction[] {
+    if (
+      balances.some((b) => !Number.isSafeInteger(b.balance)) ||
+      balances.reduce((sum, b) => sum + b.balance, 0) !== 0
+    ) {
+      throw new Error("Balances must be whole yen and sum to zero");
+    }
     const creditors = balances
-      .filter((b) => b.balance > 0.01)
+      .filter((b) => b.balance > 0)
       .map((b) => ({ ...b }))
       .sort((a, b) => b.balance - a.balance);
 
     const debtors = balances
-      .filter((b) => b.balance < -0.01)
+      .filter((b) => b.balance < 0)
       .map((b) => ({ ...b }))
       .sort((a, b) => a.balance - b.balance);
 
@@ -97,7 +127,7 @@ export class SettlementService {
       const amount = Math.min(creditor.balance, Math.abs(debtor.balance));
       const roundedAmount = isRoughMode
         ? Math.round(amount / 1000) * 1000
-        : Math.round(amount);
+        : amount;
 
       if (roundedAmount > 0) {
         transactions.push({
@@ -112,8 +142,8 @@ export class SettlementService {
       creditor.balance -= amount;
       debtor.balance += amount;
 
-      if (Math.abs(creditor.balance) < 0.01) i++;
-      if (Math.abs(debtor.balance) < 0.01) j++;
+      if (creditor.balance === 0) i++;
+      if (debtor.balance === 0) j++;
     }
 
     return transactions;

@@ -1,3 +1,4 @@
+import { GroupDashboardUseCase } from "@/core/application/use-cases/GroupDashboardUseCase";
 import { SettlementUseCase } from "@/core/application/use-cases/SettlementUseCase";
 import { SupabaseAuthRepository } from "@/core/infrastructure/repositories/SupabaseAuthRepository";
 import { SupabaseGroupRepository } from "@/core/infrastructure/repositories/SupabaseGroupRepository";
@@ -8,6 +9,12 @@ export const paymentRepository = new SupabasePaymentRepository();
 export const authRepository = new SupabaseAuthRepository();
 
 export const settlementUseCase = new SettlementUseCase(
+  groupRepository,
+  paymentRepository
+);
+
+export const groupDashboardUseCase = new GroupDashboardUseCase(
+  authRepository,
   groupRepository,
   paymentRepository
 );

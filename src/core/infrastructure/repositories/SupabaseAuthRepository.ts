@@ -1,3 +1,5 @@
+import { isAuthSessionMissingError } from "@supabase/supabase-js";
+
 import type { IAuthRepository } from "@/core/domain/repositories";
 
 import { createClient } from "@/lib/supabase/server";
@@ -7,7 +9,9 @@ export class SupabaseAuthRepository implements IAuthRepository {
     const supabase = await createClient();
     const {
       data: { user },
+      error,
     } = await supabase.auth.getUser();
+    if (error && !isAuthSessionMissingError(error)) throw error;
     if (!user) return null;
     return { id: user.id };
   }

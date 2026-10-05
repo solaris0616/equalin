@@ -103,7 +103,7 @@ describe("SettlementService", () => {
     });
 
     // Boundary Case: Tiny balances below 0.01 threshold
-    it("should skip transactions for balances below 0.01 threshold", () => {
+    it("rejects fractional balances", () => {
       const balances = [
         {
           memberId: "1",
@@ -120,12 +120,11 @@ describe("SettlementService", () => {
           balance: -0.005,
         },
       ];
-      const transactions = SettlementService.generateTransactions(balances);
-      expect(transactions).toEqual([]);
+      expect(() => SettlementService.generateTransactions(balances)).toThrow();
     });
 
     // Boundary Case: Rounding / Fractions (e.g. 1000 divided by 3)
-    it("should handle fractional balances with proper rounding", () => {
+    it("rejects fractional and unbalanced inputs", () => {
       const balances = [
         {
           memberId: "1",
@@ -149,10 +148,7 @@ describe("SettlementService", () => {
           balance: -333.333,
         },
       ];
-      const transactions = SettlementService.generateTransactions(balances);
-      expect(transactions).toHaveLength(2);
-      expect(transactions[0].amount).toBe(333);
-      expect(transactions[1].amount).toBe(333);
+      expect(() => SettlementService.generateTransactions(balances)).toThrow();
     });
 
     it("should handle rough mode with 1000 yen rounding", () => {
@@ -165,7 +161,7 @@ describe("SettlementService", () => {
           balance: 11253,
         },
         { memberId: "2", name: "Bob", paid: 0, owed: 5627, balance: -5627 },
-        { memberId: "3", name: "Charlie", paid: 0, owed: 5627, balance: -5627 },
+        { memberId: "3", name: "Charlie", paid: 0, owed: 5627, balance: -5626 },
       ];
       const transactions = SettlementService.generateTransactions(
         balances,
@@ -207,7 +203,7 @@ describe("SettlementService", () => {
 
   describe("calculateBalances edge cases", () => {
     // Exceptional Case: Payment with empty participant list
-    it("should safely ignore payments with empty participant lists", () => {
+    it("rejects payments with no participants", () => {
       const payments: PaymentWithParticipants[] = [
         {
           id: "p1",
@@ -216,14 +212,13 @@ describe("SettlementService", () => {
           participantMemberIds: [], // Empty participants
         },
       ];
-      const balances = SettlementService.calculateBalances(payments, members);
-      // Alice paid 3000 but owes 0 because the payment had no participants
-      expect(balances.find((b) => b.memberId === "1")?.balance).toBe(3000);
-      expect(balances.find((b) => b.memberId === "2")?.balance).toBe(0);
+      expect(() =>
+        SettlementService.calculateBalances(payments, members)
+      ).toThrow();
     });
 
     // Exceptional Case: Payment references an unknown member ID
-    it("should handle payments referencing unknown member IDs gracefully", () => {
+    it("rejects unknown members", () => {
       const payments: PaymentWithParticipants[] = [
         {
           id: "p1",
@@ -232,10 +227,9 @@ describe("SettlementService", () => {
           participantMemberIds: ["1", "999"], // Unknown participant
         },
       ];
-      const balances = SettlementService.calculateBalances(payments, members);
-      // Unknown payer/participant shouldn't crash the calculation for known members
-      // Alice ("1") owes 1500 (3000/2) and paid 0 -> balance: -1500
-      expect(balances.find((b) => b.memberId === "1")?.balance).toBe(-1500);
+      expect(() =>
+        SettlementService.calculateBalances(payments, members)
+      ).toThrow();
     });
   });
 });

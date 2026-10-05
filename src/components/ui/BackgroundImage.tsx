@@ -13,7 +13,8 @@ export function BackgroundImage({
     <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
       <Image
         src={src}
-        alt="Background"
+        alt=""
+        sizes="100vw"
         fill
         priority={priority}
         className="object-cover"

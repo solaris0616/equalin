@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { createClient } from "@/lib/supabase/server";
+import { groupRepository } from "@/core/registry";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -9,13 +9,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const supabase = await createClient();
-
-  const { data: group } = await supabase
-    .from("groups")
-    .select("name")
-    .eq("id", id)
-    .single();
+  const group = await groupRepository.getById(id);
 
   if (!group) {
     return {
@@ -25,6 +19,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${group.name} - パリカン`,
+    robots: { index: false, follow: false },
+    referrer: "no-referrer",
   };
 }
 

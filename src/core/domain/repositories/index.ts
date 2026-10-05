@@ -7,10 +7,10 @@ import type {
 } from "../entities/payment";
 
 export interface IGroupRepository {
-  create(name: string, ownerId: string): Promise<Group>;
+  create(name: string, ownerId: string, memberNames: string[]): Promise<Group>;
   getById(id: string): Promise<Group | null>;
   addMember(groupId: string, name: string): Promise<Member>;
-  deleteMember(memberId: string): Promise<void>;
+  deleteMember(groupId: string, memberId: string): Promise<void>;
   getMembers(groupId: string): Promise<Member[]>;
   addCollaborator(groupId: string, userId: string): Promise<void>;
   isCollaborator(groupId: string, userId: string): Promise<boolean>;
@@ -23,8 +23,9 @@ export interface IPaymentRepository {
     participantMemberIds: string[]
   ): Promise<void>;
   update(
+    groupId: string,
     paymentId: string,
-    payment: Partial<Omit<Payment, "id" | "groupId" | "createdAt">>,
+    payment: Omit<Payment, "id" | "groupId" | "createdAt">,
     participantMemberIds: string[]
   ): Promise<void>;
   getByIdWithParticipants(
@@ -34,7 +35,7 @@ export interface IPaymentRepository {
   getWithParticipantsByGroupId(
     groupId: string
   ): Promise<PaymentWithParticipants[]>;
-  delete(paymentId: string): Promise<void>;
+  delete(groupId: string, paymentId: string): Promise<void>;
 }
 
 export interface IAuthRepository {
