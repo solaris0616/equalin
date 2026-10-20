@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import type {
   Member,
@@ -39,6 +39,7 @@ export function PaymentForm({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const createRequestId = useRef<string | null>(null);
 
   const handleParticipantToggle = (memberId: string) => {
     setSelectedParticipants((prev) => {
@@ -102,12 +103,14 @@ export function PaymentForm({
           Array.from(selectedParticipants)
         );
       } else {
+        createRequestId.current ??= crypto.randomUUID();
         result = await createPayment(
           groupId,
           payerMemberId,
           amountValue,
           description,
-          Array.from(selectedParticipants)
+          Array.from(selectedParticipants),
+          createRequestId.current
         );
       }
 
@@ -115,6 +118,7 @@ export function PaymentForm({
         if (!initialData) {
           setDescription("");
           setAmount("");
+          createRequestId.current = null;
         }
         setError(null);
         await onSuccess();

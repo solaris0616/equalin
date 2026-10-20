@@ -14,6 +14,8 @@ interface PaymentListProps {
   isOwner: boolean;
   onPaymentDeleted: () => void | Promise<void>;
   onEdit: (payment: PaymentWithDetails) => void;
+  hasMore: boolean;
+  onLoadMore: () => Promise<void>;
 }
 
 export function PaymentList({
@@ -22,8 +24,11 @@ export function PaymentList({
   isOwner,
   onPaymentDeleted,
   onEdit,
+  hasMore,
+  onLoadMore,
 }: PaymentListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const handleDelete = async (paymentId: string) => {
     const confirmed = window.confirm("この支払いを削除してもよろしいですか？");
@@ -47,6 +52,19 @@ export function PaymentList({
       alert("予期しないエラーが発生しました");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleLoadMore = async () => {
+    if (isLoadingMore) return;
+    setIsLoadingMore(true);
+    try {
+      await onLoadMore();
+    } catch (error) {
+      console.error("Error loading payment history:", error);
+      alert("履歴の読み込みに失敗しました");
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -130,6 +148,17 @@ export function PaymentList({
           )}
         </div>
       ))}
+      {hasMore && (
+        <Button
+          variant="outline"
+          onClick={handleLoadMore}
+          isLoading={isLoadingMore}
+          loadingText="読み込み中..."
+          className="w-full"
+        >
+          さらに表示
+        </Button>
+      )}
     </div>
   );
 }

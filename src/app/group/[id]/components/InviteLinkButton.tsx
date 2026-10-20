@@ -1,17 +1,26 @@
 "use client";
 
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
 interface InviteLinkButtonProps {
   groupId: string;
+  invitationToken: string;
+  canRotate: boolean;
+  onRotate: () => Promise<void>;
 }
 
-export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
+export function InviteLinkButton({
+  groupId,
+  invitationToken,
+  canRotate,
+  onRotate,
+}: InviteLinkButtonProps) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isRotating, setIsRotating] = useState(false);
 
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
@@ -23,7 +32,7 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
 
   const groupUrl =
     typeof window !== "undefined"
-      ? `${window.location.origin}/group/${groupId}`
+      ? `${window.location.origin}/group/${groupId}?invite=${encodeURIComponent(invitationToken)}`
       : "";
 
   const handleCopy = async () => {
@@ -44,8 +53,26 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
     }
   };
 
+  const handleRotate = async () => {
+    if (
+      isRotating ||
+      !window.confirm(
+        "招待リンクを再発行しますか？以前のリンクでは参加できなくなります。"
+      )
+    ) {
+      return;
+    }
+    setIsRotating(true);
+    try {
+      await onRotate();
+      setCopied(false);
+    } finally {
+      setIsRotating(false);
+    }
+  };
+
   return (
-    <div className="w-full md:w-64">
+    <div className="w-full md:w-64 space-y-2">
       <button
         type="button"
         onClick={handleCopy}
@@ -71,6 +98,18 @@ export function InviteLinkButton({ groupId }: InviteLinkButtonProps) {
           </>
         )}
       </button>
+
+      {canRotate && (
+        <button
+          type="button"
+          onClick={handleRotate}
+          disabled={isRotating}
+          className="w-full text-sm font-bold underline underline-offset-4"
+        >
+          <RefreshCw className="mr-1 inline h-4 w-4" />
+          {isRotating ? "再発行中..." : "招待リンクを再発行"}
+        </button>
+      )}
 
       {error && (
         <p

@@ -54,7 +54,12 @@ export default function Page() {
         return;
       }
 
-      router.push(`/group/${result.data.id}`);
+      const invite = result.data.invitationToken;
+      router.push(
+        invite
+          ? `/group/${result.data.id}?invite=${encodeURIComponent(invite)}`
+          : `/group/${result.data.id}`
+      );
     } catch (error) {
       console.error("Error creating group:", error);
       alert("エラーが発生しました。");

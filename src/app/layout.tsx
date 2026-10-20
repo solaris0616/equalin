@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 
-import { ThemeProvider } from "next-themes";
 import { DotGothic16 } from "next/font/google";
 
 import { Footer } from "@/components/Footer";
@@ -30,17 +29,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" suppressHydrationWarning>
+    <html lang="ja">
       <body className={`${dotGothic.variable} font-sans antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <Footer />
-        </ThemeProvider>
+        {children}
+        <Footer />
       </body>
     </html>
   );

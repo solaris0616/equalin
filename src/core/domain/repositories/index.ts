@@ -1,26 +1,33 @@
 import type {
   Group,
+  GroupDashboardSnapshot,
   Member,
   Payment,
-  PaymentWithDetails,
-  PaymentWithParticipants,
+  PaymentHistoryCursor,
+  PaymentHistoryPage,
 } from "../entities/payment";
 
 export interface IGroupRepository {
   create(name: string, ownerId: string, memberNames: string[]): Promise<Group>;
   getById(id: string): Promise<Group | null>;
+  getDashboardSnapshot(groupId: string): Promise<GroupDashboardSnapshot | null>;
+  getPaymentHistory(
+    groupId: string,
+    cursor: PaymentHistoryCursor | null
+  ): Promise<PaymentHistoryPage>;
+  getInvitationToken(groupId: string): Promise<string | null>;
+  rotateInvitationToken(groupId: string): Promise<string>;
   addMember(groupId: string, name: string): Promise<Member>;
   deleteMember(groupId: string, memberId: string): Promise<void>;
-  getMembers(groupId: string): Promise<Member[]>;
-  addCollaborator(groupId: string, userId: string): Promise<void>;
-  isCollaborator(groupId: string, userId: string): Promise<boolean>;
+  addCollaborator(invitationToken: string): Promise<void>;
   updateRoughMode(groupId: string, isRoughMode: boolean): Promise<void>;
 }
 
 export interface IPaymentRepository {
   create(
     payment: Omit<Payment, "id" | "createdAt">,
-    participantMemberIds: string[]
+    participantMemberIds: string[],
+    clientRequestId: string
   ): Promise<void>;
   update(
     groupId: string,
@@ -28,13 +35,6 @@ export interface IPaymentRepository {
     payment: Omit<Payment, "id" | "groupId" | "createdAt">,
     participantMemberIds: string[]
   ): Promise<void>;
-  getByIdWithParticipants(
-    paymentId: string
-  ): Promise<PaymentWithParticipants | null>;
-  getByGroupId(groupId: string): Promise<PaymentWithDetails[]>;
-  getWithParticipantsByGroupId(
-    groupId: string
-  ): Promise<PaymentWithParticipants[]>;
   delete(groupId: string, paymentId: string): Promise<void>;
 }
 

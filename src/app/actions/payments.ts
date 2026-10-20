@@ -6,16 +6,14 @@ import type {
   Group,
   GroupDashboardData,
   Member,
-  PaymentWithDetails,
-  PaymentWithParticipants,
-  SettlementTransaction,
+  PaymentHistoryCursor,
+  PaymentHistoryPage,
 } from "@/core/domain/entities/payment";
 
 import {
   groupRepository,
   paymentRepository,
   authRepository,
-  settlementUseCase,
   groupDashboardUseCase,
 } from "@/core/registry";
 
@@ -82,7 +80,8 @@ export async function createPayment(
   payerMemberId: string,
   amount: number,
   description: string,
-  participantMemberIds: string[]
+  participantMemberIds: string[],
+  clientRequestId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     if (
@@ -106,9 +105,14 @@ export async function createPayment(
       return { success: false, error: "有効な金額を入力してください" };
     }
 
+    if (!isUuid(clientRequestId)) {
+      return { success: false, error: "リクエストを再試行してください" };
+    }
+
     await paymentRepository.create(
       { groupId, payerMemberId, amount, description: description || null },
-      participantMemberIds
+      participantMemberIds,
+      clientRequestId
     );
 
     revalidatePath(`/group/${groupId}`);
@@ -176,46 +180,6 @@ export async function updatePayment(
 }
 
 /**
- * 支払いの詳細取得（参加者ID含む）
- */
-export async function getPaymentWithParticipants(
-  paymentId: string
-): Promise<PaymentWithParticipants | null> {
-  try {
-    return await paymentRepository.getByIdWithParticipants(paymentId);
-  } catch (error: unknown) {
-    console.error("Error in getPaymentWithParticipants:", error);
-    return null;
-  }
-}
-
-/**
- * グループの支払い履歴取得
- */
-export async function getGroupPayments(
-  groupId: string
-): Promise<PaymentWithDetails[]> {
-  try {
-    return await paymentRepository.getByGroupId(groupId);
-  } catch (error: unknown) {
-    console.error("Error in getGroupPayments:", error);
-    return [];
-  }
-}
-
-/**
- * グループメンバー取得
- */
-export async function getGroupMembers(groupId: string): Promise<Member[]> {
-  try {
-    return await groupRepository.getMembers(groupId);
-  } catch (error: unknown) {
-    console.error("Error in getGroupMembers:", error);
-    return [];
-  }
-}
-
-/**
  * メンバーの追加
  */
 export async function addMember(
@@ -246,17 +210,6 @@ export async function deleteMember(
   memberId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const members = await groupRepository.getMembers(groupId);
-    if (members.length <= 2) {
-      return {
-        success: false,
-        error: "グループには最低2名のメンバーが必要です。",
-      };
-    }
-
-    if (!members.some((member) => member.id === memberId)) {
-      return { success: false, error: "メンバーが見つかりません" };
-    }
     await groupRepository.deleteMember(groupId, memberId);
     revalidatePath(`/group/${groupId}`);
     return { success: true };
@@ -270,7 +223,7 @@ export async function deleteMember(
  * グループに参加 (コラボレーターとして登録)
  */
 export async function joinGroup(
-  groupId: string
+  invitationToken: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const user = await authRepository.getCurrentUser();
@@ -279,9 +232,12 @@ export async function joinGroup(
       return { success: false, error: "認証に失敗しました" };
     }
 
-    await groupRepository.addCollaborator(groupId, user.id);
+    if (!/^[a-f0-9]{32}$/.test(invitationToken)) {
+      return { success: false, error: "招待リンクが無効です" };
+    }
 
-    revalidatePath(`/group/${groupId}`);
+    await groupRepository.addCollaborator(invitationToken);
+
     return { success: true };
   } catch (error: unknown) {
     console.error("Error in joinGroup:", error);
@@ -290,6 +246,20 @@ export async function joinGroup(
       success: false,
       error: message,
     };
+  }
+}
+
+/** 招待リンクを再発行し、過去のリンクでの参加を無効化する。 */
+export async function rotateInvitation(
+  groupId: string
+): Promise<{ success: boolean; data?: string; error?: string }> {
+  try {
+    const token = await groupRepository.rotateInvitationToken(groupId);
+    revalidatePath(`/group/${groupId}`);
+    return { success: true, data: token };
+  } catch (error: unknown) {
+    console.error("Error in rotateInvitation:", error);
+    return { success: false, error: "招待リンクの再発行に失敗しました" };
   }
 }
 
@@ -312,20 +282,6 @@ export async function deletePayment(
 }
 
 /**
- * 精算の計算
- */
-export async function calculateSettlement(
-  groupId: string
-): Promise<SettlementTransaction[]> {
-  try {
-    return await settlementUseCase.execute(groupId);
-  } catch (error: unknown) {
-    console.error("Error in calculateSettlement:", error);
-    return [];
-  }
-}
-
-/**
  * グループダッシュボードに必要な全てのデータを一括取得
  */
 export async function getGroupDashboardData(
@@ -343,38 +299,22 @@ export async function getGroupDashboardData(
       settlement: [],
       isCollaborator: false,
       isOwner: false,
+      invitationToken: null,
+      nextPaymentCursor: null,
     };
   }
 }
 
-/**
- * ユーザーがグループのオーナーかどうか確認
- */
-export async function isGroupOwner(groupId: string): Promise<boolean> {
+/** 次の履歴ページを取得する。精算値はダッシュボード初期応答の集計を使う。 */
+export async function getGroupPaymentHistory(
+  groupId: string,
+  cursor: PaymentHistoryCursor | null
+): Promise<PaymentHistoryPage> {
   try {
-    const user = await authRepository.getCurrentUser();
-    if (!user) return false;
-
-    const group = await groupRepository.getById(groupId);
-    return group?.ownerId === user.id;
-  } catch (error: unknown) {
-    console.error("Error in isGroupOwner:", error);
-    return false;
-  }
-}
-
-/**
- * ユーザーがグループのコラボレーターかどうか確認
- */
-export async function isGroupCollaborator(groupId: string): Promise<boolean> {
-  try {
-    const user = await authRepository.getCurrentUser();
-    if (!user) return false;
-
-    return await groupRepository.isCollaborator(groupId, user.id);
-  } catch (error: unknown) {
-    console.error("Error in isGroupCollaborator:", error);
-    return false;
+    return await groupRepository.getPaymentHistory(groupId, cursor);
+  } catch (error) {
+    console.error("Error in getGroupPaymentHistory:", error);
+    throw new Error("履歴の読み込みに失敗しました");
   }
 }
 
@@ -400,4 +340,13 @@ export async function updateRoughMode(
     console.error("Error in updateRoughMode:", error);
     return { success: false, error: "設定の更新に失敗しました" };
   }
+}
+
+function isUuid(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      value
+    )
+  );
 }
