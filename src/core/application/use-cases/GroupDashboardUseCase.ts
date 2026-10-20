@@ -2,7 +2,6 @@ import type { GroupDashboardData } from "@/core/domain/entities/payment";
 import type {
   IAuthRepository,
   IGroupRepository,
-  IPaymentRepository,
 } from "@/core/domain/repositories";
 
 import { SettlementService } from "@/core/domain/services/SettlementService";
@@ -12,14 +11,14 @@ export class GroupDashboardUseCase {
     private authRepository: Pick<IAuthRepository, "getCurrentUser">,
     private groupRepository: Pick<
       IGroupRepository,
-      "getById" | "isCollaborator" | "getMembers"
-    >,
-    private paymentRepository: Pick<IPaymentRepository, "getByGroupId">
+      "getById" | "getDashboardSnapshot"
+    >
   ) {}
   async execute(groupId: string): Promise<GroupDashboardData> {
-    const [user, group] = await Promise.all([
+    const [user, group, snapshot] = await Promise.all([
       this.authRepository.getCurrentUser(),
       this.groupRepository.getById(groupId),
+      this.groupRepository.getDashboardSnapshot(groupId),
     ]);
 
     if (!user) {
@@ -32,15 +31,12 @@ export class GroupDashboardUseCase {
         settlement: [],
         isCollaborator: false,
         isOwner: false,
+        invitationToken: null,
+        nextPaymentCursor: null,
       };
     }
 
-    const isCollab = await this.groupRepository.isCollaborator(
-      groupId,
-      user.id
-    );
-
-    if (!isCollab) {
+    if (!snapshot) {
       return {
         group: group
           ? { id: group.id, name: group.name, isRoughMode: group.isRoughMode }
@@ -50,33 +46,25 @@ export class GroupDashboardUseCase {
         settlement: [],
         isCollaborator: false,
         isOwner: group?.ownerId === user.id,
+        invitationToken: null,
+        nextPaymentCursor: null,
       };
     }
 
-    // コラボレーターの場合は詳細データを取得
-    const [members, payments] = await Promise.all([
-      this.groupRepository.getMembers(groupId),
-      this.paymentRepository.getByGroupId(groupId),
-    ]);
-
-    // 精算計算 (追加のDBクエリを避け、取得済みのデータを使用)
-    const settlement =
-      payments.length > 0
-        ? SettlementService.generateTransactions(
-            SettlementService.calculateBalances(payments, members),
-            group?.isRoughMode
-          )
-        : [];
+    const settlement = SettlementService.generateTransactions(
+      snapshot.balances,
+      snapshot.group.isRoughMode
+    );
 
     return {
-      group: group
-        ? { id: group.id, name: group.name, isRoughMode: group.isRoughMode }
-        : null,
-      members,
-      payments,
+      group: snapshot.group,
+      members: snapshot.members,
+      payments: snapshot.payments,
       settlement,
       isCollaborator: true,
       isOwner: group?.ownerId === user.id,
+      invitationToken: snapshot.invitationToken,
+      nextPaymentCursor: snapshot.nextPaymentCursor,
     };
   }
 }

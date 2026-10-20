@@ -18,6 +18,8 @@ const group = "aaaaaaaaaaaaaaaaaaaaa";
 const otherGroup = "bbbbbbbbbbbbbbbbbbbbb";
 let members: string[];
 let foreignMember: string;
+let invitationToken: string;
+let requestNumber = 0;
 
 async function asUser(id: string) {
   await db.exec("RESET ROLE; SET ROLE authenticated;");
@@ -26,12 +28,18 @@ async function asUser(id: string) {
 async function save(
   id: string | null,
   participants = members.slice(0, 2),
-  groupId = group
+  groupId = group,
+  requestId = id ? null : nextRequestId()
 ) {
   return db.query<{ id: string }>(
-    "SELECT public.save_payment($1,$2,$3,1001,'test',$4) AS id",
-    [groupId, id, members[0], participants]
+    "SELECT public.save_payment($1,$2,$3,1001,'test',$4,$5) AS id",
+    [groupId, id, members[0], participants, requestId]
   );
+}
+
+function nextRequestId() {
+  requestNumber += 1;
+  return `00000000-0000-4000-8000-${requestNumber.toString().padStart(12, "0")}`;
 }
 
 beforeAll(async () => {
@@ -63,6 +71,12 @@ beforeAll(async () => {
       [group]
     )
   ).rows.map((r) => r.id);
+  invitationToken = (
+    await db.query<{ token: string }>(
+      "SELECT public.get_group_invitation($1) AS token",
+      [group]
+    )
+  ).rows[0].token;
   await asUser(other);
   await db.query("SELECT public.create_group($1, 'Second', ARRAY['X','Y'])", [
     otherGroup,
@@ -115,6 +129,9 @@ describe("database security and consistency", () => {
       )
     ).rejects.toThrow();
     await expect(
+      db.query("SELECT * FROM public.group_invites")
+    ).rejects.toThrow();
+    await expect(
       db.query("SELECT public.lock_group($1,false)", [group])
     ).rejects.toThrow();
   });
@@ -122,8 +139,8 @@ describe("database security and consistency", () => {
   it("allows idempotent joining and creation, but denies non-owner edits and deletes", async () => {
     await asUser(guest);
     await expect(save(null)).rejects.toThrow();
-    await db.query("SELECT public.join_group($1)", [group]);
-    await db.query("SELECT public.join_group($1)", [group]);
+    await db.query("SELECT public.join_group($1)", [invitationToken]);
+    await db.query("SELECT public.join_group($1)", [invitationToken]);
     const id = (await save(null)).rows[0].id;
     await expect(save(id)).rejects.toThrow();
     await expect(
@@ -206,7 +223,7 @@ describe("database security and consistency", () => {
     ).rejects.toThrow("At least two");
   });
 
-  it("returns complete JSON history and retains read isolation", async () => {
+  it("pages history while retaining complete balances and read isolation", async () => {
     await db.exec("RESET ROLE;");
     await db.query(
       `INSERT INTO public.payments(group_id,payer_member_id,amount)
@@ -220,19 +237,123 @@ describe("database security and consistency", () => {
       [group, members[1]]
     );
     await asUser(owner);
-    const result = await db.query<{ data: unknown[] }>(
-      "SELECT public.get_group_payments($1) AS data",
-      [group]
-    );
-    expect(result.rows[0].data.length).toBeGreaterThan(1000);
+    const result = await db.query<{
+      data: {
+        payments: unknown[];
+        next_payment_cursor: { created_at: string; id: string } | null;
+        balances: { balance: number }[];
+      };
+    }>("SELECT public.get_group_dashboard($1) AS data", [group]);
+    expect(result.rows[0].data.payments).toHaveLength(50);
+    expect(result.rows[0].data.next_payment_cursor).not.toBeNull();
+    expect(
+      result.rows[0].data.balances.reduce(
+        (total, balance) => total + balance.balance,
+        0
+      )
+    ).toBe(0);
+    const nextCursor = result.rows[0].data.next_payment_cursor;
+    if (!nextCursor) throw new Error("Expected a next payment cursor");
+    const history = await db.query<{
+      data: { payments: unknown[]; next_cursor: unknown };
+    }>("SELECT public.get_group_payment_history($1,$2,$3) AS data", [
+      group,
+      nextCursor.created_at,
+      nextCursor.id,
+    ]);
+    expect(history.rows[0].data.payments).toHaveLength(50);
     await asUser(other);
     expect(
       (
-        await db.query<{ data: unknown[] }>(
-          "SELECT public.get_group_payments($1) AS data",
+        await db.query<{ data: { payments: unknown[] } }>(
+          "SELECT public.get_group_payment_history($1,$2,$3) AS data",
+          [group, null, null]
+        )
+      ).rows[0].data.payments
+    ).toEqual([]);
+  });
+
+  it("reuses the payment created by the same client request ID", async () => {
+    const requestId = nextRequestId();
+    const first = await save(null, members.slice(0, 2), group, requestId);
+    const second = await save(null, members.slice(0, 2), group, requestId);
+    expect(second.rows[0].id).toBe(first.rows[0].id);
+    expect(
+      (
+        await db.query<{ count: number }>(
+          "SELECT count(*) FROM public.payments WHERE group_id=$1 AND client_request_id=$2",
+          [group, requestId]
+        )
+      ).rows[0].count
+    ).toBe(1);
+  });
+
+  it("rotates invitations and returns an authorized dashboard snapshot", async () => {
+    const before = invitationToken;
+    const rotated = (
+      await db.query<{ token: string }>(
+        "SELECT public.rotate_group_invitation($1) AS token",
+        [group]
+      )
+    ).rows[0].token;
+    expect(rotated).not.toBe(before);
+    await asUser(guest);
+    await expect(
+      db.query("SELECT public.join_group($1)", [before])
+    ).rejects.toThrow();
+    await db.query("SELECT public.join_group($1)", [rotated]);
+    const dashboard = await db.query<{
+      data: { group: { id: string }; invite_token: string };
+    }>("SELECT public.get_group_dashboard($1) AS data", [group]);
+    expect(dashboard.rows[0].data.group.id).toBe(group);
+    expect(dashboard.rows[0].data.invite_token).toBe(rotated);
+    await asUser(other);
+    expect(
+      (
+        await db.query<{ data: unknown }>(
+          "SELECT public.get_group_dashboard($1) AS data",
           [group]
         )
       ).rows[0].data
-    ).toEqual([]);
+    ).toBeNull();
+  });
+
+  it("hides expired groups and rejects their mutations", async () => {
+    await db.exec("RESET ROLE;");
+    await db.query(
+      "UPDATE public.groups SET expires_at = now() - interval '1 second' WHERE id=$1",
+      [group]
+    );
+    await asUser(owner);
+    expect(
+      (await db.query("SELECT * FROM public.get_group_by_link($1)", [group]))
+        .rows
+    ).toHaveLength(0);
+    expect(
+      (await db.query("SELECT * FROM public.groups WHERE id=$1", [group])).rows
+    ).toHaveLength(0);
+    expect(
+      (
+        await db.query("SELECT * FROM public.members WHERE group_id=$1", [
+          group,
+        ])
+      ).rows
+    ).toHaveLength(0);
+    expect(
+      (
+        await db.query("SELECT * FROM public.payments WHERE group_id=$1", [
+          group,
+        ])
+      ).rows
+    ).toHaveLength(0);
+    expect(
+      (
+        await db.query<{ data: unknown }>(
+          "SELECT public.get_group_dashboard($1) AS data",
+          [group]
+        )
+      ).rows[0].data
+    ).toBeNull();
+    await expect(save(null)).rejects.toThrow();
   });
 });

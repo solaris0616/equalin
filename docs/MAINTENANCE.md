@@ -37,15 +37,18 @@ Next/font needs Google Fonts access during builds.
 
 ## Database rollout
 
-Back up and apply the 20261005 migrations on staging first. Invalid historical
-payment membership or amounts stop migration instead of silently deleting data.
-Release database and app together in a maintenance window; older clients' direct
-table writes are intentionally rejected by the new grants.
+Back up and apply the 20261005 and 20261020 migrations on staging first. Invalid
+historical payment membership or amounts stop migration instead of silently
+deleting data. Release database and app together in a maintenance window; older
+clients' direct table writes are intentionally rejected by the new grants. After
+20261020, a group-ID-only URL can preview a group but cannot add a collaborator;
+copy a new tokenized invitation URL from an existing collaborator.
 
 Staging checks: anonymous sign-in, expired-cookie refresh, invitation joining,
 collaborator creation versus owner edit/delete, cross-group rejection, referenced
-member protection, concurrent deletes/edits, >1,000 payment history, network errors
-versus zero settlement, and mobile keyboard navigation.
+member protection, concurrent deletes/edits, invitation rotation, expired groups,
+idempotent payment retry, paged >1,000 payment history, network errors versus zero
+settlement, and mobile keyboard navigation.
 
 Local tests do not modify remote databases or exercise PostgREST, real Supabase
 Auth, or multi-connection locking. Retention, restore drills, abuse limits and

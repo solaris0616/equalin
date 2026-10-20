@@ -8,6 +8,7 @@ export interface Group {
   ownerId: string;
   createdAt: string;
   isRoughMode: boolean;
+  invitationToken?: string;
 }
 
 export interface Member {
@@ -69,6 +70,27 @@ export interface GroupDashboardData {
   settlement: SettlementTransaction[];
   isCollaborator: boolean;
   isOwner: boolean;
+  invitationToken: string | null;
+  nextPaymentCursor: PaymentHistoryCursor | null;
+}
+
+export interface GroupDashboardSnapshot {
+  group: { id: string; name: string; isRoughMode: boolean };
+  members: Member[];
+  payments: PaymentWithDetails[];
+  balances: MemberBalance[];
+  invitationToken: string;
+  nextPaymentCursor: PaymentHistoryCursor | null;
+}
+
+export interface PaymentHistoryCursor {
+  createdAt: string;
+  id: string;
+}
+
+export interface PaymentHistoryPage {
+  payments: PaymentWithDetails[];
+  nextCursor: PaymentHistoryCursor | null;
 }
 
 /**

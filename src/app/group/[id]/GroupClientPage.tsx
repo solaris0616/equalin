@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   GroupDashboardData,
   Member,
+  PaymentHistoryCursor,
   PaymentWithDetails,
   SettlementTransaction,
 } from "@/core/domain/entities/payment";
@@ -14,7 +15,9 @@ import {
   addMember,
   deleteMember,
   getGroupDashboardData,
+  getGroupPaymentHistory,
   joinGroup,
+  rotateInvitation,
   updateRoughMode,
 } from "@/app/actions/payments";
 import { BackgroundImage } from "@/components/ui/BackgroundImage";
@@ -30,11 +33,13 @@ import { SettlementDisplay } from "./components/SettlementDisplay";
 interface GroupClientPageProps {
   groupId: string;
   initialData: GroupDashboardData;
+  invitationToken: string | null;
 }
 
 export default function GroupClientPage({
   groupId,
   initialData,
+  invitationToken: initialInvitationToken,
 }: GroupClientPageProps) {
   const supabase = createClient();
 
@@ -47,8 +52,13 @@ export default function GroupClientPage({
   const [payments, setPayments] = useState<PaymentWithDetails[]>(
     initialData.payments
   );
+  const [nextPaymentCursor, setNextPaymentCursor] =
+    useState<PaymentHistoryCursor | null>(initialData.nextPaymentCursor);
   const [settlement, setSettlement] = useState<SettlementTransaction[]>(
     initialData.settlement
+  );
+  const [invitationToken, setInvitationToken] = useState(
+    initialData.invitationToken || initialInvitationToken
   );
 
   const [showPaymentForm, setShowPaymentForm] = useState(false);
@@ -80,9 +90,11 @@ export default function GroupClientPage({
     setGroup(data.group);
     setMembers(data.members);
     setPayments(data.payments);
+    setNextPaymentCursor(data.nextPaymentCursor);
     setSettlement(data.settlement);
     setIsCollaborator(data.isCollaborator);
     setIsOwner(data.isOwner);
+    setInvitationToken(data.invitationToken);
   }, [groupId]);
 
   const handleJoinGroup = async () => {
@@ -97,7 +109,7 @@ export default function GroupClientPage({
         if (authError) throw authError;
       }
 
-      const result = await joinGroup(groupId);
+      const result = await joinGroup(invitationToken || "");
 
       if (!result.success) {
         alert(result.error || "グループへの参加に失敗しました。");
@@ -181,6 +193,28 @@ export default function GroupClientPage({
     setEditingPayment(null);
   };
 
+  const handleLoadMorePayments = async () => {
+    if (!nextPaymentCursor) return;
+    const page = await getGroupPaymentHistory(groupId, nextPaymentCursor);
+    setPayments((current) => {
+      const known = new Set(current.map((payment) => payment.id));
+      return [
+        ...current,
+        ...page.payments.filter((payment) => !known.has(payment.id)),
+      ];
+    });
+    setNextPaymentCursor(page.nextCursor);
+  };
+
+  const handleRotateInvitation = async () => {
+    const result = await rotateInvitation(groupId);
+    if (!result.success || !result.data) {
+      alert(result.error || "招待リンクの再発行に失敗しました");
+      return;
+    }
+    setInvitationToken(result.data);
+  };
+
   const handleEditPayment = (payment: PaymentWithDetails) => {
     setEditingPayment(payment);
     setShowPaymentForm(true);
@@ -232,7 +266,14 @@ export default function GroupClientPage({
             </div>
             {/* どんぶり勘定設定と招待リンク */}
             <div className="flex flex-col items-stretch md:items-end gap-2 w-full md:w-64">
-              <InviteLinkButton groupId={groupId} />
+              {invitationToken && (
+                <InviteLinkButton
+                  groupId={groupId}
+                  invitationToken={invitationToken}
+                  canRotate={isOwner}
+                  onRotate={handleRotateInvitation}
+                />
+              )}
               {isOwner && (
                 <label className="flex items-center justify-center gap-2 cursor-pointer select-none border-4 border-black px-4 h-14 bg-yellow-50 font-bold hover:bg-yellow-100 transition-colors text-base w-full md:w-64">
                   <input
@@ -389,6 +430,8 @@ export default function GroupClientPage({
               isOwner={isOwner}
               onPaymentDeleted={refreshData}
               onEdit={handleEditPayment}
+              hasMore={nextPaymentCursor !== null}
+              onLoadMore={handleLoadMorePayments}
             />
           )}
         </div>
